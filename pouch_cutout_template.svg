@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" style="background:#0b192c; font-family:'Courier New', monospace;">
+  <!-- Blueprint Grid Pattern -->
+  <defs>
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#162c46" stroke-width="0.75"/>
+    </pattern>
+    <pattern id="majorGrid" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="url(#grid)"/>
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#224263" stroke-width="1.25"/>
+    </pattern>
+  </defs>
+
+  <rect width="100%" height="100%" fill="url(#majorGrid)" />
+
+  <!-- Outer Blueprint Border -->
+  <rect x="25" y="25" width="750" height="550" fill="none" stroke="#64dfdf" stroke-width="2" />
+  <rect x="30" y="30" width="740" height="540" fill="none" stroke="#48cae4" stroke-width="0.75" />
+
+  <!-- Title Block -->
+  <g transform="translate(470, 470)">
+    <rect x="0" y="0" width="290" height="90" fill="#071324" stroke="#64dfdf" stroke-width="1.5" />
+    <line x1="0" y1="28" x2="290" y2="28" stroke="#48cae4" stroke-width="0.75" />
+    <line x1="0" y1="58" x2="290" y2="58" stroke="#48cae4" stroke-width="0.75" />
+    <line x1="145" y1="28" x2="145" y2="90" stroke="#48cae4" stroke-width="0.75" />
+    <text x="10" y="20" fill="#64dfdf" font-size="14" font-weight="bold">TREBUCHET CLOTH POUCH TEMPLATE</text>
+    <text x="10" y="44" fill="#a0aec0" font-size="10">PROJECTILE: 16mm MARBLE</text>
+    <text x="155" y="44" fill="#a0aec0" font-size="10">SCALE: 1:1 PRINTABLE</text>
+    <text x="10" y="74" fill="#a0aec0" font-size="10">MATERIAL: HEAVY CANVAS / DENIM</text>
+    <text x="155" y="74" fill="#64dfdf" font-size="10">DWG NO: POUCH-01</text>
+  </g>
+
+  <!-- Title & Instructions -->
+  <text x="50" y="65" fill="#64dfdf" font-size="18" font-weight="bold" letter-spacing="1.5">DETAIL D: 1:1 CLOTH POUCH CUTOUT PATTERN</text>
+  <text x="50" y="85" fill="#a0aec0" font-size="11">Print at 100% scale (no scaling). Cut along cyan boundary, punch eyelets, and stitch darts.</text>
+
+  <!-- 1:1 Calibration Check Ruler -->
+  <g transform="translate(50, 105)">
+    <rect x="0" y="0" width="200" height="25" fill="#071324" stroke="#48cae4" stroke-width="1"/>
+    <!-- Inches ruler (2 inches = ~192 px at 96 dpi) -->
+    <line x1="0" y1="0" x2="0" y2="25" stroke="#64dfdf" stroke-width="1.5"/>
+    <line x1="48" y1="0" x2="48" y2="12" stroke="#64dfdf" stroke-width="1"/>
+    <line x1="96" y1="0" x2="96" y2="18" stroke="#64dfdf" stroke-width="1.5"/>
+    <line x1="144" y1="0" x2="144" y2="12" stroke="#64dfdf" stroke-width="1"/>
+    <line x1="192" y1="0" x2="192" y2="25" stroke="#64dfdf" stroke-width="1.5"/>
+    <text x="96" y="20" fill="#64dfdf" font-size="9" text-anchor="middle">1 INCH</text>
+    <text x="192" y="20" fill="#64dfdf" font-size="9" text-anchor="end">2 INCHES</text>
+    <text x="210" y="17" fill="#ffd166" font-size="10">CALIBRATION RULER (Verify 2.0" with ruler)</text>
+  </g>
+
+  <!-- Pouch Flat Pattern (Scale 1:1: 1mm = 3.7795 px at 96dpi) -->
+  <!-- Length = 90mm (340px), Width = 48mm (181px), Tip Width = 14mm (53px) -->
+  <!-- Centered at X=400, Y=260 -->
+  <g id="pouch-cutout" transform="translate(400, 260)">
+    <!-- Shaded cloth fill -->
+    <path d="M -160 -26
+             L -60 -90
+             L -15 -90
+             L 0 -55
+             L 15 -90
+             L 60 -90
+             L 160 -26
+             L 160 26
+             L 60 90
+             L 15 90
+             L 0 55
+             L -15 90
+             L -60 90
+             L -160 26
+             Z"
+          fill="#102a43" fill-opacity="0.8" stroke="#64dfdf" stroke-width="2.5" />
+
+    <!-- Center fold axes -->
+    <line x1="-180" y1="0" x2="180" y2="0" stroke="#ffd166" stroke-width="1" stroke-dasharray="6,4" />
+    <line x1="0" y1="-110" x2="0" y2="110" stroke="#ffd166" stroke-width="1" stroke-dasharray="6,4" />
+
+    <!-- Dart Stitch Lines (dashed yellow) -->
+    <line x1="-15" y1="-90" x2="0" y2="-55" stroke="#ff5964" stroke-width="1.5" stroke-dasharray="3,3" />
+    <line x1="15" y1="-90" x2="0" y2="-55" stroke="#ff5964" stroke-width="1.5" stroke-dasharray="3,3" />
+    <line x1="-15" y1="90" x2="0" y2="55" stroke="#ff5964" stroke-width="1.5" stroke-dasharray="3,3" />
+    <line x1="15" y1="90" x2="0" y2="55" stroke="#ff5964" stroke-width="1.5" stroke-dasharray="3,3" />
+
+    <!-- 16mm Marble Silhouette in Center Pocket -->
+    <!-- 16mm = 60px diameter -->
+    <circle cx="0" cy="0" r="30" fill="#48cae4" fill-opacity="0.2" stroke="#48cae4" stroke-width="1.5" stroke-dasharray="4,4" />
+    <text x="0" y="4" fill="#48cae4" font-size="9" text-anchor="middle" font-weight="bold">16mm MARBLE</text>
+    <text x="0" y="16" fill="#48cae4" font-size="8" text-anchor="middle">CRADLE ZONE</text>
+
+    <!-- Eyelet Punch Holes (3mm diameter = ~11.5px) -->
+    <!-- Left eyelet -->
+    <circle cx="-135" cy="0" r="6" fill="#071324" stroke="#ffd166" stroke-width="2" />
+    <circle cx="-135" cy="0" r="1.5" fill="#ffd166" />
+    <!-- Right eyelet -->
+    <circle cx="135" cy="0" r="6" fill="#071324" stroke="#ffd166" stroke-width="2" />
+    <circle cx="135" cy="0" r="1.5" fill="#ffd166" />
+
+    <!-- Eyelet Callout Text -->
+    <text x="-135" y="-14" fill="#ffd166" font-size="9" text-anchor="middle">3mm EYELET</text>
+    <text x="135" y="-14" fill="#ffd166" font-size="9" text-anchor="middle">3mm EYELET</text>
+
+    <!-- Dart Callout Arrows -->
+    <path d="M 0 -70 L 40 -115" stroke="#ff5964" stroke-width="1" />
+    <text x="45" y="-115" fill="#ff5964" font-size="10">FOLD &amp; STITCH DARTS (Forms 3D Cup)</text>
+
+    <!-- Dimension Lines -->
+    <!-- Overall Length: 85 mm (320 px) -->
+    <line x1="-160" y1="115" x2="160" y2="115" stroke="#a0aec0" stroke-width="1" />
+    <line x1="-160" y1="105" x2="-160" y2="125" stroke="#a0aec0" stroke-width="1" />
+    <line x1="160" y1="105" x2="160" y2="125" stroke="#a0aec0" stroke-width="1" />
+    <text x="0" y="132" fill="#e0e6ed" font-size="11" text-anchor="middle">85 mm [3.35 in] OVERALL LENGTH</text>
+
+    <!-- Width: 48 mm (180 px) -->
+    <line x1="185" y1="-90" x2="185" y2="90" stroke="#a0aec0" stroke-width="1" />
+    <line x1="175" y1="-90" x2="195" y2="-90" stroke="#a0aec0" stroke-width="1" />
+    <line x1="175" y1="90" x2="195" y2="90" stroke="#a0aec0" stroke-width="1" />
+    <text x="200" y="4" fill="#e0e6ed" font-size="11" text-anchor="start">48 mm [1.88 in]</text>
+
+    <!-- Tip Width: 14 mm (52 px) -->
+    <line x1="-180" y1="-26" x2="-180" y2="26" stroke="#a0aec0" stroke-width="1" />
+    <line x1="-173" y1="-26" x2="-187" y2="-26" stroke="#a0aec0" stroke-width="1" />
+    <line x1="-173" y1="26" x2="-187" y2="26" stroke="#a0aec0" stroke-width="1" />
+    <text x="-195" y="4" fill="#e0e6ed" font-size="10" text-anchor="end">14 mm</text>
+  </g>
+
+  <!-- Assembly Instructions Box -->
+  <g transform="translate(50, 420)">
+    <rect x="0" y="0" width="390" height="140" fill="#071324" stroke="#48cae4" stroke-width="1" rx="4" />
+    <text x="15" y="24" fill="#64dfdf" font-size="12" font-weight="bold">FABRICATION &amp; LACING INSTRUCTIONS:</text>
+    <text x="15" y="46" fill="#e0e6ed" font-size="10">1. TRACE onto durable cloth (duck canvas, denim, or leather).</text>
+    <text x="15" y="66" fill="#e0e6ed" font-size="10">2. CUT along solid cyan border; do NOT cut beyond dart tips.</text>
+    <text x="15" y="86" fill="#e0e6ed" font-size="10">3. FOLD each V-dart together and hand-sew with heavy nylon thread.</text>
+    <text x="15" y="106" fill="#e0e6ed" font-size="10">4. PUNCH 3mm eyelet holes at both ends; install brass eyelets.</text>
+    <text x="15" y="126" fill="#ffd166" font-size="10">5. THREAD leather shoe-lace (Line 1 fixed to arm, Line 2 to ring).</text>
+  </g>
+</svg>

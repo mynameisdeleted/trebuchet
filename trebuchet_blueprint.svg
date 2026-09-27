@@ -1,0 +1,443 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" width="1600" height="1100" style="background:#09192f; font-family:'Courier New', monospace;">
+  <defs>
+    <!-- Blueprint Drafting Grid -->
+    <pattern id="fineGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+      <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#122c4d" stroke-width="0.5"/>
+    </pattern>
+    <pattern id="coarseGrid" width="50" height="50" patternUnits="userSpaceOnUse">
+      <rect width="50" height="50" fill="url(#fineGrid)"/>
+      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#1c416e" stroke-width="1"/>
+    </pattern>
+    <!-- Dimension Arrowheads -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#64dfdf"/>
+    </marker>
+    <marker id="arrow-yellow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#ffd166"/>
+    </marker>
+  </defs>
+
+  <!-- Background Grid -->
+  <rect width="100%" height="100%" fill="url(#coarseGrid)" />
+
+  <!-- Blueprint Sheet Borders -->
+  <rect x="30" y="30" width="1540" height="1040" fill="none" stroke="#64dfdf" stroke-width="2.5" />
+  <rect x="40" y="40" width="1520" height="1020" fill="none" stroke="#48cae4" stroke-width="1" />
+
+  <!-- Sheet Header / Title -->
+  <text x="60" y="75" fill="#64dfdf" font-size="22" font-weight="bold" letter-spacing="2">ENGINEERING BLUEPRINT: 3-FOOT TIMBER TREBUCHET (3-YARD MARBLE LAUNCH)</text>
+  <text x="60" y="98" fill="#a0aec0" font-size="12">CONSTRUCTION: RECTANGULAR WOODEN STICKS, PVA GLUE, BOLTED JOINERY, 8mm STEEL ROD &amp; 2x 608 BALL BEARINGS</text>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 1: FRONT ELEVATION (Side profile of Trebuchet)                       -->
+  <!-- ========================================================================= -->
+  <g id="view-front" transform="translate(60, 130)">
+    <!-- View Header -->
+    <text x="0" y="20" fill="#ffd166" font-size="14" font-weight="bold">VIEW 1: FRONT ELEVATION (LONGITUDINAL SECTION)</text>
+    <text x="0" y="38" fill="#a0aec0" font-size="10">SCALE: 1:8 | ARM IN REST/HORIZONTAL POSITION</text>
+
+    <!-- Ground / Base Level -->
+    <line x1="0" y1="440" x2="620" y2="440" stroke="#4a5568" stroke-width="2" stroke-dasharray="8,4" />
+    <text x="5" y="455" fill="#718096" font-size="10">GROUND LEVEL (Z = 0.00)</text>
+
+    <!-- Base Runner (36" long = 480 px, 1.5" h = 20 px) -->
+    <!-- Centered: X from 70 to 550, Y from 420 to 440 -->
+    <rect x="70" y="420" width="480" height="20" fill="#0c2340" stroke="#64dfdf" stroke-width="1.8" />
+    <!-- Glue hatch on base runner -->
+    <line x1="290" y1="420" x2="330" y2="440" stroke="#2a5c8a" stroke-width="1"/>
+    <line x1="300" y1="420" x2="340" y2="440" stroke="#2a5c8a" stroke-width="1"/>
+    <text x="310" y="434" fill="#64dfdf" font-size="9" text-anchor="middle">BASE RUNNER (3/4" x 1.5" x 36")</text>
+
+    <!-- Guide Trough for Marble (X: 70 to 310, Y: 410 to 420) -->
+    <rect x="70" y="410" width="240" height="10" fill="#14345c" stroke="#48cae4" stroke-width="1.2" />
+    <text x="190" y="418" fill="#48cae4" font-size="8" text-anchor="middle">MARBLE GUIDE TROUGH (24" STICK)</text>
+
+    <!-- 16mm Glass Marble resting in trough -->
+    <circle cx="110" cy="404" r="8" fill="#00f5d4" stroke="#ffffff" stroke-width="1.2" />
+    <text x="110" y="392" fill="#00f5d4" font-size="8" text-anchor="middle">16mm MARBLE</text>
+
+    <!-- A-Frame Upright Legs (Rectangular Sticks) -->
+    <!-- Pivot Axle Center is at X=310, Y=140 (Height = 30" = 400px from ground 440) -->
+    <!-- Rear Leg: from (180, 420) to (310, 140) -->
+    <polygon points="175,420 195,420 320,140 300,140" fill="#0e2a4a" stroke="#64dfdf" stroke-width="1.8" />
+    <!-- Front Leg: from (440, 420) to (310, 140) -->
+    <polygon points="425,420 445,420 320,140 300,140" fill="#0e2a4a" stroke="#64dfdf" stroke-width="1.8" />
+
+    <!-- A-Frame Apex extension to 36" (Y = 60) -->
+    <polygon points="300,140 320,140 315,60 305,60" fill="#0e2a4a" stroke="#64dfdf" stroke-width="1.5" />
+    <text x="310" y="52" fill="#ffd166" font-size="9" text-anchor="middle">APEX (36" / 3 FT)</text>
+
+    <!-- Pillow Block / Bearing Housing (X=295 to 325, Y=125 to 155) -->
+    <rect x="292" y="125" width="36" height="30" fill="#14345c" stroke="#64dfdf" stroke-width="1.5" />
+    <!-- 608 Bearing Outer Race (22mm OD = 18px), Inner Race (8mm ID = 7px), 8mm Steel Rod -->
+    <circle cx="310" cy="140" r="11" fill="#1c416e" stroke="#ffd166" stroke-width="1.5" />
+    <circle cx="310" cy="140" r="4.5" fill="#ffd166" stroke="#000" stroke-width="0.8" />
+    <text x="310" y="118" fill="#ffd166" font-size="8" text-anchor="middle">608 BEARING &amp; 8mm ROD</text>
+
+    <!-- Bolts at A-Frame base and apex -->
+    <circle cx="185" cy="430" r="3.5" fill="#ffd166" stroke="#000" stroke-width="0.8" />
+    <circle cx="435" cy="430" r="3.5" fill="#ffd166" stroke="#000" stroke-width="0.8" />
+    <circle cx="310" cy="162" r="3.5" fill="#ffd166" stroke="#000" stroke-width="0.8" />
+
+    <!-- SWING STICK (ARM): 30" total (4:1 Ratio) -->
+    <g transform="rotate(-20, 310, 140)">
+      <rect x="-10" y="132" width="400" height="16" fill="#163e66" stroke="#64dfdf" stroke-width="2" />
+      <text x="140" y="144" fill="#e0e6ed" font-size="9">SWING STICK (LONG ARM 24" / 610mm)</text>
+      <text x="325" y="144" fill="#ffd166" font-size="8">SHORT 6"</text>
+
+      <!-- 45-Degree Steel Release Pin at Long Arm Tip -->
+      <line x1="-10" y1="132" x2="-26" y2="116" stroke="#ffd166" stroke-width="3" />
+      <circle cx="-10" cy="140" r="2.5" fill="#ffd166" />
+      <text x="-35" y="112" fill="#ffd166" font-size="8">45° RELEASE PIN</text>
+
+      <!-- BOLTED COUNTERWEIGHT AT SHORT END (395g) -->
+      <line x1="380" y1="115" x2="380" y2="165" stroke="#ffffff" stroke-width="3" />
+      <rect x="365" y="148" width="30" height="26" fill="#2a5c8a" stroke="#ffd166" stroke-width="1.8" rx="2" />
+      <rect x="374" y="174" width="12" height="6" fill="#ffd166" stroke="#000" stroke-width="0.8" />
+      <text x="380" y="193" fill="#ffd166" font-size="8" text-anchor="middle">SCREWED 395g WEIGHT</text>
+      <text x="380" y="203" fill="#a0aec0" font-size="7" text-anchor="middle">(3/8" BOLT + NUT)</text>
+    </g>
+
+    <!-- Leather Shoe-Lace Sling & Cloth Pouch -->
+    <path d="M 12 108 Q 60 250 110 404" fill="none" stroke="#d4a373" stroke-width="2" stroke-dasharray="5,2" />
+    <path d="M 100 402 Q 110 414 120 402" fill="none" stroke="#e76f51" stroke-width="3" />
+    <path d="M 110 404 Q 50 240 10 106" fill="none" stroke="#d4a373" stroke-width="2" />
+    <circle cx="10" cy="106" r="4" fill="none" stroke="#ffd166" stroke-width="1.5" />
+    <text x="30" y="240" fill="#d4a373" font-size="8">LEATHER SHOE-LACE (17.3")</text>
+
+    <!-- Dimension Callouts on Front View -->
+    <line x1="565" y1="60" x2="565" y2="440" stroke="#64dfdf" stroke-width="1" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+    <line x1="545" y1="60" x2="575" y2="60" stroke="#64dfdf" stroke-width="0.75" />
+    <line x1="545" y1="440" x2="575" y2="440" stroke="#64dfdf" stroke-width="0.75" />
+    <text x="575" y="255" fill="#64dfdf" font-size="11" transform="rotate(90, 575, 255)" text-anchor="middle">36.0" [914 mm] OVERALL HEIGHT</text>
+
+    <line x1="520" y1="140" x2="520" y2="440" stroke="#ffd166" stroke-width="1" marker-start="url(#arrow-yellow)" marker-end="url(#arrow-yellow)" />
+    <text x="510" y="295" fill="#ffd166" font-size="10" transform="rotate(-90, 510, 295)" text-anchor="middle">30.0" [762 mm] PIVOT</text>
+
+    <line x1="70" y1="475" x2="550" y2="475" stroke="#64dfdf" stroke-width="1" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+    <line x1="70" y1="465" x2="70" y2="485" stroke="#64dfdf" stroke-width="0.75" />
+    <line x1="550" y1="465" x2="550" y2="485" stroke="#64dfdf" stroke-width="0.75" />
+    <text x="310" y="492" fill="#64dfdf" font-size="11" text-anchor="middle">36.0" [914 mm] BASE RUNNER LENGTH</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- VIEW 2: SIDE ELEVATION (Looking from rear along launch axis)              -->
+  <!-- ========================================================================= -->
+  <g id="view-side" transform="translate(710, 130)">
+    <text x="0" y="20" fill="#ffd166" font-size="14" font-weight="bold">VIEW 2: SIDE ELEVATION (TRANSVERSE SECTION)</text>
+    <text x="0" y="38" fill="#a0aec0" font-size="10">SHOWING 8mm METAL ROD AXLE &amp; 2x 608 BALL BEARINGS</text>
+
+    <!-- Ground Level -->
+    <line x1="0" y1="440" x2="400" y2="440" stroke="#4a5568" stroke-width="2" stroke-dasharray="8,4" />
+
+    <!-- Left & Right Base Runners -->
+    <rect x="70" y="420" width="20" height="20" fill="#0c2340" stroke="#64dfdf" stroke-width="1.5" />
+    <rect x="310" y="420" width="20" height="20" fill="#0c2340" stroke="#64dfdf" stroke-width="1.5" />
+    <rect x="90" y="426" width="220" height="14" fill="#14345c" stroke="#64dfdf" stroke-width="1.5" />
+    <text x="200" y="437" fill="#64dfdf" font-size="9" text-anchor="middle">CROSSBAR (18" / 457mm)</text>
+
+    <!-- Guide trough -->
+    <rect x="188" y="414" width="24" height="12" fill="#1c416e" stroke="#48cae4" stroke-width="1" />
+    <circle cx="200" cy="414" r="5" fill="#09192f" stroke="#48cae4" stroke-width="1" />
+
+    <!-- Upright Legs -->
+    <polygon points="70,420 90,420 120,140 100,140" fill="#0e2a4a" stroke="#64dfdf" stroke-width="1.8" />
+    <polygon points="310,420 330,420 300,140 280,140" fill="#0e2a4a" stroke="#64dfdf" stroke-width="1.8" />
+
+    <!-- Upper Cross Brace -->
+    <rect x="106" y="165" width="188" height="16" fill="#163e66" stroke="#64dfdf" stroke-width="1.5" />
+    <text x="200" y="177" fill="#64dfdf" font-size="8" text-anchor="middle">UPPER RECTANGULAR BRACE</text>
+
+    <!-- Bearing Pillow Blocks -->
+    <rect x="92" y="125" width="28" height="30" fill="#14345c" stroke="#64dfdf" stroke-width="1.5" />
+    <rect x="280" y="125" width="28" height="30" fill="#14345c" stroke="#64dfdf" stroke-width="1.5" />
+
+    <!-- 2x 608 BALL BEARINGS -->
+    <rect x="100" y="133" width="12" height="14" fill="#ffd166" stroke="#000" stroke-width="1" />
+    <text x="70" y="124" fill="#ffd166" font-size="8">608 BEARING #1</text>
+    <rect x="288" y="133" width="12" height="14" fill="#ffd166" stroke="#000" stroke-width="1" />
+    <text x="305" y="124" fill="#ffd166" font-size="8">608 BEARING #2</text>
+
+    <!-- 8mm STEEL ROUND ROD -->
+    <rect x="80" y="137" width="240" height="6" fill="#e0e6ed" stroke="#ffffff" stroke-width="1" rx="2" />
+    <text x="200" y="132" fill="#ffffff" font-size="9" text-anchor="middle">8mm STEEL ROUND ROD (19.5" / 495mm)</text>
+
+    <!-- Swing Stick -->
+    <rect x="190" y="80" width="20" height="240" fill="#163e66" stroke="#64dfdf" stroke-width="1.8" />
+    <circle cx="200" cy="140" r="4" fill="#ffd166" stroke="#000" stroke-width="1" />
+    <text x="200" y="230" fill="#e0e6ed" font-size="8" text-anchor="middle">SWING STICK</text>
+
+    <!-- Bolted Weight -->
+    <rect x="180" y="300" width="40" height="18" fill="#2a5c8a" stroke="#ffd166" stroke-width="1.5" rx="2" />
+    <text x="200" y="313" fill="#ffd166" font-size="8" text-anchor="middle">395g WEIGHT</text>
+
+    <!-- Base Width Callout -->
+    <line x1="70" y1="475" x2="330" y2="475" stroke="#64dfdf" stroke-width="1" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+    <line x1="70" y1="465" x2="70" y2="485" stroke="#64dfdf" stroke-width="0.75" />
+    <line x1="330" y1="465" x2="330" y2="485" stroke="#64dfdf" stroke-width="0.75" />
+    <text x="200" y="492" fill="#64dfdf" font-size="11" text-anchor="middle">18.0" [457 mm] FRAME WIDTH</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- DETAILS & HARDWARE BLOCKS                                                 -->
+  <!-- ========================================================================= -->
+  <!-- DETAIL A: Fulcrum Bearing Assembly -->
+  <g transform="translate(60, 680)">
+    <rect x="0" y="0" width="310" height="175" fill="#071324" stroke="#ffd166" stroke-width="1.5" rx="3" />
+    <text x="12" y="22" fill="#ffd166" font-size="12" font-weight="bold">DETAIL A: FULCRUM BEARING ASSEMBLY</text>
+    <text x="12" y="38" fill="#a0aec0" font-size="9">DUAL 608-2RS BALL BEARINGS ON 8mm STEEL ROD</text>
+
+    <g transform="translate(45, 60)">
+      <rect x="0" y="0" width="60" height="60" fill="#0c2340" stroke="#64dfdf" stroke-width="1.5" />
+      <circle cx="30" cy="30" r="22" fill="#1c416e" stroke="#ffd166" stroke-width="1.5" />
+      <circle cx="30" cy="14" r="3.5" fill="#ffffff" />
+      <circle cx="44" cy="22" r="3.5" fill="#ffffff" />
+      <circle cx="44" cy="38" r="3.5" fill="#ffffff" />
+      <circle cx="30" cy="46" r="3.5" fill="#ffffff" />
+      <circle cx="16" cy="38" r="3.5" fill="#ffffff" />
+      <circle cx="16" cy="22" r="3.5" fill="#ffffff" />
+      <circle cx="30" cy="30" r="8" fill="#ffd166" stroke="#000" stroke-width="1" />
+      <circle cx="30" cy="30" r="5" fill="#e0e6ed" />
+    </g>
+
+    <text x="135" y="65" fill="#e0e6ed" font-size="9">• 8mm Precision Steel Rod</text>
+    <text x="135" y="80" fill="#ffd166" font-size="9">• 2x 608-2RS Bearings</text>
+    <text x="145" y="93" fill="#a0aec0" font-size="8">(8mm ID x 22mm OD x 7mm W)</text>
+    <text x="135" y="110" fill="#e0e6ed" font-size="9">• Press-fit / clamped in block</text>
+    <text x="135" y="125" fill="#e0e6ed" font-size="9">• Ultra-low friction (μ = 0.0015)</text>
+    <text x="135" y="140" fill="#64dfdf" font-size="9">• Preserves launch velocity</text>
+  </g>
+
+  <!-- DETAIL B: Screwed Counterweight Mount -->
+  <g transform="translate(390, 680)">
+    <rect x="0" y="0" width="310" height="175" fill="#071324" stroke="#ffd166" stroke-width="1.5" rx="3" />
+    <text x="12" y="22" fill="#ffd166" font-size="12" font-weight="bold">DETAIL B: BOLTED COUNTERWEIGHT</text>
+    <text x="12" y="38" fill="#a0aec0" font-size="9">395g WEIGHT SCREWED TO SHORT STICK END</text>
+
+    <g transform="translate(30, 50)">
+      <rect x="20" y="10" width="80" height="24" fill="#163e66" stroke="#64dfdf" stroke-width="1.5" />
+      <text x="50" y="26" fill="#e0e6ed" font-size="8">STICK END</text>
+      <line x1="75" y1="-8" x2="75" y2="72" stroke="#ffffff" stroke-width="4" />
+      <rect x="71" y="-14" width="8" height="6" fill="#ffd166" stroke="#000" />
+      <rect x="55" y="34" width="40" height="22" fill="#2a5c8a" stroke="#ffd166" stroke-width="1.5" rx="2" />
+      <text x="75" y="48" fill="#ffd166" font-size="8" text-anchor="middle">395g WEIGHT</text>
+      <rect x="70" y="58" width="10" height="6" fill="#ffd166" stroke="#000" />
+    </g>
+
+    <text x="145" y="65" fill="#e0e6ed" font-size="9">• 3/8"-16 x 3.5" Grade 5 Bolt</text>
+    <text x="145" y="80" fill="#ffd166" font-size="9">• Calibrated Weight: 395 g</text>
+    <text x="155" y="93" fill="#a0aec0" font-size="8">(14.0 oz / 0.87 lb steel disc)</text>
+    <text x="145" y="110" fill="#e0e6ed" font-size="9">• 2x Heavy Fender Washers</text>
+    <text x="145" y="125" fill="#e0e6ed" font-size="9">• Split lock washer + hex nut</text>
+    <text x="145" y="140" fill="#64dfdf" font-size="9">• Tuned for exactly 3.0 yards</text>
+  </g>
+
+  <!-- DETAIL C: 45° Release Pin & Leather Shoe-Lace -->
+  <g transform="translate(720, 680)">
+    <rect x="0" y="0" width="310" height="175" fill="#071324" stroke="#ffd166" stroke-width="1.5" rx="3" />
+    <text x="12" y="22" fill="#ffd166" font-size="12" font-weight="bold">DETAIL C: SLING RELEASE MECHANISM</text>
+    <text x="12" y="38" fill="#a0aec0" font-size="9">45° FINGER PIN, LEATHER LACE &amp; RING</text>
+
+    <g transform="translate(30, 50)">
+      <rect x="0" y="10" width="70" height="20" fill="#163e66" stroke="#64dfdf" stroke-width="1.5" />
+      <line x1="55" y1="10" x2="80" y2="-15" stroke="#ffffff" stroke-width="3.5" />
+      <ellipse cx="73" cy="-7" rx="5" ry="8" fill="none" stroke="#ffd166" stroke-width="2" transform="rotate(45, 73, -7)" />
+      <path d="M 55 30 Q 80 50 110 55" fill="none" stroke="#d4a373" stroke-width="2" stroke-dasharray="3,2" />
+      <path d="M 76 -5 Q 90 20 110 55" fill="none" stroke="#d4a373" stroke-width="2" />
+      <text x="10" y="24" fill="#e0e6ed" font-size="8">ARM TIP</text>
+    </g>
+
+    <text x="145" y="65" fill="#e0e6ed" font-size="9">• 45° Incline Release Pin</text>
+    <text x="155" y="78" fill="#a0aec0" font-size="8">(3/16" stainless steel rod)</text>
+    <text x="145" y="95" fill="#d4a373" font-size="9">• Raw Leather Shoe-Lace</text>
+    <text x="155" y="108" fill="#a0aec0" font-size="8">(17.3" / 440 mm length)</text>
+    <text x="145" y="125" fill="#ffd166" font-size="9">• Brass Release Ring (1/2" ID)</text>
+    <text x="145" y="140" fill="#64dfdf" font-size="9">• Releases sling at 45° arc</text>
+  </g>
+
+  <!-- DETAIL D: Cloth Pouch Mini-Preview -->
+  <g transform="translate(1050, 680)">
+    <rect x="0" y="0" width="510" height="175" fill="#071324" stroke="#64dfdf" stroke-width="1.5" rx="3" />
+    <text x="15" y="22" fill="#64dfdf" font-size="12" font-weight="bold">DETAIL D: CLOTH POUCH CUTOUT (16mm MARBLE)</text>
+    <text x="15" y="38" fill="#a0aec0" font-size="9">FULL 1:1 TEMPLATE AVAILABLE IN pouch_cutout_template.svg</text>
+
+    <g transform="translate(80, 105) scale(0.65)">
+      <path d="M -90 -16 L -35 -50 L -10 -50 L 0 -30 L 10 -50 L 35 -50 L 90 -16 L 90 16 L 35 50 L 10 50 L 0 30 L -10 50 L -35 50 L -90 16 Z"
+            fill="#102a43" stroke="#64dfdf" stroke-width="2" />
+      <circle cx="0" cy="0" r="18" fill="#00f5d4" fill-opacity="0.3" stroke="#00f5d4" stroke-width="1.5" />
+      <circle cx="-75" cy="0" r="4" fill="#ffd166" />
+      <circle cx="75" cy="0" r="4" fill="#ffd166" />
+    </g>
+
+    <text x="175" y="65" fill="#e0e6ed" font-size="9.5">• Material: Heavy Cotton Canvas or Denim</text>
+    <text x="175" y="82" fill="#e0e6ed" font-size="9.5">• Flat Pattern Size: 85 mm x 48 mm</text>
+    <text x="175" y="99" fill="#ff5964" font-size="9.5">• 2x Side Darts: Folded &amp; stitched into 3D cup</text>
+    <text x="175" y="116" fill="#ffd166" font-size="9.5">• 3mm Punched Eyelets for leather shoe-lace</text>
+    <text x="175" y="133" fill="#64dfdf" font-size="9.5">• Cradles 16 mm glass marble perfectly</text>
+    <text x="175" y="150" fill="#a0aec0" font-size="8.5">• See pouch_cutout_template.svg for printable 1:1 file</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- BILL OF MATERIALS (BOM) & SPECIFICATION TABLE (Top Right)                 -->
+  <!-- ========================================================================= -->
+  <g id="bom-table" transform="translate(1130, 130)">
+    <rect x="0" y="0" width="430" height="520" fill="#071324" stroke="#64dfdf" stroke-width="1.8" rx="3" />
+    <rect x="0" y="0" width="430" height="32" fill="#0b2545" rx="3" />
+    <text x="15" y="22" fill="#64dfdf" font-size="13" font-weight="bold">BILL OF MATERIALS &amp; CUT LIST</text>
+
+    <!-- Table Header -->
+    <rect x="0" y="32" width="430" height="24" fill="#14345c" />
+    <text x="10" y="48" fill="#ffd166" font-size="9.5" font-weight="bold">ITEM</text>
+    <text x="50" y="48" fill="#ffd166" font-size="9.5" font-weight="bold">DESCRIPTION &amp; MATERIAL</text>
+    <text x="280" y="48" fill="#ffd166" font-size="9.5" font-weight="bold">QTY</text>
+    <text x="325" y="48" fill="#ffd166" font-size="9.5" font-weight="bold">SIZE / SPEC</text>
+
+    <!-- Table Rows -->
+    <g font-size="9" fill="#e0e6ed">
+      <text x="10" y="76" fill="#64dfdf">01</text>
+      <text x="50" y="76">Base Runners (Pine Sticks)</text>
+      <text x="285" y="76">2</text>
+      <text x="325" y="76">3/4"x1.5" x 36.0"</text>
+      <line x1="0" y1="84" x2="430" y2="84" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="100" fill="#64dfdf">02</text>
+      <text x="50" y="100">Base Crossbars (Pine Sticks)</text>
+      <text x="285" y="100">3</text>
+      <text x="325" y="100">3/4"x1.5" x 18.0"</text>
+      <line x1="0" y1="108" x2="430" y2="108" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="124" fill="#64dfdf">03</text>
+      <text x="50" y="124">A-Frame Upright Legs</text>
+      <text x="285" y="124">4</text>
+      <text x="325" y="124">3/4"x1.5" x 33.5"</text>
+      <line x1="0" y1="132" x2="430" y2="132" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="148" fill="#64dfdf">04</text>
+      <text x="50" y="148">Upper Cross Braces</text>
+      <text x="285" y="148">2</text>
+      <text x="325" y="148">3/4"x1.5" x 15.0"</text>
+      <line x1="0" y1="156" x2="430" y2="156" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="172" fill="#64dfdf">05</text>
+      <text x="50" y="172" font-weight="bold">Swing Stick (Throwing Arm)</text>
+      <text x="285" y="172" font-weight="bold">1</text>
+      <text x="325" y="172" font-weight="bold">3/4"x1.5" x 30.0"</text>
+      <line x1="0" y1="180" x2="430" y2="180" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="196" fill="#64dfdf">06</text>
+      <text x="50" y="196">Marble Guide Trough Strip</text>
+      <text x="285" y="196">1</text>
+      <text x="325" y="196">1/2"x1.5" x 24.0"</text>
+      <line x1="0" y1="204" x2="430" y2="204" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="220" fill="#ffd166">07</text>
+      <text x="50" y="220" fill="#ffd166">Precision Metal Round Rod</text>
+      <text x="285" y="220">1</text>
+      <text x="325" y="220">Ø 8mm x 19.5"</text>
+      <line x1="0" y1="228" x2="430" y2="228" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="244" fill="#ffd166">08</text>
+      <text x="50" y="244" fill="#ffd166">608-2RS Ball Bearings</text>
+      <text x="285" y="244">2</text>
+      <text x="325" y="244">8mm ID x 22mm OD</text>
+      <line x1="0" y1="252" x2="430" y2="252" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="268" fill="#ffd166">09</text>
+      <text x="50" y="268" fill="#ffd166">Screwed Counterweight</text>
+      <text x="285" y="268">1</text>
+      <text x="325" y="268">395 g (14.0 oz)</text>
+      <line x1="0" y1="276" x2="430" y2="276" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="292" fill="#ffd166">10</text>
+      <text x="50" y="292">Counterweight Mounting Bolt</text>
+      <text x="285" y="292">1</text>
+      <text x="325" y="292">3/8"-16 x 3.5" Gr5</text>
+      <line x1="0" y1="300" x2="430" y2="300" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="316" fill="#ffd166">11</text>
+      <text x="50" y="316">Frame Clamping Hex Bolts</text>
+      <text x="285" y="316">10</text>
+      <text x="325" y="316">1/4"-20 x 2.5" + Nuts</text>
+      <line x1="0" y1="324" x2="430" y2="324" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="340" fill="#e0e6ed">12</text>
+      <text x="50" y="340">PVA Wood Glue (Titebond II)</text>
+      <text x="285" y="340">1</text>
+      <text x="325" y="340">All Wood Lap Joints</text>
+      <line x1="0" y1="348" x2="430" y2="348" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="364" fill="#d4a373">13</text>
+      <text x="50" y="364" fill="#d4a373">Leather Shoe-Lace (Sling)</text>
+      <text x="285" y="364">1</text>
+      <text x="325" y="364">17.3" (440 mm)</text>
+      <line x1="0" y1="372" x2="430" y2="372" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="388" fill="#e76f51">14</text>
+      <text x="50" y="388" fill="#e76f51">Cloth Sling Pouch (Cutout)</text>
+      <text x="285" y="388">1</text>
+      <text x="325" y="388">Template POUCH-01</text>
+      <line x1="0" y1="396" x2="430" y2="396" stroke="#1c416e" stroke-width="0.75" />
+
+      <text x="10" y="412" fill="#00f5d4">15</text>
+      <text x="50" y="412" fill="#00f5d4">Standard Glass Marble</text>
+      <text x="285" y="412">1</text>
+      <text x="325" y="412">Ø 16 mm (5.5 g)</text>
+    </g>
+
+    <!-- Calibration / Performance Stamp -->
+    <rect x="15" y="430" width="400" height="75" fill="#0c2340" stroke="#ffd166" stroke-width="1.2" rx="3" />
+    <text x="25" y="450" fill="#ffd166" font-size="11" font-weight="bold">TARGET CALIBRATION SPECIFICATION:</text>
+    <text x="25" y="468" fill="#e0e6ed" font-size="9.5">TARGET RANGE: 3.00 Yards (9.00 Feet / 2.74 Meters)</text>
+    <text x="25" y="484" fill="#00f5d4" font-size="9.5">SIMULATED RANGE: 3.00 Yards (2.739 m @ V=4.76 m/s, 47.8°)</text>
+    <text x="25" y="498" fill="#a0aec0" font-size="8.5">ACCURACY: 99.9% MATCH WITH 395g BOLTED COUNTERWEIGHT</text>
+  </g>
+
+  <!-- ========================================================================= -->
+  <!-- MAIN TITLE BLOCK (Bottom Right Corner)                                    -->
+  <!-- ========================================================================= -->
+  <g transform="translate(1050, 875)">
+    <rect x="0" y="0" width="510" height="150" fill="#071324" stroke="#64dfdf" stroke-width="2" />
+    <line x1="0" y1="40" x2="510" y2="40" stroke="#48cae4" stroke-width="1" />
+    <line x1="0" y1="80" x2="510" y2="80" stroke="#48cae4" stroke-width="1" />
+    <line x1="0" y1="115" x2="510" y2="115" stroke="#48cae4" stroke-width="1" />
+    <line x1="260" y1="40" x2="260" y2="150" stroke="#48cae4" stroke-width="1" />
+    <line x1="390" y1="80" x2="390" y2="150" stroke="#48cae4" stroke-width="1" />
+
+    <text x="15" y="28" fill="#64dfdf" font-size="17" font-weight="bold">3-FOOT TIMBER TREBUCHET (3-YD MARBLE)</text>
+
+    <text x="15" y="58" fill="#a0aec0" font-size="9">DESIGNER / CAD MODEL:</text>
+    <text x="15" y="72" fill="#e0e6ed" font-size="11" font-weight="bold">FreeCAD Engineering Assistant</text>
+
+    <text x="275" y="58" fill="#a0aec0" font-size="9">TARGET PERFORMANCE:</text>
+    <text x="275" y="72" fill="#ffd166" font-size="11" font-weight="bold">3.00 YARDS (9.0 FT / 2.74 M)</text>
+
+    <text x="15" y="98" fill="#a0aec0" font-size="9">MATERIAL SYSTEM:</text>
+    <text x="15" y="110" fill="#e0e6ed" font-size="10">Pine Sticks, Glue, Bolts, 8mm Rod, 608 Bearings</text>
+
+    <text x="275" y="98" fill="#a0aec0" font-size="9">CAD FILE:</text>
+    <text x="275" y="110" fill="#64dfdf" font-size="10">trebuchet_model.py</text>
+
+    <text x="405" y="98" fill="#a0aec0" font-size="9">SCALE:</text>
+    <text x="405" y="110" fill="#e0e6ed" font-size="10">1:8 (Sheet A1)</text>
+
+    <text x="15" y="132" fill="#a0aec0" font-size="9">SIMULATION:</text>
+    <text x="15" y="144" fill="#00f5d4" font-size="10">Lagrangian + Ballistic Drag (Verified)</text>
+
+    <text x="275" y="132" fill="#a0aec0" font-size="9">DRAWING NO:</text>
+    <text x="275" y="144" fill="#ffd166" font-size="11" font-weight="bold">TREB-3FT-3YD-01</text>
+
+    <text x="405" y="132" fill="#a0aec0" font-size="9">REV:</text>
+    <text x="405" y="144" fill="#64dfdf" font-size="11" font-weight="bold">B (BOLTED CW)</text>
+  </g>
+
+  <!-- Assembly Notes -->
+  <g transform="translate(60, 875)">
+    <rect x="0" y="0" width="970" height="150" fill="#071324" stroke="#48cae4" stroke-width="1.2" rx="3" />
+    <text x="15" y="24" fill="#64dfdf" font-size="12" font-weight="bold">GENERAL ASSEMBLY &amp; WORKSHOP NOTES:</text>
+    <text x="15" y="46" fill="#e0e6ed" font-size="9.5">1. GLUE &amp; BOLT JOINTS: Apply PVA wood glue (Titebond II/III) to all mating stick lap joints, clamp firmly, and drill clearance holes for 1/4" bolts.</text>
+    <text x="15" y="66" fill="#e0e6ed" font-size="9.5">2. BEARING HOUSING: Drill 22mm Forstner bit recesses into upright pillow blocks. Press-fit 608-2RS ball bearings flush with inner faces.</text>
+    <text x="15" y="86" fill="#e0e6ed" font-size="9.5">3. FULCRUM AXLE: Slide 8mm steel round rod through bearings and pre-drilled 8mm hole in swing stick. Install retaining washers to prevent lateral shift.</text>
+    <text x="15" y="106" fill="#e0e6ed" font-size="9.5">4. COUNTERWEIGHT: Drill 3/8" hole through short end of swing stick. Screw 395g steel weight stack tightly using 3/8" bolt, lock washer, and hex nut.</text>
+    <text x="15" y="126" fill="#ffd166" font-size="9.5">5. SLING CALIBRATION: Leather shoe-lace length is 17.3". If marble launches too late/steep, bend 45° pin slightly forward; if too low, bend pin back.</text>
+  </g>
+</svg>
