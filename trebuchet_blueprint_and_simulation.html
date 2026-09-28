@@ -124,9 +124,18 @@
               <span class="text-[#7d93b0]">• Aligned Lagrangian Dynamics & Aerodynamic Drag</span>
             </div>
             <div class="flex items-center gap-3">
-              <button id="view-mode-btn" onclick="toggleViewMode()" class="px-2.5 py-1 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4] transition">
-                🔍 Catapult View (Close)
-              </button>
+              <!-- Viewport Distance Selector -->
+              <div class="inline-flex rounded-lg bg-[#071629] p-0.5 border border-[#1e3f66]" role="group">
+                <button id="view-close-btn" onclick="setViewMode('close')" class="px-2.5 py-1 text-[11px] font-semibold rounded-md transition text-white bg-[#1a4a75] shadow border border-[#48cae4]/50">
+                  🔍 Close
+                </button>
+                <button id="view-mid-btn" onclick="setViewMode('mid')" class="px-2.5 py-1 text-[11px] font-semibold rounded-md transition text-[#7d93b0] hover:text-white">
+                  📐 Mid (Apex)
+                </button>
+                <button id="view-far-btn" onclick="setViewMode('far')" class="px-2.5 py-1 text-[11px] font-semibold rounded-md transition text-[#7d93b0] hover:text-white">
+                  🌐 Far (Full Field)
+                </button>
+              </div>
               <span id="canvas-status" class="mono text-[#ffd166] font-semibold">Ready to Launch</span>
             </div>
           </div>
@@ -576,14 +585,21 @@ print("Model ready!")</code></pre>
     let scale = 200;
     let origin_x = 180;
     let origin_y = 380;
-    let view_mode = 'close'; // 'close' (catapult mechanism) or 'wide' (full 15-yard field)
+    let view_mode = 'close'; // 'close' (catapult mechanism), 'mid' (trajectory apex), or 'far' (full field)
 
-    function toggleViewMode() {
-      view_mode = view_mode === 'close' ? 'wide' : 'close';
-      const btn = document.getElementById('view-mode-btn');
-      if (btn) {
-        btn.innerText = view_mode === 'close' ? '🔍 Catapult View (Close)' : '🌐 Full Field View (Wide)';
-      }
+    function setViewMode(mode) {
+      view_mode = mode;
+      const modes = ['close', 'mid', 'far'];
+      modes.forEach(m => {
+        const btn = document.getElementById(`view-${m}-btn`);
+        if (btn) {
+          if (m === mode) {
+            btn.className = "px-2.5 py-1 text-[11px] font-semibold rounded-md transition text-white bg-[#1a4a75] shadow border border-[#48cae4]/50";
+          } else {
+            btn.className = "px-2.5 py-1 text-[11px] font-semibold rounded-md transition text-[#7d93b0] hover:text-white";
+          }
+        }
+      });
       resizeCanvas();
     }
 
@@ -594,14 +610,19 @@ print("Model ready!")</code></pre>
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
       
       if (view_mode === 'close') {
-        // Zoomed close to catapult mechanism: shows -1.3m to +3.0m in crisp detail
-        origin_x = Math.max(90, rect.width * 0.30);
+        // Zoomed close to catapult mechanism: shows -1.2m to +3.0m in crisp detail
+        origin_x = Math.max(90, rect.width * 0.28);
         origin_y = rect.height * 0.84;
         scale = rect.height / 2.2;
+      } else if (view_mode === 'mid') {
+        // Mid-distance: shows catapult + launch arc up to trajectory apex (~8-9m)
+        origin_x = Math.max(60, rect.width * 0.14);
+        origin_y = rect.height * 0.88;
+        scale = Math.min(rect.width / 9.5, rect.height / 5.2);
       } else {
-        // Full field view: shows entire 18-yard trajectory and target line
-        origin_x = Math.max(70, rect.width * 0.09);
-        origin_y = rect.height * 0.82;
+        // Far view: covers full 18-yard field and touchdown
+        origin_x = Math.max(50, rect.width * 0.08);
+        origin_y = rect.height * 0.84;
         scale = rect.width / 18.5;
       }
       draw();
@@ -972,22 +993,26 @@ print("Model ready!")</code></pre>
       ctx.lineTo(canvas.width, origin_y);
       ctx.stroke();
 
-      for (let yd = 3; yd <= 18; yd += 3) {
+      let step_yd = view_mode === 'close' ? 1 : (view_mode === 'mid' ? 2 : 3);
+      let max_yd = view_mode === 'close' ? 4 : (view_mode === 'mid' ? 10 : 18);
+      for (let yd = step_yd; yd <= max_yd; yd += step_yd) {
         let xm = yd * 0.9144;
         let sx = toScreenX(xm);
-        ctx.strokeStyle = yd === 15 ? '#00f5d4' : '#1c4068';
-        ctx.lineWidth = yd === 15 ? 2 : 1;
-        ctx.setLineDash(yd === 15 ? [4, 4] : [2, 2]);
+        if (sx < 0 || sx > canvas.width) continue;
+        let is_target = (yd === 15);
+        ctx.strokeStyle = is_target ? '#00f5d4' : '#1c4068';
+        ctx.lineWidth = is_target ? 2 : 1;
+        ctx.setLineDash(is_target ? [4, 4] : [2, 2]);
         ctx.beginPath();
         ctx.moveTo(sx, 40);
         ctx.lineTo(sx, origin_y);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = yd === 15 ? '#00f5d4' : '#64dfdf';
-        ctx.font = yd === 15 ? 'bold 11px monospace' : '10px monospace';
+        ctx.fillStyle = is_target ? '#00f5d4' : '#64dfdf';
+        ctx.font = is_target ? 'bold 11px monospace' : '10px monospace';
         ctx.fillText(`${yd}.0 YD`, sx - 16, origin_y + 18);
-        if (yd === 15) {
+        if (is_target) {
           ctx.fillText(`TARGET`, sx - 18, 55);
         }
       }
@@ -1100,7 +1125,7 @@ print("Model ready!")</code></pre>
       ctx.restore();
 
       // Weight label (unrotated for crisp readability)
-      if (view_mode === 'close') {
+      if (view_mode !== 'far') {
         ctx.fillStyle = '#ffd166';
         ctx.font = 'bold 9px monospace';
         ctx.textAlign = 'center';
