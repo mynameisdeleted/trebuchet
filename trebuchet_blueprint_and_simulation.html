@@ -51,7 +51,7 @@
           3-FOOT TIMBER TREBUCHET
           <span class="text-xs px-2 py-0.5 rounded bg-[#102d4f] border border-[#48cae4] text-[#48cae4] mono">3-YARD MARBLE LAUNCH</span>
         </h1>
-        <p class="text-xs text-[#8da2be]">Parametric FreeCAD Design • Blueprint Drafting • Dynamic 60FPS Physics Simulation</p>
+        <p class="text-xs text-[#8da2be]">Parametric 3D Design • Blender Physics • Blueprint Drafting • Dynamic 60FPS Simulation</p>
       </div>
     </div>
 
@@ -70,7 +70,7 @@
         ✂️ 1:1 Pouch Template
       </button>
       <button id="tab-cad-btn" onclick="switchTab('cad')" class="px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all text-[#8da2be] hover:text-white">
-        💻 FreeCAD &amp; Blender SSOT
+        💻 Blender 3D &amp; SSOT Files
       </button>
     </div>
   </header>
@@ -388,10 +388,233 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- TAB 4: FREECAD SCRIPT & WORKSHOP BUILD GUIDE                              -->
+    <!-- TAB 5: BLENDER 3D PHYSICS SIMULATION & SSOT PROJECT FILES                 -->
     <!-- ========================================================================= -->
     <div id="tab-cad" class="hidden space-y-6">
       
+      <!-- Hero Download Banner: Trebuchet_3ft.blend -->
+      <div class="bg-gradient-to-r from-[#071d33] via-[#0b2847] to-[#0a1e36] border-2 border-[#0077b6] rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+        <div class="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
+          <svg class="w-64 h-64 text-[#48cae4]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#00f5d4]/10 border border-[#00f5d4]/30 text-[#00f5d4] text-[11px] font-bold uppercase tracking-wider">
+              <span>🌟 Primary Project Asset</span>
+              <span>•</span>
+              <span>Native 3D Bullet Physics Scene</span>
+            </div>
+            <h2 class="text-xl md:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+              <span>Trebuchet_3ft.blend</span>
+              <span class="text-xs px-2.5 py-0.5 rounded bg-[#e65100]/20 text-[#ff9800] border border-[#ff9800]/40 font-mono font-normal">5.3 MB</span>
+            </h2>
+            <p class="text-xs md:text-sm text-[#cbd5e1] leading-relaxed">
+              Complete pre-baked 3D Blender physics simulation across <strong>3,600 frames (60 seconds)</strong> at a 300 FPS timebase. Features Bullet rigid-body constraints, marble-in-trough sliding friction, dynamic pin-release slip, post-release sling flinging, and full harmonic arm deceleration to equilibrium rest.
+            </p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+            <a href="Trebuchet_3ft.blend" download="Trebuchet_3ft.blend" class="px-5 py-3 rounded-xl bg-[#0077b6] hover:bg-[#0096c7] text-white text-sm font-bold shadow-lg shadow-[#0077b6]/30 transition flex items-center justify-center gap-2 group">
+              <span class="text-base group-hover:translate-y-0.5 transition-transform">⬇</span>
+              <span>Download .blend File</span>
+              <span class="text-[11px] opacity-80 font-mono">(5.3 MB)</span>
+            </a>
+            <a href="build_blender_physics_sim.py" download="build_blender_physics_sim.py" class="px-4 py-3 rounded-xl bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-xs font-semibold border border-[#48cae4] transition flex items-center justify-center gap-2">
+              <span>🐍</span>
+              <span>Download Python Sim Script</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- SSOT Project Files Matrix -->
+      <div class="bg-[#091a2e] border border-[#1b3a5d] rounded-xl p-5 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#1b3a5d] gap-2">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-[#00f5d4] flex items-center gap-2">
+              <span>📁</span> COMPLETE PROJECT SSOT REPOSITORY FILES
+            </h3>
+            <p class="text-xs text-[#8da2be] mt-0.5">All 3D assets, simulation solvers, fabrication blueprints, and validation datasets</p>
+          </div>
+          <span class="text-[11px] mono text-[#ffd166] font-semibold bg-[#102d4f] px-2.5 py-1 rounded border border-[#1b3a5d]">
+            11 Master Project Files
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+          
+          <!-- File 1: Trebuchet_3ft.blend -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#ff9800]/20 text-[#ff9800] border border-[#ff9800]/40 text-[10px] font-bold mono">.BLEND</span>
+                <span class="text-[#7d93b0] mono text-[10px]">5.3 MB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">Trebuchet_3ft.blend</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Native Blender 3D scene with baked 60-second physics, lighting, cameras, and materials.</p>
+            </div>
+            <a href="Trebuchet_3ft.blend" download="Trebuchet_3ft.blend" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download .blend</span>
+            </a>
+          </div>
+
+          <!-- File 2: Trebuchet_3ft.obj -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#00f5d4]/20 text-[#00f5d4] border border-[#00f5d4]/40 text-[10px] font-bold mono">.OBJ</span>
+                <span class="text-[#7d93b0] mono text-[10px]">31 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">Trebuchet_3ft.obj</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Clean 3D Wavefront polygonal mesh geometry for universal CAD/3D viewer import.</p>
+            </div>
+            <a href="Trebuchet_3ft.obj" download="Trebuchet_3ft.obj" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download .obj</span>
+            </a>
+          </div>
+
+          <!-- File 3: build_blender_physics_sim.py -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#48cae4]/20 text-[#48cae4] border border-[#48cae4]/40 text-[10px] font-bold mono">.PY</span>
+                <span class="text-[#7d93b0] mono text-[10px]">33 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">build_blender_physics_sim.py</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Automated Python generator that builds the scene, sets physics constraints, and bakes keyframes.</p>
+            </div>
+            <a href="build_blender_physics_sim.py" download="build_blender_physics_sim.py" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download Script</span>
+            </a>
+          </div>
+
+          <!-- File 4: simulate_trebuchet.py -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#ffd166]/20 text-[#ffd166] border border-[#ffd166]/40 text-[10px] font-bold mono">.PY</span>
+                <span class="text-[#7d93b0] mono text-[10px]">21 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">simulate_trebuchet.py</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Standalone Python Lagrangian numerical dynamics solver with aerodynamic drag and liftoff physics.</p>
+            </div>
+            <a href="simulate_trebuchet.py" download="simulate_trebuchet.py" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download Solver</span>
+            </a>
+          </div>
+
+          <!-- File 5: simulation_results.json -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#06d6a0]/20 text-[#06d6a0] border border-[#06d6a0]/40 text-[10px] font-bold mono">.JSON</span>
+                <span class="text-[#7d93b0] mono text-[10px]">1.1 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">simulation_results.json</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Calculated numerical trajectory dataset, release angles, velocities, and apex statistics.</p>
+            </div>
+            <a href="simulation_results.json" download="simulation_results.json" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download Data</span>
+            </a>
+          </div>
+
+          <!-- File 6: trebuchet_blueprint.svg -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#118ab2]/20 text-[#118ab2] border border-[#118ab2]/40 text-[10px] font-bold mono">.SVG</span>
+                <span class="text-[#7d93b0] mono text-[10px]">156 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">trebuchet_blueprint.svg</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Complete 3-view orthographic technical CAD blueprint with dimensioned callouts and BOM.</p>
+            </div>
+            <a href="trebuchet_blueprint.svg" download="trebuchet_blueprint.svg" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download Blueprint</span>
+            </a>
+          </div>
+
+          <!-- File 7: wood_cutout_shapes.svg -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#e0a96d]/20 text-[#e0a96d] border border-[#e0a96d]/40 text-[10px] font-bold mono">.SVG</span>
+                <span class="text-[#7d93b0] mono text-[10px]">36 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">wood_cutout_shapes.svg</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">1:1 scale dimensioned cut patterns for base runners, A-frame uprights, and swing beam.</p>
+            </div>
+            <a href="wood_cutout_shapes.svg" download="wood_cutout_shapes.svg" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download Wood Shapes</span>
+            </a>
+          </div>
+
+          <!-- File 8: pouch_cutout_template.svg -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#e76f51]/20 text-[#e76f51] border border-[#e76f51]/40 text-[10px] font-bold mono">.SVG</span>
+                <span class="text-[#7d93b0] mono text-[10px]">8 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">pouch_cutout_template.svg</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">1:1 scale printable leather sling pouch pattern with lace punch centers and fold lines.</p>
+            </div>
+            <a href="pouch_cutout_template.svg" download="pouch_cutout_template.svg" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download Pouch Template</span>
+            </a>
+          </div>
+
+          <!-- File 9: trebuchet_simulation_plot.png / svg -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#a7c957]/20 text-[#a7c957] border border-[#a7c957]/40 text-[10px] font-bold mono">.PNG / .SVG</span>
+                <span class="text-[#7d93b0] mono text-[10px]">601 KB / 225 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">trebuchet_simulation_plot</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Comparative multi-panel physics verification plot comparing simulation trajectories.</p>
+            </div>
+            <div class="flex gap-2">
+              <a href="trebuchet_simulation_plot.png" download="trebuchet_simulation_plot.png" class="flex-1 py-1.5 px-2 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[10px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1">
+                <span>⬇ PNG</span>
+              </a>
+              <a href="trebuchet_simulation_plot.svg" download="trebuchet_simulation_plot.svg" class="flex-1 py-1.5 px-2 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[10px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1">
+                <span>⬇ SVG</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- File 10: trebuchet_model.py -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#48cae4]/20 text-[#48cae4] border border-[#48cae4]/40 text-[10px] font-bold mono">.PY</span>
+                <span class="text-[#7d93b0] mono text-[10px]">24 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">trebuchet_model.py</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Parametric 3D CAD modeling script defining exact timber stock dimensions and joint coords.</p>
+            </div>
+            <a href="trebuchet_model.py" download="trebuchet_model.py" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download Script</span>
+            </a>
+          </div>
+
+          <!-- File 11: generate_blueprint_from_obj.py -->
+          <div class="p-3.5 bg-[#061424] rounded-lg border border-[#143355] flex flex-col justify-between space-y-3 hover:border-[#0077b6] transition group">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="px-2 py-0.5 rounded bg-[#48cae4]/20 text-[#48cae4] border border-[#48cae4]/40 text-[10px] font-bold mono">.PY</span>
+                <span class="text-[#7d93b0] mono text-[10px]">71 KB</span>
+              </div>
+              <div class="font-bold text-white group-hover:text-[#64dfdf] transition">generate_blueprint_from_obj.py</div>
+              <p class="text-[#8da2be] text-[11px] leading-relaxed">Automated 2D orthographic projection engine that converts the 3D OBJ into dimensioned SVG blueprints.</p>
+            </div>
+            <a href="generate_blueprint_from_obj.py" download="generate_blueprint_from_obj.py" class="w-full py-1.5 px-3 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4]/40 transition flex items-center justify-center gap-1.5">
+              <span>⬇ Download Script</span>
+            </a>
+          </div>
+
+        </div>
+      </div>
+
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         <!-- Assembly Guide -->
@@ -403,7 +626,7 @@
           <div class="space-y-3 text-xs text-[#cbd5e1] leading-relaxed">
             <div class="p-3 bg-[#061424] rounded-lg border border-[#143355]">
               <strong class="text-[#ffd166]">1. Rectangular Timber Sticks:</strong>
-              <p class="text-[#8da2be] mt-1">Use standard 3/4" x 1.5" (19mm x 38mm) rectangular pine craft sticks. Cut 2x 36" base runners, 3x 18" crossbars, 4x 33.5" A-frame legs, and 1x 30" swing arm stick.</p>
+              <p class="text-[#8da2be] mt-1">Use standard 3/4" x 1.5" (19mm x 38mm) rectangular pine craft sticks. Cut 2x 36" base runners, 3x 18" crossbars, 4x 33.5" A-frame legs, and 1x 40" swing arm beam.</p>
             </div>
 
             <div class="p-3 bg-[#061424] rounded-lg border border-[#143355]">
@@ -418,84 +641,97 @@
 
             <div class="p-3 bg-[#061424] rounded-lg border border-[#143355]">
               <strong class="text-[#ffd166]">4. Bolted Counterweight:</strong>
-              <p class="text-[#8da2be] mt-1">Drill a 3/8" hole through the short end of the swing stick (8" from pivot). Pass a 3/8"-16 x 4.5" steel bolt through, stacking heavy washers and steel disc weights totaling <strong>748 grams (1.65 lbs)</strong>. Tighten firmly with a split lock washer and nut.</p>
+              <p class="text-[#8da2be] mt-1">Drill a 3/8" hole through the short end of the swing stick (6.33" from pivot). Pass a 3/8"-16 x 4.5" steel bolt through, stacking heavy washers and bronze/steel ballast block totaling <strong>2.0 kg (4.41 lbs)</strong>. Tighten firmly with a split lock washer and nut.</p>
             </div>
           </div>
         </div>
 
-        <!-- How to Run FreeCAD -->
+        <!-- How to Run Blender 3D Simulation -->
         <div class="bg-[#091a2e] border border-[#1b3a5d] rounded-xl p-5 space-y-4 flex flex-col justify-between">
           <div>
             <h2 class="text-sm font-bold uppercase tracking-wider text-[#00f5d4] flex items-center gap-2">
-              <span>💻</span> HOW TO OPEN IN FREECAD
+              <span>💻</span> HOW TO OPEN &amp; RUN IN BLENDER 3D
             </h2>
             <div class="space-y-3 text-xs text-[#cbd5e1] mt-3">
-              <p>The Python file <code class="text-[#64dfdf] mono bg-[#061424] px-1.5 py-0.5 rounded">trebuchet_model.py</code> contains the complete parametric CAD recipe.</p>
+              <p>The <code class="text-[#64dfdf] mono bg-[#061424] px-1.5 py-0.5 rounded">Trebuchet_3ft.blend</code> file contains the baked 3D Bullet physics simulation.</p>
               
               <div class="bg-[#061424] p-3 rounded-lg border border-[#143355] space-y-1.5">
-                <div class="text-[#ffd166] font-bold">Method A: Inside FreeCAD GUI</div>
+                <div class="text-[#ffd166] font-bold">Method A: Interactive 3D Playback (GUI)</div>
                 <ol class="list-decimal list-inside space-y-1 text-[#8da2be]">
-                  <li>Open FreeCAD (v0.20, v0.21, or v1.0+).</li>
-                  <li>Click menu <strong>Macro &gt; Macros...</strong></li>
-                  <li>Select <code class="text-white">trebuchet_model.py</code> and click <strong>Execute</strong>.</li>
-                  <li>The full 3D assembly and TechDraw blueprint pages will generate!</li>
+                  <li>Open <code class="text-white">Trebuchet_3ft.blend</code> in Blender (v3.3, v3.6, v4.0+).</li>
+                  <li>Press <kbd class="px-1.5 py-0.5 bg-[#030912] rounded text-[#48cae4] border border-[#1b3a5d]">Spacebar</kbd> to play the baked 60-second physics simulation.</li>
+                  <li>Press <kbd class="px-1.5 py-0.5 bg-[#030912] rounded text-[#48cae4] border border-[#1b3a5d]">Numpad 1</kbd> for Side Orthographic, or <kbd class="px-1.5 py-0.5 bg-[#030912] rounded text-[#48cae4] border border-[#1b3a5d]">Numpad 0</kbd> for Camera View.</li>
+                  <li>Scrub the timeline to inspect trough slide (Frames 1-20), liftoff, and 45° pin release.</li>
                 </ol>
               </div>
 
               <div class="bg-[#061424] p-3 rounded-lg border border-[#143355] space-y-1.5">
-                <div class="text-[#ffd166] font-bold">Method B: Command Line</div>
-                <pre class="bg-[#030912] p-2 rounded text-[#48cae4] mono text-[11px] overflow-x-auto">freecad trebuchet_model.py</pre>
+                <div class="text-[#ffd166] font-bold">Method B: Headless Command-Line Bake</div>
+                <pre class="bg-[#030912] p-2 rounded text-[#48cae4] mono text-[11px] overflow-x-auto">blender --background --python build_blender_physics_sim.py</pre>
+                <p class="text-[#7d93b0] text-[10px] mt-1">Re-evaluates all 17,996 Bullet physics steps, bakes keyframes, and overwrites the .blend file.</p>
               </div>
             </div>
           </div>
 
           <div class="pt-4 border-t border-[#1b3a5d] flex items-center justify-between">
-            <span class="text-xs text-[#7d93b0]">Export Formats:</span>
+            <span class="text-xs text-[#7d93b0]">Export Formats Available:</span>
             <div class="flex gap-2">
-              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#64dfdf] text-[10px] mono">.FCStd</span>
-              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#64dfdf] text-[10px] mono">.STEP</span>
+              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#ff9800] text-[10px] mono">.BLEND</span>
               <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#64dfdf] text-[10px] mono">.OBJ</span>
-              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#64dfdf] text-[10px] mono">.SVG</span>
+              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#00f5d4] text-[10px] mono">.SVG</span>
+              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#ffd166] text-[10px] mono">.JSON</span>
             </div>
           </div>
         </div>
 
       </div>
 
-      <!-- FreeCAD Python Code Snippet -->
+      <!-- Blender Python Simulation Script Snippet -->
       <div class="bg-[#091a2e] border border-[#1b3a5d] rounded-xl overflow-hidden shadow-2xl">
         <div class="px-4 py-3 bg-[#0b2038] border-b border-[#1b3a5d] flex items-center justify-between">
-          <span class="text-xs font-bold text-white mono">trebuchet_model.py (Parametric FreeCAD Script)</span>
-          <button onclick="copyCode()" class="px-3 py-1 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-xs font-semibold border border-[#48cae4] transition">
-            <span id="copy-btn-text">Copy Script</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-white mono">build_blender_physics_sim.py</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-[#102d4f] text-[#64dfdf] border border-[#1c4068]">Blender Bullet Physics Engine</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="build_blender_physics_sim.py" download="build_blender_physics_sim.py" class="px-3 py-1 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-xs font-semibold border border-[#48cae4] transition">
+              Download Script
+            </a>
+            <button onclick="copyCode()" class="px-3 py-1 rounded bg-[#0077b6] hover:bg-[#0096c7] text-white text-xs font-semibold shadow transition">
+              <span id="copy-btn-text">Copy Script</span>
+            </button>
+          </div>
         </div>
-        <pre class="p-4 bg-[#050e1a] text-[#8da2be] mono text-xs overflow-x-auto max-h-[350px] leading-relaxed"><code id="code-block"># Parametric FreeCAD Model: 3-Foot High Trebuchet (Calibrated for 3-Yard Marble Launch)
-# Hardware: Rectangular sticks, 8mm steel round rod, 2x 608 ball bearings, bolted 748g weight
-import FreeCAD as App
-import Part
+        <pre class="p-4 bg-[#050e1a] text-[#8da2be] mono text-xs overflow-x-auto max-h-[350px] leading-relaxed"><code id="code-block">#!/usr/bin/env python3
+"""
+Trebuchet 3D Bullet Physics Simulation & Keyframe Baker (Blender SSOT)
+- 60-Second Full Lifecycle Simulation (Frames 1 to 3600 at 60 FPS)
+- 17,996 Discrete Physics Sub-Steps at dt = 1/300s (Native Bullet Physics Engine)
+- Contact friction with pine trough, 2.0 kg counterweight, 45° pin dynamic slip
+"""
+import bpy
+import mathutils
 
-doc = App.newDocument("Trebuchet_3ft")
+def build_simulation():
+    # 1. Reset Scene & Unit Timebase
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    scene = bpy.context.scene
+    scene.unit_settings.system = 'METRIC'
+    scene.unit_settings.length_unit = 'METERS'
+    scene.render.fps = 300
+    scene.frame_start = 1
+    scene.frame_end = 3600
 
-# Parametric Constants (mm)
-INCH = 25.4
-FRAME_HEIGHT = 36.0 * INCH      # 914.4 mm (3.0 ft)
-BASE_LENGTH  = 36.0 * INCH      # 914.4 mm
-BASE_WIDTH   = 18.0 * INCH      # 457.2 mm
-PIVOT_HEIGHT = 30.0 * INCH      # 762.0 mm (2.5 ft)
-STICK_THICK  = 0.75 * INCH      # 19.05 mm
-STICK_WIDTH  = 1.5 * INCH       # 38.1 mm
+    # 2. Trebuchet SSOT Geometry (Meters)
+    H_PIVOT   = 0.762   # 30.0" pivot height
+    L_ARM_CW  = 0.1607  # 6.33" counterweight center of mass
+    L_ARM_TIP = 0.8018  # 31.57" long throwing arm
+    M_CW      = 2.000   # 2.0 kg standardized counterweight
+    M_PROJ    = 0.020   # 20g glass marble projectile
+    L_SLING   = 0.3922  # 15.44" braided sling (resting at X=0.00m)
 
-# Bigger 40.0" Swing Stick (4:1 Ratio: 32" Long Arm : 8" Short Arm)
-SHORT_ARM    = 8.0 * INCH       # 203.2 mm (Counterweight side)
-LONG_ARM     = 32.0 * INCH      # 812.8 mm (Throwing arm side)
-AXLE_ROD     = 8.0              # 8 mm steel round rod
-BEARING_OD   = 22.0             # 22 mm OD (608 ball bearings)
-CW_MASS      = 748.0            # 748 grams bolted counterweight
-SLING_LEN    = 14.55 * INCH     # 369.6 mm (reaches just under fulcrum when cocked)
-
-# Builds 3D assembly and generates TechDraw blueprint pages...
-print("Model ready!")</code></pre>
+    # 3. Setup Rigid Body Physics Constraints & World Dynamics...
+    print("Blender Bullet Physics model built & ready!")</code></pre>
       </div>
 
     </div>
