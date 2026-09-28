@@ -144,9 +144,12 @@
           <div class="relative w-full h-[460px] blueprint-bg overflow-hidden cursor-crosshair">
             <canvas id="simCanvas" class="w-full h-full block"></canvas>
             
-            <!-- Live Telemetry Overlay in Canvas -->
-            <div class="absolute top-3 left-3 bg-[#061424]/85 border border-[#1c4068] backdrop-blur rounded-lg p-3 text-xs mono space-y-1 shadow">
-              <div class="text-[#7d93b0] text-[10px] uppercase font-bold tracking-wider mb-1">Live Telemetry</div>
+            <!-- Live Telemetry Overlay in Canvas (Positioned at lower-right for close/mid views) -->
+            <div id="live-telemetry" class="absolute bottom-3 right-3 bg-[#061424]/90 border border-[#1c4068] backdrop-blur rounded-lg p-3 text-xs mono space-y-1 shadow transition-all duration-300 z-10">
+              <div class="text-[#7d93b0] text-[10px] uppercase font-bold tracking-wider mb-1 flex items-center justify-between">
+                <span>Live Telemetry</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-[#00f5d4] animate-pulse"></span>
+              </div>
               <div>Arm Angle: <span id="tel-angle" class="text-white font-semibold">--</span></div>
               <div>Arm Omega: <span id="tel-omega" class="text-white font-semibold">--</span></div>
               <div>Release V: <span id="tel-vrel" class="text-[#00f5d4] font-semibold">--</span></div>
@@ -160,8 +163,8 @@
               </div>
             </div>
 
-            <!-- Target Banner in Canvas -->
-            <div class="absolute bottom-3 right-3 bg-[#061424]/90 border border-[#00f5d4] rounded-lg px-3 py-1.5 text-xs mono text-[#00f5d4] flex items-center gap-2">
+            <!-- Target Banner in Canvas (Shown in far view) -->
+            <div id="target-banner" style="display: none;" class="absolute bottom-3 right-3 bg-[#061424]/90 border border-[#00f5d4] rounded-lg px-3 py-1.5 text-xs mono text-[#00f5d4] items-center gap-2 z-10">
               <span class="text-sm">🎯</span>
               <span>TARGET LINE: <strong>15.00 YARDS (13.72 M)</strong></span>
             </div>
@@ -784,6 +787,7 @@ def build_simulation():
       activeBtn.classList.remove('text-[#8da2be]');
 
       if (tab === 'sim') {
+        updateTelemetryPosition();
         resizeCanvas();
       }
     }
@@ -889,6 +893,28 @@ def build_simulation():
     let origin_y = 380;
     let view_mode = 'close'; // 'close' (catapult mechanism), 'mid' (trajectory apex), or 'far' (full field)
 
+    function updateTelemetryPosition() {
+      const tel = document.getElementById('live-telemetry');
+      const targetBanner = document.getElementById('target-banner');
+      if (!tel) return;
+
+      if (view_mode === 'close' || view_mode === 'mid') {
+        // Move live telemetry to lower-right of blueprint window for close and mid views
+        tel.classList.remove('top-3', 'left-3');
+        tel.classList.add('bottom-3', 'right-3');
+        if (targetBanner) {
+          targetBanner.style.display = 'none';
+        }
+      } else {
+        // Move live telemetry to top-left in far view to keep target marker and touchdown clear
+        tel.classList.remove('bottom-3', 'right-3');
+        tel.classList.add('top-3', 'left-3');
+        if (targetBanner) {
+          targetBanner.style.display = 'flex';
+        }
+      }
+    }
+
     function setViewMode(mode) {
       view_mode = mode;
       const modes = ['close', 'mid', 'far'];
@@ -902,6 +928,7 @@ def build_simulation():
           }
         }
       });
+      updateTelemetryPosition();
       resizeCanvas();
     }
 
@@ -1648,6 +1675,7 @@ def build_simulation():
     }
 
     window.onload = () => {
+      updateTelemetryPosition();
       resizeCanvas();
       updateSliders();
       requestAnimationFrame(animate);
