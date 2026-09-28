@@ -305,9 +305,9 @@ def build_simulation():
         bpy.ops.rigidbody.object_add()
         pouch.rigid_body.type = 'ACTIVE'
         pouch.rigid_body.mass = 0.010 # 10 grams canvas pouch
-        # Added friction to sling (canvas pouch air drag & fabric internal friction):
-        pouch.rigid_body.linear_damping = 0.35
-        pouch.rigid_body.angular_damping = 0.35
+        # Doubled damping on sling (canvas pouch air drag & fabric internal friction):
+        pouch.rigid_body.linear_damping = 0.70
+        pouch.rigid_body.angular_damping = 0.70
         pouch.rigid_body.collision_collections[0] = False
         pouch.rigid_body.collision_collections[1] = False
 
@@ -318,9 +318,9 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     line1.rigid_body.type = 'ACTIVE'
     line1.rigid_body.mass = 0.008
-    # Added friction to sling twine line 1:
-    line1.rigid_body.linear_damping = 0.25
-    line1.rigid_body.angular_damping = 0.25
+    # Doubled damping on sling twine line 1:
+    line1.rigid_body.linear_damping = 0.50
+    line1.rigid_body.angular_damping = 0.50
     line1.rigid_body.collision_collections[0] = False
     line1.rigid_body.collision_collections[1] = False
     line1.hide_render = True
@@ -332,9 +332,9 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     line2.rigid_body.type = 'ACTIVE'
     line2.rigid_body.mass = 0.008
-    # Added friction to sling twine line 2:
-    line2.rigid_body.linear_damping = 0.25
-    line2.rigid_body.angular_damping = 0.25
+    # Doubled damping on sling twine line 2:
+    line2.rigid_body.linear_damping = 0.50
+    line2.rigid_body.angular_damping = 0.50
     line2.rigid_body.collision_collections[0] = False
     line2.rigid_body.collision_collections[1] = False
     line2.hide_render = True
