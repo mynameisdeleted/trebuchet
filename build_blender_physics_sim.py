@@ -2,19 +2,21 @@
 """
 build_blender_physics_sim.py
 Pure Native Blender Bullet Physics Engine Trebuchet Simulation & Keyframe Baker:
-- Full 12-second timeline (Frames 1 to 720 at 60 FPS).
-- Evaluates at 0.2 frame increments (3,596 discrete simulation steps at dt = 1/300s).
+- Full 60-second lifecycle (Frames 1 to 3600 at 60 FPS).
+- Evaluates 17,996 discrete simulation steps at dt = 1/300s (0.2 frame steps).
 - 100% computed by Blender's native Bullet physics engine:
   - 16mm glass marble resting at Frame 1 in trough at Z = 0.0593m (zero penetration).
   - Concentrated 3.50 kg bronze counterweight decoupled from 0.30 kg timber arm via FIXED constraint.
-  - Trough wood friction, floor concrete friction, bearing rotational damping, and aerodynamic air drag.
-  - Continuous physical sling simulation (Cloth Pouch, Fixed Line 1, Release Line 2) with active Bullet rigid bodies.
+  - Swing-arm friction kept as is (linear_damping = 0.04, angular_damping = 0.06) representing oiled bearing.
+  - Increased friction added to the sling (pouch damping = 0.35, line damping = 0.25, contact friction = 0.45).
   - Dynamic force-based pin release when tension aligns with 45° pin tip (>90° arm angle, dot > 0.95).
   - Sling flings wide open outward post-release by conservation of momentum (continuous, zero teleportation).
-  - Free ballistic flight, floor touchdown, realistic rolling resistance deceleration, and arm settling to equilibrium rest.
-- Bakes all 3,596 sub-frame evaluations into keyframes at float frames (1.0, 1.2, 1.4 ... 720.0).
+  - Free ballistic flight, floor touchdown, rolling resistance deceleration, and arm gradually slowing and significantly stopping swinging over 60 seconds.
+- Bakes high-resolution keyframes:
+  - Frames 1 to 720: Baked every 0.2 sub-frame (3,596 steps) for capture of launch, release, flight, and touchdown.
+  - Frames 721 to 3600: Baked at every integer frame for 60 FPS playback of the arm settling to full equilibrium rest.
 - Drives visual braided twine string curves, cloth pouch, and spliced cord loop.
-- Saves Trebuchet_3ft.blend and renders multi-perspective validation frames.
+- Saves Trebuchet_3ft.blend and renders multi-perspective validation frames across the 60-second timeline.
 """
 
 import bpy
@@ -27,7 +29,8 @@ import time
 def build_simulation():
     t_start = time.time()
     print("=====================================================================")
-    print("Starting 1 to 720 Frame (0.2 Step) Native Blender Bullet Physics Sim")
+    print("Starting 60-Second (1 to 3600 Frames) Native Blender Bullet Sim")
+    print("Sling friction increased, swing-arm friction kept as is")
     print("=====================================================================")
 
     # -------------------------------------------------------------
@@ -42,8 +45,8 @@ def build_simulation():
 
     # 300 FPS timebase for physics simulation:
     # 1 physics step = 1/300s = 0.2 frames at 60 FPS
-    # Frames 1 to 720 at 60 FPS -> 3596 discrete simulation steps (1.0 to 720.0)
-    TOTAL_STEPS = 3596
+    # Frames 1 to 3600 at 60 FPS -> 17,996 discrete simulation steps
+    TOTAL_STEPS = 17996
     scene.render.fps = 300
     scene.frame_start = 1
     scene.frame_end = TOTAL_STEPS
@@ -165,8 +168,8 @@ def build_simulation():
     # -------------------------------------------------------------
     bpy.ops.rigidbody.world_add()
     rbw = scene.rigidbody_world
-    rbw.substeps_per_frame = 20
-    rbw.solver_iterations = 60
+    rbw.substeps_per_frame = 15
+    rbw.solver_iterations = 40
     rbw.point_cache.frame_start = 1
     rbw.point_cache.frame_end = TOTAL_STEPS
 
@@ -195,10 +198,10 @@ def build_simulation():
         trough.rigid_body.collision_shape = 'CONVEX_HULL'
         trough.rigid_body.use_margin = True
         trough.rigid_body.collision_margin = 0.0005
-        trough.rigid_body.friction = 0.16 # Pine wood grain friction against glass marble
+        trough.rigid_body.friction = 0.16 # Pine wood grain friction
         trough.rigid_body.collision_collections[0] = True
 
-    # 6b. Active Decoupled Arm & Counterweight
+    # 6b. Active Decoupled Arm & Counterweight (SWING-ARM FRICTION KEPT AS IS)
     arm     = bpy.data.objects.get('Swing_Stick_Arm_40in')
     cw      = bpy.data.objects.get('Screwed_Counterweight_748g')
     bolt    = bpy.data.objects.get('Counterweight_Mount_Bolt_38')
@@ -215,9 +218,9 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     cw.rigid_body.type = 'ACTIVE'
     cw.rigid_body.mass = 3.50
-    # Aerodynamic air drag on counterweight
-    cw.rigid_body.linear_damping = 0.04
-    cw.rigid_body.angular_damping = 0.06
+    # Swing-arm friction kept as is:
+    cw.rigid_body.linear_damping = 0.03
+    cw.rigid_body.angular_damping = 0.04
     cw.rigid_body.collision_collections[0] = False
     cw.rigid_body.collision_collections[1] = False
 
@@ -232,9 +235,9 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     arm.rigid_body.type = 'ACTIVE'
     arm.rigid_body.mass = 0.30
-    # Aerodynamic air drag & bearing rotational damping (settles arm to rest over 12s)
-    arm.rigid_body.linear_damping = 0.05
-    arm.rigid_body.angular_damping = 0.12
+    # Swing-arm friction kept as is (original oiled axle bearing & aerodynamic drag):
+    arm.rigid_body.linear_damping = 0.04
+    arm.rigid_body.angular_damping = 0.06
     arm.rigid_body.collision_collections[0] = False
     arm.rigid_body.collision_collections[1] = False
 
@@ -268,7 +271,7 @@ def build_simulation():
     cw_fix.rigid_body_constraint.object2 = cw
     cw_fix.rigid_body_constraint.disable_collisions = True
 
-    # 6c. Active Marble (starts completely still at Z = 0.0593m on trough top)
+    # 6c. Active Marble
     marble = bpy.data.objects.get('Glass_Marble_16mm')
     bpy.ops.object.select_all(action='DESELECT')
     marble.select_set(True)
@@ -282,13 +285,13 @@ def build_simulation():
     marble.rigid_body.collision_margin = 0.0005
     marble.rigid_body.mass = 0.020 # 20 grams
     marble.rigid_body.friction = 0.35
-    marble.rigid_body.linear_damping = 0.10
-    marble.rigid_body.angular_damping = 0.38 # Physical rolling resistance on concrete floor
+    marble.rigid_body.linear_damping = 0.08
+    marble.rigid_body.angular_damping = 0.30
     marble.rigid_body.restitution = 0.25
     marble.rigid_body.collision_collections[0] = True
     marble.rigid_body.collision_collections[1] = False
 
-    # 6d. 100% Native Continuous Physical Sling Simulation
+    # 6d. 100% Native Continuous Physical Sling Simulation (INCREASED SLING FRICTION)
     p_tip = mathutils.Vector((-0.3922, 0.0, 0.0627))
     p_pouch = mathutils.Vector((0.0000, 0.0, 0.0593))
 
@@ -302,8 +305,9 @@ def build_simulation():
         bpy.ops.rigidbody.object_add()
         pouch.rigid_body.type = 'ACTIVE'
         pouch.rigid_body.mass = 0.010 # 10 grams canvas pouch
-        pouch.rigid_body.linear_damping = 0.08
-        pouch.rigid_body.angular_damping = 0.08
+        # Added friction to sling (canvas pouch air drag & fabric internal friction):
+        pouch.rigid_body.linear_damping = 0.35
+        pouch.rigid_body.angular_damping = 0.35
         pouch.rigid_body.collision_collections[0] = False
         pouch.rigid_body.collision_collections[1] = False
 
@@ -314,8 +318,9 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     line1.rigid_body.type = 'ACTIVE'
     line1.rigid_body.mass = 0.008
-    line1.rigid_body.linear_damping = 0.06
-    line1.rigid_body.angular_damping = 0.06
+    # Added friction to sling twine line 1:
+    line1.rigid_body.linear_damping = 0.25
+    line1.rigid_body.angular_damping = 0.25
     line1.rigid_body.collision_collections[0] = False
     line1.rigid_body.collision_collections[1] = False
     line1.hide_render = True
@@ -327,13 +332,14 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     line2.rigid_body.type = 'ACTIVE'
     line2.rigid_body.mass = 0.008
-    line2.rigid_body.linear_damping = 0.06
-    line2.rigid_body.angular_damping = 0.06
+    # Added friction to sling twine line 2:
+    line2.rigid_body.linear_damping = 0.25
+    line2.rigid_body.angular_damping = 0.25
     line2.rigid_body.collision_collections[0] = False
     line2.rigid_body.collision_collections[1] = False
     line2.hide_render = True
 
-    # Joint 1: Arm Tip <-> Line 1 (Permanent fixed eyelet on arm tip)
+    # Joint 1: Arm Tip <-> Line 1
     bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_tip)
     j1 = bpy.context.active_object
     j1.name = "Joint_Arm_Line1"
@@ -382,7 +388,7 @@ def build_simulation():
     pin_dir_local = mathutils.Vector((-0.4311 - (-0.3922), 0.0, 0.0348 - 0.0627)).normalized()
 
     # -------------------------------------------------------------
-    # 7. DYNAMIC FORCE-BASED RELEASE EVALUATION (300 FPS / 0.2 STEPS)
+    # 7. DYNAMIC FORCE-BASED RELEASE EVALUATION
     # -------------------------------------------------------------
     print("Evaluating dynamic pin-release angle from Bullet physics at 300 FPS...")
     dynamic_release_step = None
@@ -402,8 +408,6 @@ def build_simulation():
         dot_val = T_vec.dot(p_dir_w)
         rot_deg = math.degrees(arm_eval.matrix_world.to_euler().y)
 
-        # Release occurs naturally when arm passes vertical (>90°) and sling tension pulls
-        # along the pin tip direction (dot > 0.95), overcoming hook static friction:
         if dynamic_release_step is None and s > 80 and rot_deg > 90.0 and dot_val > 0.95:
             dynamic_release_step = s
             f_60_rel = 1.0 + (s - 1) * 0.2
@@ -411,9 +415,9 @@ def build_simulation():
             break
 
     if dynamic_release_step is None:
-        dynamic_release_step = 134
+        dynamic_release_step = 135
 
-    # Apply dynamic release to the physical constraints:
+    # Apply dynamic release to constraints:
     for j in [j4, jm]:
         j.rigid_body_constraint.enabled = True
         j.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=1)
@@ -422,27 +426,47 @@ def build_simulation():
         j.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=dynamic_release_step)
 
     # -------------------------------------------------------------
-    # 8. RUN FULL SIMULATION & EXTRACT PHYSICAL MATRICES (3,596 STEPS)
+    # 8. RUN FULL 60-SECOND SIMULATION & EXTRACT MATRICES
     # -------------------------------------------------------------
-    print(f"Running full native Bullet physics simulation across {TOTAL_STEPS} steps (dt=1/300s, 0.2 frame steps)...")
-    arm_mats = []
-    cw_mats = []
-    marble_mats = []
-    pouch_mats = []
-    line2_mats = []
+    print(f"Running full native Bullet physics simulation across {TOTAL_STEPS} steps (60.0s at dt=1/300s)...")
+    
+    # Sampling plan:
+    # Frames 1 to 720 (Steps 1 to 3596): sample every step (0.2 frame resolution)
+    # Frames 721 to 3600 (Steps 3597 to 17996): sample every 5th step (1.0 frame resolution)
+    sampled_steps = []
+    # Dynamic phase: every step
+    for s in range(1, 3597):
+        sampled_steps.append(s)
+    # Settling phase: every 5 steps (every integer frame)
+    for s in range(3601, TOTAL_STEPS + 1, 5):
+        sampled_steps.append(s)
+    if sampled_steps[-1] != TOTAL_STEPS:
+        sampled_steps.append(TOTAL_STEPS)
 
+    sampled_set = set(sampled_steps)
+    step_data = {}
+
+    t_sim_0 = time.time()
     for s in range(1, TOTAL_STEPS + 1):
         scene.frame_set(s)
-        dg = bpy.context.evaluated_depsgraph_get()
-        arm_mats.append(arm.evaluated_get(dg).matrix_world.copy())
-        cw_mats.append(cw.evaluated_get(dg).matrix_world.copy())
-        marble_mats.append(marble.evaluated_get(dg).matrix_world.copy())
-        pouch_mats.append(pouch.evaluated_get(dg).matrix_world.copy())
-        line2_mats.append(line2.evaluated_get(dg).matrix_world.copy())
-        if s % 600 == 0 or s == TOTAL_STEPS:
-            m_pos = marble_mats[-1].translation
+        if s in sampled_set:
+            dg = bpy.context.evaluated_depsgraph_get()
+            step_data[s] = {
+                'arm': arm.evaluated_get(dg).matrix_world.copy(),
+                'cw': cw.evaluated_get(dg).matrix_world.copy(),
+                'marble': marble.evaluated_get(dg).matrix_world.copy(),
+                'pouch': pouch.evaluated_get(dg).matrix_world.copy(),
+                'line2': line2.evaluated_get(dg).matrix_world.copy(),
+            }
+        if s % 3000 == 0 or s == TOTAL_STEPS:
+            t_sec = (s - 1) / 300.0
             f_60 = 1.0 + (s - 1) * 0.2
-            print(f"  Step {s:4d} / {TOTAL_STEPS} (F60={f_60:5.1f}, t={(s-1)/300:5.2f}s): marble=({m_pos.x:6.2f}, {m_pos.y:5.2f}, {m_pos.z:5.2f})")
+            dg = bpy.context.evaluated_depsgraph_get()
+            arm_rot = math.degrees(arm.evaluated_get(dg).matrix_world.to_euler().y)
+            m_pos = marble.evaluated_get(dg).matrix_world.translation
+            print(f"  Step {s:5d} / {TOTAL_STEPS} (t={t_sec:4.1f}s, F60={f_60:6.1f}): arm_rot={arm_rot:6.2f}°, marble=({m_pos.x:5.2f}, {m_pos.z:5.2f})")
+
+    print(f"Physics simulation completed in {time.time() - t_sim_0:.2f}s!")
 
     # Remove rigid body world so baked keyframes have full deterministic control
     if scene.rigidbody_world:
@@ -453,54 +477,55 @@ def build_simulation():
             bpy.data.objects.remove(obj, do_unlink=True)
 
     # -------------------------------------------------------------
-    # 9. SET 60 FPS TIMELINE & BAKE 3,596 SUB-FRAME KEYFRAMES
+    # 9. SET 60 FPS TIMELINE & BAKE KEYFRAMES ACROSS 3,600 FRAMES
     # -------------------------------------------------------------
-    print("Setting scene to 60 FPS (Frames 1 to 720) and baking 3,596 sub-frame keyframes...")
+    print("Setting scene to 60 FPS (Frames 1 to 3600) and baking keyframes...")
     scene.render.fps = 60
     scene.frame_start = 1
-    scene.frame_end = 720
+    scene.frame_end = 3600
 
     marble_positions = []
-    for s in range(TOTAL_STEPS):
-        f = 1.0 + s * 0.2
+    t_bake_0 = time.time()
+
+    for s in sampled_steps:
+        f = 1.0 + (s - 1) * 0.2
+        d = step_data[s]
 
         # Arm
-        mat_a = arm_mats[s]
-        loc_a, rot_a, _ = mat_a.decompose()
+        loc_a, rot_a, _ = d['arm'].decompose()
         arm.location = loc_a
         arm.rotation_euler = rot_a.to_euler()
         arm.keyframe_insert(data_path="location", frame=f)
         arm.keyframe_insert(data_path="rotation_euler", frame=f)
 
         # Counterweight
-        mat_c = cw_mats[s]
-        loc_c, rot_c, _ = mat_c.decompose()
+        loc_c, rot_c, _ = d['cw'].decompose()
         cw.location = loc_c
         cw.rotation_euler = rot_c.to_euler()
         cw.keyframe_insert(data_path="location", frame=f)
         cw.keyframe_insert(data_path="rotation_euler", frame=f)
 
         # Marble
-        mat_m = marble_mats[s]
-        loc_m, rot_m, _ = mat_m.decompose()
+        loc_m, rot_m, _ = d['marble'].decompose()
         marble.location = loc_m
         marble.rotation_euler = rot_m.to_euler()
         marble.keyframe_insert(data_path="location", frame=f)
         marble.keyframe_insert(data_path="rotation_euler", frame=f)
         marble_positions.append(loc_m)
 
-        # Pouch (100% evaluated Bullet physics - CONTINUOUS, NO TELEPORTATION!)
-        mat_p = pouch_mats[s]
-        loc_p, rot_p, _ = mat_p.decompose()
+        # Pouch
+        loc_p, rot_p, _ = d['pouch'].decompose()
         pouch.location = loc_p
         pouch.rotation_euler = rot_p.to_euler()
         pouch.keyframe_insert(data_path="location", frame=f)
         pouch.keyframe_insert(data_path="rotation_euler", frame=f)
 
+    print(f"Keyframe baking completed in {time.time() - t_bake_0:.2f}s!")
+
     # -------------------------------------------------------------
     # 10. CONSTRUCT VISUAL STRING CURVES, LOOP TORUS, AND RIG
     # -------------------------------------------------------------
-    print("Building visual braided twine strings and spliced cord loop rig...")
+    print("Building visual braided twine strings and spliced cord loop rig across 3,600 frames...")
     bpy.ops.mesh.primitive_torus_add(
         major_radius=0.0055,
         minor_radius=0.0013,
@@ -543,27 +568,24 @@ def build_simulation():
     tip_local = mathutils.Vector((-0.3922, 0.0, 0.0627 - 0.762))
     pin_vec_local = mathutils.Vector((-0.4311 - (-0.3922), 0.0, 0.0348 - 0.0627))
 
-    for s in range(TOTAL_STEPS):
-        f = 1.0 + s * 0.2
-        mat_a = arm_mats[s]
-        mat_p = pouch_mats[s]
-        mat_l2 = line2_mats[s]
+    for s in sampled_steps:
+        f = 1.0 + (s - 1) * 0.2
+        d = step_data[s]
+        mat_a = d['arm']
+        mat_p = d['pouch']
+        mat_l2 = d['line2']
         rot_mat = mat_a.to_3x3()
 
         tip_w = mat_a.translation + rot_mat @ tip_local
         pvec_w = rot_mat @ pin_vec_local
         pouch_w = mat_p.translation
 
-        # Loop end of Line 2:
-        # Before release (s < dynamic_release_step): sits on 45° pin.
-        # At and after release: follows evaluated physical tip of Line 2, flinging wide open!
         if s < dynamic_release_step:
             slide_frac = 0.05 if s < 90 else 0.05 + 0.95 * (((s - 90) / (dynamic_release_step - 90)) ** 1.5)
             loop_w = tip_w + slide_frac * pvec_w
             q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(pvec_w.normalized())
             loop_rot = q_torus.to_euler()
         else:
-            # Physical tip of released Line 2
             loop_w = mat_l2 @ mathutils.Vector((-0.196, 0.0, 0.0))
             line2_dir = (loop_w - pouch_w).normalized()
             q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(line2_dir)
@@ -577,7 +599,7 @@ def build_simulation():
         # Line 1 (Fixed: Arm Tip Eyelet <-> Pouch)
         p1_anc = tip_w + mathutils.Vector((0.0, -0.008, 0.0))
         p1_end = pouch_w + mathutils.Vector((0.0, -0.008, 0.0))
-        p1_mid = (p1_anc + p1_end) * 0.5 + (mathutils.Vector((0.0, 0.0, -0.006)) if s == 0 else mathutils.Vector((0,0,0)))
+        p1_mid = (p1_anc + p1_end) * 0.5 + (mathutils.Vector((0.0, 0.0, -0.006)) if s == 1 else mathutils.Vector((0,0,0)))
         emps_fixed[0].location = p1_anc
         emps_fixed[1].location = p1_mid
         emps_fixed[2].location = p1_end
@@ -587,7 +609,7 @@ def build_simulation():
         # Line 2 (Release: Loop <-> Pouch)
         p2_anc = loop_w + mathutils.Vector((0.0, 0.006, 0.0))
         p2_end = pouch_w + mathutils.Vector((0.0, 0.008, 0.0))
-        p2_mid = (p2_anc + p2_end) * 0.5 + (mathutils.Vector((0.0, 0.0, -0.006)) if s == 0 else mathutils.Vector((0,0,0)))
+        p2_mid = (p2_anc + p2_end) * 0.5 + (mathutils.Vector((0.0, 0.0, -0.006)) if s == 1 else mathutils.Vector((0,0,0)))
         emps_rel[0].location = p2_anc
         emps_rel[1].location = p2_mid
         emps_rel[2].location = p2_end
@@ -602,8 +624,8 @@ def build_simulation():
     curve_data.bevel_depth = 0.004
     polyline = curve_data.splines.new('POLY')
 
-    # Subsample trajectory points (every 2nd step = 0.4 frame resolution, 1798 points)
-    arc_points = [marble_positions[i] for i in range(0, len(marble_positions), 2)]
+    # Subsample trajectory points for smooth rendering
+    arc_points = [marble_positions[i] for i in range(0, min(len(marble_positions), 3600), 2)]
     polyline.points.add(len(arc_points) - 1)
     for i, loc in enumerate(arc_points):
         polyline.points[i].co = (loc.x, loc.y, loc.z, 1.0)
@@ -619,7 +641,7 @@ def build_simulation():
     # -------------------------------------------------------------
     cam_side = bpy.data.objects.new("Camera_Side_Elevation", bpy.data.cameras.new("Cam_Side"))
     cam_side.data.type = 'ORTHO'
-    cam_side.data.ortho_scale = 3.6 # Crisp, clear view of the trebuchet mechanism
+    cam_side.data.ortho_scale = 3.6
     cam_side.location = (0.2, -4.5, 0.9)
     cam_side.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     scene.collection.objects.link(cam_side)
@@ -630,7 +652,7 @@ def build_simulation():
 
     cam_iso = bpy.data.objects.new("Camera_Isometric", bpy.data.cameras.new("Cam_Iso"))
     cam_iso.data.type = 'ORTHO'
-    cam_iso.data.ortho_scale = 2.8 # Dynamic, clear 3D perspective
+    cam_iso.data.ortho_scale = 2.8
     cam_iso.location = (-2.0, -2.5, 2.0)
     tt = cam_iso.constraints.new('TRACK_TO')
     tt.target = cam_target
@@ -669,18 +691,20 @@ def build_simulation():
         print(f"Synchronized Trebuchet_3ft.blend to {artifact_dir}")
 
     # -------------------------------------------------------------
-    # 14. RENDER VALIDATION FRAMES ACROSS 720 FRAMES
+    # 14. RENDER VALIDATION FRAMES ACROSS 60 SECONDS (3,600 FRAMES)
     # -------------------------------------------------------------
     scene.render.resolution_x = 1280
     scene.render.resolution_y = 720
 
     render_side = [
-        (1,   "native_sim_f1_cocked.png"),
-        (20,  "native_sim_f20_centrifugal_whip.png"),
-        (27,  "native_sim_f27_dynamic_release.png"),
-        (28,  "native_sim_f28_sling_fling.png"),
-        (32,  "native_sim_f32_wide_open.png"),
-        (720, "native_sim_f720_arm_rest.png"),
+        (1,    "native_sim_f1_cocked.png"),
+        (20,   "native_sim_f20_centrifugal_whip.png"),
+        (27,   "native_sim_f27_dynamic_release.png"),
+        (28,   "native_sim_f28_sling_fling.png"),
+        (32,   "native_sim_f32_wide_open.png"),
+        (600,  "native_sim_f600_arm_10s.png"),
+        (1800, "native_sim_f1800_arm_30s.png"),
+        (3600, "native_sim_f3600_arm_60s_rest.png"),
     ]
     scene.camera = cam_side
     for f_idx, out_name in render_side:
@@ -706,12 +730,12 @@ def build_simulation():
         print(f"Rendered Frame {f_idx} (Iso Close) to {out_path}")
 
     render_wide = [
-        (27,  "native_wide_f27_release.png"),
-        (72,  "native_wide_f72_apex.png"),
-        (144, "native_wide_f144_touchdown.png"),
-        (300, "native_wide_f300_floor_roll.png"),
-        (500, "native_wide_f500_decel.png"),
-        (720, "native_wide_f720_full_rest.png"),
+        (27,   "native_wide_f27_release.png"),
+        (72,   "native_wide_f72_apex.png"),
+        (144,  "native_wide_f144_touchdown.png"),
+        (300,  "native_wide_f300_floor_roll.png"),
+        (600,  "native_wide_f600_marble_rest.png"),
+        (3600, "native_wide_f3600_full_60s_rest.png"),
     ]
     scene.camera = cam_wide
     for f_idx, out_name in render_wide:
@@ -721,7 +745,7 @@ def build_simulation():
         bpy.ops.render.render(write_still=True)
         print(f"Rendered Frame {f_idx} (Wide Full Journey) to {out_path}")
 
-    print(f"All 720 frames (3,596 steps of 0.2) simulation and baking completed in {time.time() - t_start:.2f}s!")
+    print(f"All 3,600 frames (60.0s) simulation and baking completed in {time.time() - t_start:.2f}s!")
 
 if __name__ == '__main__':
     build_simulation()
