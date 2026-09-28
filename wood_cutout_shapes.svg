@@ -1,0 +1,402 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1200" width="1920" height="1200">
+  <defs>
+    <!-- Background & Grid -->
+    <pattern id="gridMinorWood" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#122438" stroke-width="0.8"/>
+    </pattern>
+    <pattern id="gridMajorWood" width="100" height="100" patternUnits="userSpaceOnUse">
+      <path d="M 100 0 L 0 0 0 100" fill="none" stroke="#1b3a5b" stroke-width="1.4"/>
+    </pattern>
+    <marker id="arrowCyan" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#64dfdf" />
+    </marker>
+    <marker id="arrowGold" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 10 5 L 0 8.5 z" fill="#ffd166" />
+    </marker>
+    <pattern id="woodGrain" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 0 10 Q 20 8 40 10 M 0 25 Q 20 27 40 25 M 0 35 Q 20 33 40 35" fill="none" stroke="#1a4269" stroke-width="0.8" opacity="0.6"/>
+    </pattern>
+  </defs>
+
+  <!-- Sheet Canvas -->
+  <rect width="1920" height="1200" fill="#081524" />
+  <rect width="1920" height="1200" fill="url(#gridMinorWood)" />
+  <rect width="1920" height="1200" fill="url(#gridMajorWood)" />
+
+  <!-- Sheet Borders -->
+  <rect x="25" y="25" width="1870" height="1150" fill="none" stroke="#22577a" stroke-width="2.5" />
+  <rect x="33" y="33" width="1854" height="1134" fill="none" stroke="#64dfdf" stroke-width="1.0" />
+
+  <!-- ==================== HEADER BLOCK ==================== -->
+  <g transform="translate(50, 48)">
+    <text x="0" y="0" font-family="'Segoe UI', Roboto, sans-serif" font-size="24" font-weight="900" fill="#64dfdf" letter-spacing="2">
+      TREBUCHET WOOD CUTOUT SHAPES &amp; CUTTING SCHEDULE
+    </text>
+    <text x="0" y="22" font-family="monospace" font-size="12" fill="#ffd166" letter-spacing="1">
+      1:1 &amp; DIMENSIONED WORKSHOP CUTTING PATTERNS • EXTRACTED DIRECTLY FROM Trebuchet_3ft.obj
+    </text>
+    <text x="940" y="0" font-family="monospace" font-size="11" fill="#80ed99">
+      MATERIAL: STRAIGHT-GRAIN PINE / HARDWOOD LUMBER • KERF ALLOWANCE: 1/8" (3.2 mm)
+    </text>
+    <text x="940" y="22" font-family="monospace" font-size="11" fill="#48cae4">
+      TOLERANCE: ± 1/32" [± 0.8 mm] • ALL ANGLES CALIBRATED FOR PERFECT A-FRAME CONVERGENCE
+    </text>
+  </g>
+
+  <!-- PART W1: BASE RUNNER -->
+  <g transform="translate(60, 100)">
+    <rect x="0" y="0" width="750" height="24" fill="#0f2b46" stroke="#22577a" />
+    <text x="12" y="17" font-family="monospace" font-size="12" font-weight="bold" fill="#64dfdf">
+      [W1-L, W1-R] BASE RUNNERS (QTY: 2) — 3/4" x 1.5" x 36.00" [19.05 x 38.1 x 914.4 mm]
+    </text>
+    <text x="640" y="17" font-family="monospace" font-size="11" fill="#ffd166">90° SQUARE ENDS</text>
+
+    <!-- Wood Stick Graphic -->
+    <!-- Top Face (Width = 1.5" => 38.1mm * 0.8 = 30.5px) -->
+    <g transform="translate(10, 45)">
+      <rect x="0" y="0" width="731.5" height="30.5" fill="#0c2542" stroke="#64dfdf" stroke-width="1.5" />
+      <rect x="0" y="0" width="731.5" height="30.5" fill="url(#woodGrain)" />
+
+      <!-- Centerline -->
+      <line x1="0" y1="15.25" x2="731.5" y2="15.25" stroke="#48cae4" stroke-width="0.8" stroke-dasharray="8,4" />
+
+      <!-- Crossbar Lap Joint Marks -->
+      <!-- Rear: X = 0 to 1.5" => 0 to 30.5 px -->
+      <rect x="0" y="0" width="30.5" height="30.5" fill="#1b4168" stroke="#ffd166" stroke-width="1.0" opacity="0.8" />
+      <circle cx="15.25" cy="15.25" r="3" fill="#ffffff" stroke="#ffd166" stroke-width="1.0" />
+      <!-- Mid: X = 17.25" to 18.75" => 350.5 to 381.0 px -->
+      <rect x="350.5" y="0" width="30.5" height="30.5" fill="#1b4168" stroke="#ffd166" stroke-width="1.0" opacity="0.8" />
+      <circle cx="365.75" cy="15.25" r="3" fill="#ffffff" stroke="#ffd166" stroke-width="1.0" />
+      <!-- Front: X = 34.5" to 36.0" => 701.0 to 731.5 px -->
+      <rect x="701.0" y="0" width="30.5" height="30.5" fill="#1b4168" stroke="#ffd166" stroke-width="1.0" opacity="0.8" />
+      <circle cx="716.25" cy="15.25" r="3" fill="#ffffff" stroke="#ffd166" stroke-width="1.0" />
+
+      <!-- A-Frame Post Foot Footprints at X = 9.0" (182.9px) and X = 27.0" (548.6px) -->
+      <rect x="167.6" y="0" width="30.5" height="30.5" fill="#14345c" stroke="#80ed99" stroke-width="1.2" stroke-dasharray="3,3" />
+      <text x="182.9" y="20" font-family="monospace" font-size="8" fill="#80ed99" text-anchor="middle">A-LEG</text>
+
+      <rect x="533.3" y="0" width="30.5" height="30.5" fill="#14345c" stroke="#80ed99" stroke-width="1.2" stroke-dasharray="3,3" />
+      <text x="548.6" y="20" font-family="monospace" font-size="8" fill="#80ed99" text-anchor="middle">A-LEG</text>
+
+      <!-- Dimension Arrows -->
+      <line x1="0" y1="42" x2="731.5" y2="42" stroke="#64dfdf" stroke-width="1.2" marker-start="url(#arrowCyan)" marker-end="url(#arrowCyan)" />
+      <text x="365.75" y="55" font-family="monospace" font-size="11" font-weight="bold" fill="#64dfdf" text-anchor="middle">
+        36.00" [914.4 mm] FINISHED LENGTH
+      </text>
+
+      <!-- Hole callouts -->
+      <text x="15" y="-6" font-family="monospace" font-size="9" fill="#ffd166" text-anchor="middle">Ø 1/4" Rear Bolt</text>
+      <text x="365.75" y="-6" font-family="monospace" font-size="9" fill="#ffd166" text-anchor="middle">Ø 1/4" Mid Bolt</text>
+      <text x="716" y="-6" font-family="monospace" font-size="9" fill="#ffd166" text-anchor="middle">Ø 1/4" Front Bolt</text>
+    </g>
+  </g>
+
+  <!-- PART W2: BASE CROSSBARS -->
+  <g transform="translate(60, 235)">
+    <rect x="0" y="0" width="750" height="24" fill="#0f2b46" stroke="#22577a" />
+    <text x="12" y="17" font-family="monospace" font-size="12" font-weight="bold" fill="#64dfdf">
+      [W2-R, W2-M, W2-F] BASE CROSSBARS (QTY: 3) — 3/4" x 1.5" x 13.50" [19.05 x 38.1 x 342.9 mm]
+    </text>
+    <text x="640" y="17" font-family="monospace" font-size="11" fill="#ffd166">90° SQUARE ENDS</text>
+
+    <!-- Crossbar Pattern -->
+    <g transform="translate(10, 42)">
+      <rect x="0" y="0" width="274.3" height="30.5" fill="#0c2542" stroke="#64dfdf" stroke-width="1.5" />
+      <rect x="0" y="0" width="274.3" height="30.5" fill="url(#woodGrain)" />
+      <line x1="0" y1="15.25" x2="274.3" y2="15.25" stroke="#48cae4" stroke-width="0.8" stroke-dasharray="8,4" />
+
+      <!-- End Holes: 0.75" (15.2px) from each end -->
+      <circle cx="15.2" cy="15.25" r="3" fill="#ffffff" stroke="#ffd166" stroke-width="1.0" />
+      <circle cx="259.1" cy="15.25" r="3" fill="#ffffff" stroke="#ffd166" stroke-width="1.0" />
+
+      <!-- Dimension -->
+      <line x1="0" y1="42" x2="274.3" y2="42" stroke="#64dfdf" stroke-width="1.2" marker-start="url(#arrowCyan)" marker-end="url(#arrowCyan)" />
+      <text x="137.1" y="55" font-family="monospace" font-size="11" font-weight="bold" fill="#64dfdf" text-anchor="middle">
+        13.50" [342.9 mm]
+      </text>
+      <text x="15.2" y="-5" font-family="monospace" font-size="8.5" fill="#ffd166" text-anchor="middle">Ø 1/4" Hole</text>
+      <text x="259.1" y="-5" font-family="monospace" font-size="8.5" fill="#ffd166" text-anchor="middle">Ø 1/4" Hole</text>
+
+      <!-- Side Callout Notes -->
+      <text x="310" y="12" font-family="monospace" font-size="10" fill="#ffffff">
+        • W2-R (Rear), W2-M (Mid), W2-F (Front) form rigid base ladder.
+      </text>
+      <text x="310" y="28" font-family="monospace" font-size="10" fill="#80ed99">
+        • Upper cross tie omitted to ensure 100% free swingarm rotation.
+      </text>
+    </g>
+  </g>
+
+  <!-- PART W4: A-FRAME ANGLED POSTS -->
+  <g transform="translate(60, 365)">
+    <rect x="0" y="0" width="750" height="24" fill="#0f2b46" stroke="#22577a" />
+    <text x="12" y="17" font-family="monospace" font-size="12" font-weight="bold" fill="#64dfdf">
+      [W4-LF, LR, RF, RR] A-FRAME ANGLED POSTS (QTY: 4) — 3/4" x 1.5" x 31.8" STOCK (30.6" C-C)
+    </text>
+    <text x="590" y="17" font-family="monospace" font-size="11" fill="#ffd166">17.1° DUAL MITER CUTS</text>
+
+    <!-- Mitered Wood Pattern -->
+    <g transform="translate(20, 50)">
+      <!-- Angled Parallelogram: width 621.8px, height 30.5px, miter offset = 30.5 * tan(17.1°) = 9.4 px -->
+      <polygon points="9.4,0 631.2,0 621.8,30.5 0,30.5" fill="#0c2542" stroke="#64dfdf" stroke-width="1.5" />
+      <polygon points="9.4,0 631.2,0 621.8,30.5 0,30.5" fill="url(#woodGrain)" />
+      
+      <!-- Square Reference Cut Line (Dotted) -->
+      <line x1="0" y1="0" x2="0" y2="30.5" stroke="#e63946" stroke-width="1.2" stroke-dasharray="3,3" />
+      <line x1="621.8" y1="0" x2="621.8" y2="30.5" stroke="#e63946" stroke-width="1.2" stroke-dasharray="3,3" />
+
+      <!-- Center-to-Center Dimension -->
+      <line x1="4.7" y1="45" x2="626.5" y2="45" stroke="#64dfdf" stroke-width="1.2" marker-start="url(#arrowCyan)" marker-end="url(#arrowCyan)" />
+      <text x="315.6" y="58" font-family="monospace" font-size="11" font-weight="bold" fill="#64dfdf" text-anchor="middle">
+        30.60" [777.3 mm] CENTER-TO-CENTER (31.8" OVERALL STOCK)
+      </text>
+
+      <!-- Miter Angle Arc Indicator -->
+      <path d="M 0 30.5 L 9.4 0" stroke="#ffd166" stroke-width="1.5" />
+      <text x="25" y="24" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">17.1° MITER</text>
+      <text x="25" y="36" font-family="monospace" font-size="8.5" fill="#cbd5e1">(72.9° to edge)</text>
+
+      <!-- Top Cut Angle Indicator -->
+      <path d="M 621.8 30.5 L 631.2 0" stroke="#ffd166" stroke-width="1.5" />
+      <text x="545" y="24" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">17.1° PARALLEL</text>
+      <text x="545" y="36" font-family="monospace" font-size="8.5" fill="#cbd5e1">(Flush under apex)</text>
+
+      <!-- Miter Saw Protractor Graphic -->
+      <g transform="translate(650, -10)">
+        <circle cx="40" cy="40" r="35" fill="#091b2e" stroke="#22577a" stroke-width="1.2" />
+        <line x1="40" y1="5" x2="40" y2="75" stroke="#48cae4" stroke-width="1.0" />
+        <line x1="5" y1="40" x2="75" y2="40" stroke="#48cae4" stroke-width="1.0" />
+        <!-- 17.1 degree line -->
+        <line x1="40" y1="40" x2="68" y2="18" stroke="#ffd166" stroke-width="2.0" />
+        <text x="40" y="88" font-family="monospace" font-size="9" font-weight="bold" fill="#ffd166" text-anchor="middle">
+          MITER SAW: 17.1°
+        </text>
+      </g>
+    </g>
+  </g>
+
+  <!-- PART W5: PILLOW BLOCKS -->
+  <g transform="translate(60, 520)">
+    <rect x="0" y="0" width="750" height="24" fill="#0f2b46" stroke="#22577a" />
+    <text x="12" y="17" font-family="monospace" font-size="12" font-weight="bold" fill="#64dfdf">
+      [W5-L, W5-R] BEARING PILLOW BLOCKS (QTY: 2) — 1.5" x 3.0" x 2.17" [38.1 x 76.2 x 55.0 mm]
+    </text>
+    <text x="570" y="17" font-family="monospace" font-size="11" fill="#ffd166">MACHINED BEARING POCKET</text>
+
+    <!-- Orthographic Views of Block -->
+    <!-- View A: Front Elevation (76.2mm x 55.0mm => scale 1.2 => 91.4px x 66.0px) -->
+    <g transform="translate(30, 40)">
+      <rect x="0" y="0" width="91.4" height="66.0" fill="#0c2542" stroke="#64dfdf" stroke-width="1.5" />
+      
+      <!-- Bearing Centerlines -->
+      <line x1="45.7" y1="-5" x2="45.7" y2="71" stroke="#ffd166" stroke-width="0.8" stroke-dasharray="4,2" />
+      <line x1="-5" y1="33.0" x2="96.4" y2="33.0" stroke="#ffd166" stroke-width="0.8" stroke-dasharray="4,2" />
+
+      <!-- Ø22mm Counterbore Recess (22mm * 1.2 = 26.4px) -->
+      <circle cx="45.7" cy="33.0" r="13.2" fill="#14375e" stroke="#ffd166" stroke-width="1.5" />
+      <!-- Ø8.5mm Through Bore (8.5mm * 1.2 = 10.2px) -->
+      <circle cx="45.7" cy="33.0" r="5.1" fill="#081524" stroke="#ffffff" stroke-width="1.2" />
+
+      <!-- Mounting Holes at Base: 2x Ø1/4" -->
+      <circle cx="15.0" cy="55.0" r="3.0" fill="#ffffff" stroke="#64dfdf" stroke-width="0.8" />
+      <circle cx="76.4" cy="55.0" r="3.0" fill="#ffffff" stroke="#64dfdf" stroke-width="0.8" />
+
+      <text x="45.7" y="80" font-family="monospace" font-size="9" fill="#64dfdf" text-anchor="middle">FRONT (POCKET)</text>
+    </g>
+
+    <!-- View B: Cross Section View showing 7mm Pocket Depth -->
+    <g transform="translate(170, 40)">
+      <!-- Thickness 38.1mm * 1.2 = 45.7px, Height 66.0px -->
+      <rect x="0" y="0" width="45.7" height="66.0" fill="#0c2542" stroke="#64dfdf" stroke-width="1.5" />
+      
+      <!-- 7mm Recess on Face: 7mm * 1.2 = 8.4px deep, height 26.4px -->
+      <rect x="0" y="19.8" width="8.4" height="26.4" fill="#1b4168" stroke="#ffd166" stroke-width="1.2" />
+      <!-- Ø8.5mm Bore through remaining 31.1mm -->
+      <rect x="8.4" y="27.9" width="37.3" height="10.2" fill="#081524" stroke="#ffffff" stroke-width="1.0" />
+
+      <line x1="-5" y1="33.0" x2="50" y2="33.0" stroke="#ffd166" stroke-width="0.8" stroke-dasharray="4,2" />
+      <text x="22.8" y="80" font-family="monospace" font-size="9" fill="#64dfdf" text-anchor="middle">CROSS-SECTION</text>
+    </g>
+
+    <!-- Dimension Callouts -->
+    <g transform="translate(250, 45)">
+      <text x="0" y="15" font-family="monospace" font-size="11" font-weight="bold" fill="#ffd166">
+        BEARING RECESS SPECIFICATION:
+      </text>
+      <text x="0" y="32" font-family="monospace" font-size="10" fill="#ffffff">
+        • Pocket: Ø 22.0 mm (+0.1/-0.0) x 7.0 mm Deep (Press-fit for 608 Bearing)
+      </text>
+      <text x="0" y="48" font-family="monospace" font-size="10" fill="#ffffff">
+        • Center Bore: Ø 8.5 mm (11/32") Through-hole for 8.0 mm steel axle clearance
+      </text>
+      <text x="0" y="64" font-family="monospace" font-size="10" fill="#80ed99">
+        • Base Mount: 2x Ø 1/4" Holes tapped/bolted into A-Frame apex header
+      </text>
+    </g>
+  </g>
+
+  <!-- PART W6: GUIDE TROUGH STRIP -->
+  <g transform="translate(60, 680)">
+    <rect x="0" y="0" width="750" height="24" fill="#0f2b46" stroke="#22577a" />
+    <text x="12" y="17" font-family="monospace" font-size="12" font-weight="bold" fill="#64dfdf">
+      [W6] MARBLE GUIDE TROUGH STRIP (QTY: 1) — 1/2" x 2.0" x 21.94" [12.7 x 50.8 x 557.2 mm]
+    </text>
+    <text x="520" y="17" font-family="monospace" font-size="10.5" fill="#ffd166">ON TOP OF MID/REAR CROSSBARS</text>
+
+    <!-- Trough Top Pattern -->
+    <g transform="translate(20, 38)">
+      <!-- Length 557.2mm * 0.8 = 445.8px, Width 2.0" (50.8mm) * 0.8 = 40.6px -->
+      <rect x="0" y="0" width="445.8" height="40.6" fill="#0c2542" stroke="#64dfdf" stroke-width="1.5" />
+      <rect x="0" y="0" width="445.8" height="40.6" fill="url(#woodGrain)" />
+      
+      <!-- Routed Center Channel (Ø16mm => 12.8px wide) -->
+      <rect x="0" y="13.9" width="445.8" height="12.8" fill="#00f5d4" opacity="0.35" stroke="#00f5d4" stroke-width="1.0" />
+      <line x1="0" y1="20.3" x2="445.8" y2="20.3" stroke="#ffffff" stroke-width="0.8" stroke-dasharray="8,4" />
+
+      <!-- Dimension -->
+      <line x1="0" y1="50" x2="445.8" y2="50" stroke="#64dfdf" stroke-width="1.2" marker-start="url(#arrowCyan)" marker-end="url(#arrowCyan)" />
+      <text x="222.9" y="63" font-family="monospace" font-size="11" font-weight="bold" fill="#64dfdf" text-anchor="middle">
+        21.94" [557.2 mm] FINISHED LENGTH (MOUNTED ON TOP OF CROSSBARS)
+      </text>
+
+      <!-- End Profile Graphic -->
+      <g transform="translate(480, -5)">
+        <!-- Width 40.6px, Thickness 12.7mm * 0.8 = 10.2px => let's draw at 2x scale for profile: 80px x 20px -->
+        <rect x="0" y="0" width="80" height="20" fill="#0c2542" stroke="#64dfdf" stroke-width="1.5" />
+        <!-- Concave Arc: 25.6px wide, 6px deep -->
+        <path d="M 27.2 0 Q 40 10 52.8 0 Z" fill="#081524" stroke="#00f5d4" stroke-width="1.2" />
+        <circle cx="40" cy="5" r="4.8" fill="#00f5d4" opacity="0.7" />
+        <text x="40" y="32" font-family="monospace" font-size="8.5" fill="#00f5d4" text-anchor="middle">
+          Ø 16mm Marble Track Profile
+        </text>
+      </g>
+    </g>
+  </g>
+
+  <!-- PART W7: BIGGER SWINGARM BEAM -->
+  <g transform="translate(60, 830)">
+    <rect x="0" y="0" width="750" height="24" fill="#0f2b46" stroke="#22577a" />
+    <text x="12" y="17" font-family="monospace" font-size="12" font-weight="bold" fill="#64dfdf">
+      [W7] BIGGER SWINGARM BEAM (QTY: 1) — 1.5" x 1.5" x 40.00" TIMBER [38.1 x 38.1 x 1016.0 mm]
+    </text>
+    <text x="590" y="17" font-family="monospace" font-size="11" fill="#ffd166">4:1 RATIO (32" : 8")</text>
+
+    <!-- Full Beam Graphic -->
+    <g transform="translate(10, 48)">
+      <!-- Length 731.5px, Height 1.5" (38.1mm) * 0.72 = 27.4px -->
+      <rect x="0" y="0" width="731.5" height="27.4" fill="#0c2542" stroke="#64dfdf" stroke-width="1.8" />
+      <rect x="0" y="0" width="731.5" height="27.4" fill="url(#woodGrain)" />
+      <line x1="0" y1="13.7" x2="731.5" y2="13.7" stroke="#48cae4" stroke-width="0.8" stroke-dasharray="8,4" />
+
+      <!-- Left End: Long Arm Tip (Sling Pin Hole) -->
+      <!-- 0.50" (12.7mm) from tip => 9.1px -->
+      <circle cx="9.1" cy="13.7" r="3.0" fill="#ffffff" stroke="#ffd166" stroke-width="1.0" />
+      <!-- 45° Pin Vector Line -->
+      <line x1="9.1" y1="13.7" x2="2.0" y2="0" stroke="#ffd166" stroke-width="2.0" />
+
+      <!-- Fulcrum Axle Bore: 32.00" (812.8mm) from long tip => 812.8 * 0.72 = 585.2px -->
+      <circle cx="585.2" cy="13.7" r="4.0" fill="#ffffff" stroke="#64dfdf" stroke-width="1.5" />
+      <line x1="585.2" y1="-10" x2="585.2" y2="38" stroke="#ffd166" stroke-width="1.0" stroke-dasharray="4,2" />
+
+      <!-- Counterweight Bolt Bore: 6.69" (170mm) from pivot => 585.2 + 170*0.72 = 707.6px (1.31" from CW end) -->
+      <circle cx="707.6" cy="13.7" r="4.8" fill="#ffffff" stroke="#ffd166" stroke-width="1.5" />
+      <line x1="707.6" y1="-10" x2="707.6" y2="38" stroke="#ffd166" stroke-width="1.0" stroke-dasharray="4,2" />
+
+      <!-- Dimensions -->
+      <!-- Overall Length 40.00" -->
+      <line x1="0" y1="42" x2="731.5" y2="42" stroke="#64dfdf" stroke-width="1.2" marker-start="url(#arrowCyan)" marker-end="url(#arrowCyan)" />
+      <text x="365.75" y="55" font-family="monospace" font-size="11" font-weight="bold" fill="#64dfdf" text-anchor="middle">
+        TOTAL LENGTH: 40.00" [1016.0 mm]
+      </text>
+
+      <!-- Long Arm Dimension: 32.00" -->
+      <line x1="0" y1="-15" x2="585.2" y2="-15" stroke="#48cae4" stroke-width="1.2" marker-start="url(#arrowCyan)" marker-end="url(#arrowCyan)" />
+      <text x="292.6" y="-22" font-family="monospace" font-size="10" font-weight="bold" fill="#48cae4" text-anchor="middle">
+        LONG ARM: 32.00" [812.8 mm]
+      </text>
+
+      <!-- Short Arm Dimension: 8.00" -->
+      <line x1="585.2" y1="-15" x2="731.5" y2="-15" stroke="#ffd166" stroke-width="1.2" marker-start="url(#arrowGold)" marker-end="url(#arrowGold)" />
+      <text x="658.3" y="-22" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166" text-anchor="middle">
+        SHORT ARM: 8.00" [203.2 mm]
+      </text>
+
+      <!-- Hole Labels -->
+      <text x="9" y="32" font-family="monospace" font-size="8.5" fill="#ffd166" text-anchor="middle">
+        45° Pin (0.5")
+      </text>
+      <text x="585.2" y="-30" font-family="monospace" font-size="9" font-weight="bold" fill="#64dfdf" text-anchor="middle">
+        Ø 8.0mm FULCRUM AXLE
+      </text>
+      <text x="707.6" y="-30" font-family="monospace" font-size="9" font-weight="bold" fill="#ffd166" text-anchor="middle">
+        Ø 3/8" CW BOLT (1.31" from end)
+      </text>
+    </g>
+  </g>
+
+  <!-- MASTER CUTTING SCHEDULE TABLE -->
+  <g transform="translate(850, 100)">
+    <rect x="0" y="0" width="1020" height="28" fill="#0f2b46" stroke="#22577a" />
+    <text x="15" y="19" font-family="monospace" font-size="13" font-weight="bold" fill="#64dfdf">
+      MASTER WOOD CUTTING SCHEDULE &amp; WORKSHOP FABRICATION BILL
+    </text>
+
+    <!-- Table Container -->
+    <rect x="0" y="28" width="1020" height="690" fill="#0b1b30" stroke="#1b3d64" />
+
+    <!-- Table Header -->
+    <rect x="0" y="28" width="1020" height="26" fill="#14345c" />
+    <text x="10" y="45" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">PART ID</text>
+    <text x="75" y="45" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">NAME / FUNCTION</text>
+    <text x="250" y="45" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">RAW STOCK SIZE</text>
+    <text x="440" y="45" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">FINISHED CUT LENGTH</text>
+    <text x="600" y="45" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">END 1 MITER</text>
+    <text x="700" y="45" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">END 2 MITER</text>
+    <text x="800" y="45" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">MACHINING OPERATIONS</text>
+    <line x1="0" y1="54" x2="1020" y2="54" stroke="#22577a" stroke-width="1.5" />
+    <rect x="0" y="58" width="1020" height="22" fill="#0d223c" />    <text x="10" y="73" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W1-L</text>    <text x="75" y="73" font-family="monospace" font-size="9.5" fill="#ffffff">Base Runner (Left)</text>    <text x="250" y="73" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="73" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">36.00" [914.4 mm]</text>    <text x="600" y="73" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="73" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="73" font-family="monospace" font-size="8.5" fill="#48cae4">3x Lap-joint holes; 2x A-frame marks</text>    <rect x="0" y="80" width="1020" height="22" fill="#0b1b30" />    <text x="10" y="95" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W1-R</text>    <text x="75" y="95" font-family="monospace" font-size="9.5" fill="#ffffff">Base Runner (Right)</text>    <text x="250" y="95" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="95" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">36.00" [914.4 mm]</text>    <text x="600" y="95" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="95" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="95" font-family="monospace" font-size="8.5" fill="#48cae4">3x Lap-joint holes; 2x A-frame marks</text>    <rect x="0" y="102" width="1020" height="22" fill="#0d223c" />    <text x="10" y="117" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W2-R</text>    <text x="75" y="117" font-family="monospace" font-size="9.5" fill="#ffffff">Base Crossbar (Rear)</text>    <text x="250" y="117" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="117" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">13.50" [342.9 mm]</text>    <text x="600" y="117" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="117" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="117" font-family="monospace" font-size="8.5" fill="#48cae4">Pre-drill 2x Ø1/4" holes at ends</text>    <rect x="0" y="124" width="1020" height="22" fill="#0b1b30" />    <text x="10" y="139" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W2-M</text>    <text x="75" y="139" font-family="monospace" font-size="9.5" fill="#ffffff">Base Crossbar (Mid)</text>    <text x="250" y="139" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="139" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">13.50" [342.9 mm]</text>    <text x="600" y="139" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="139" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="139" font-family="monospace" font-size="8.5" fill="#48cae4">Pre-drill 2x Ø1/4" holes at ends</text>    <rect x="0" y="146" width="1020" height="22" fill="#0d223c" />    <text x="10" y="161" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W2-F</text>    <text x="75" y="161" font-family="monospace" font-size="9.5" fill="#ffffff">Base Crossbar (Front)</text>    <text x="250" y="161" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="161" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">13.50" [342.9 mm]</text>    <text x="600" y="161" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="161" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="161" font-family="monospace" font-size="8.5" fill="#48cae4">Pre-drill 2x Ø1/4" holes at ends</text>    <rect x="0" y="168" width="1020" height="22" fill="#0b1b30" />    <text x="10" y="183" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W3</text>    <text x="75" y="183" font-family="monospace" font-size="9.5" fill="#ffffff">Upper Cross Tie Brace</text>    <text x="250" y="183" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="183" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">13.50" [342.9 mm]</text>    <text x="600" y="183" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="183" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="183" font-family="monospace" font-size="8.5" fill="#48cae4">Corner gusset pilot holes (Z=27.75")</text>    <rect x="0" y="190" width="1020" height="22" fill="#0d223c" />    <text x="10" y="205" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W4-LF</text>    <text x="75" y="205" font-family="monospace" font-size="9.5" fill="#ffffff">A-Frame Post (Left Front)</text>    <text x="250" y="205" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="205" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">30.60" C-C (31.8" stock)</text>    <text x="600" y="205" font-family="monospace" font-size="9" fill="#80ed99">17.1° Miter</text>    <text x="700" y="205" font-family="monospace" font-size="9" fill="#80ed99">17.1° Miter</text>    <text x="800" y="205" font-family="monospace" font-size="8.5" fill="#48cae4">PARALLEL DUAL MITER CUTS</text>    <rect x="0" y="212" width="1020" height="22" fill="#0b1b30" />    <text x="10" y="227" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W4-LR</text>    <text x="75" y="227" font-family="monospace" font-size="9.5" fill="#ffffff">A-Frame Post (Left Rear)</text>    <text x="250" y="227" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="227" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">30.60" C-C (31.8" stock)</text>    <text x="600" y="227" font-family="monospace" font-size="9" fill="#80ed99">17.1° Miter</text>    <text x="700" y="227" font-family="monospace" font-size="9" fill="#80ed99">17.1° Miter</text>    <text x="800" y="227" font-family="monospace" font-size="8.5" fill="#48cae4">PARALLEL DUAL MITER CUTS</text>    <rect x="0" y="234" width="1020" height="22" fill="#0d223c" />    <text x="10" y="249" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W4-RF</text>    <text x="75" y="249" font-family="monospace" font-size="9.5" fill="#ffffff">A-Frame Post (Right Front)</text>    <text x="250" y="249" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="249" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">30.60" C-C (31.8" stock)</text>    <text x="600" y="249" font-family="monospace" font-size="9" fill="#80ed99">17.1° Miter</text>    <text x="700" y="249" font-family="monospace" font-size="9" fill="#80ed99">17.1° Miter</text>    <text x="800" y="249" font-family="monospace" font-size="8.5" fill="#48cae4">PARALLEL DUAL MITER CUTS</text>    <rect x="0" y="256" width="1020" height="22" fill="#0b1b30" />    <text x="10" y="271" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W4-RR</text>    <text x="75" y="271" font-family="monospace" font-size="9.5" fill="#ffffff">A-Frame Post (Right Rear)</text>    <text x="250" y="271" font-family="monospace" font-size="9" fill="#cbd5e1">3/4" x 1.5" (19x38mm)</text>    <text x="440" y="271" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">30.60" C-C (31.8" stock)</text>    <text x="600" y="271" font-family="monospace" font-size="9" fill="#80ed99">17.1° Miter</text>    <text x="700" y="271" font-family="monospace" font-size="9" fill="#80ed99">17.1° Miter</text>    <text x="800" y="271" font-family="monospace" font-size="8.5" fill="#48cae4">PARALLEL DUAL MITER CUTS</text>    <rect x="0" y="278" width="1020" height="22" fill="#0d223c" />    <text x="10" y="293" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W5-L</text>    <text x="75" y="293" font-family="monospace" font-size="9.5" fill="#ffffff">Bearing Pillow Block (L)</text>    <text x="250" y="293" font-family="monospace" font-size="9" fill="#cbd5e1">1.5" x 3.0" Hardwood</text>    <text x="440" y="293" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">3.00" [76.2 mm]</text>    <text x="600" y="293" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="293" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="293" font-family="monospace" font-size="8.5" fill="#48cae4">Ø22mm x 7mm pocket; Ø8.5mm bore</text>    <rect x="0" y="300" width="1020" height="22" fill="#0b1b30" />    <text x="10" y="315" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W5-R</text>    <text x="75" y="315" font-family="monospace" font-size="9.5" fill="#ffffff">Bearing Pillow Block (R)</text>    <text x="250" y="315" font-family="monospace" font-size="9" fill="#cbd5e1">1.5" x 3.0" Hardwood</text>    <text x="440" y="315" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">3.00" [76.2 mm]</text>    <text x="600" y="315" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="315" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="315" font-family="monospace" font-size="8.5" fill="#48cae4">Ø22mm x 7mm pocket; Ø8.5mm bore</text>    <rect x="0" y="322" width="1020" height="22" fill="#0d223c" />    <text x="10" y="337" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W6</text>    <text x="75" y="337" font-family="monospace" font-size="9.5" fill="#ffffff">Marble Guide Trough</text>    <text x="250" y="337" font-family="monospace" font-size="9" fill="#cbd5e1">1/2" x 2.0" Pine</text>    <text x="440" y="337" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">21.94" [557.2 mm]</text>    <text x="600" y="337" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="337" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="337" font-family="monospace" font-size="8.5" fill="#48cae4">Mounted on Top of Crossbars; Route Ø16mm groove</text>    <rect x="0" y="344" width="1020" height="22" fill="#0b1b30" />    <text x="10" y="359" font-family="monospace" font-size="9.5" font-weight="bold" fill="#64dfdf">W7</text>    <text x="75" y="359" font-family="monospace" font-size="9.5" fill="#ffffff">Bigger Swingarm Stick</text>    <text x="250" y="359" font-family="monospace" font-size="9" fill="#cbd5e1">1.5" x 1.5" Timber</text>    <text x="440" y="359" font-family="monospace" font-size="9.5" font-weight="bold" fill="#ffd166">40.00" [1016.0 mm]</text>    <text x="600" y="359" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="700" y="359" font-family="monospace" font-size="9" fill="#80ed99">90° Square</text>    <text x="800" y="359" font-family="monospace" font-size="8.5" fill="#48cae4">Ø8mm fulcrum @ 8"; Ø3/8" CW @ 1.31"</text>
+    <!-- Tooling Checklist -->
+    <g transform="translate(15, 410)">
+      <rect x="0" y="0" width="990" height="280" fill="#08182b" stroke="#38a3a5" stroke-width="1.2" />
+      <text x="20" y="24" font-family="monospace" font-size="12" font-weight="bold" fill="#64dfdf">
+        FABRICATION TOOLING &amp; SHOP ASSEMBLY INSTRUCTIONS
+      </text>
+
+      <g transform="translate(20, 45)" font-family="monospace" font-size="9.5" fill="#ffffff">
+        <text x="0" y="0" font-weight="bold" fill="#ffd166">1. REQUIRED SHOP TOOLS &amp; DRILL BITS:</text>
+        <text x="0" y="16">• Miter Saw or Hand Backsaw with Miter Box (must hold 17.1° / 72.9° angle accurately).</text>
+        <text x="0" y="32">• Drill Press or Hand Drill with bits: Ø 8.0 mm (fulcrum axle), Ø 8.5 mm (bearing clearance),</text>
+        <text x="0" y="48">  Ø 22.0 mm (7/8" Forstner bit for 608 bearing recess), Ø 3/8" (counterweight bolt), Ø 3/16" (sling pin).</text>
+        <text x="0" y="64">• Router or Table with Ø 5/8" (16 mm) round-nose / core-box bit for the marble trough track.</text>
+
+        <text x="0" y="94" font-weight="bold" fill="#ffd166">2. STEP-BY-STEP ASSEMBLY SEQUENCE:</text>
+        <text x="0" y="110">Step A: Assemble Base Frame: Clamp W1-L &amp; W1-R runners to W2-R, W2-M, W2-F crossbars. Bolt and glue.</text>
+        <text x="0" y="126">Step B: Build Side A-Frames: Fasten dual angled posts (W4-LF &amp; W4-LR) at base runners and apex.</text>
+        <text x="0" y="142">Step C: Mount Pillow Blocks: Press-fit 608 bearings into W5 blocks; bolt blocks securely to A-frame apex.</text>
+        <text x="0" y="158">Step D: Hang Swingarm: Slide 8mm steel axle through left bearing, swingarm pivot hole, and right bearing.</text>
+        <text x="0" y="174">Step E: Rig Sling &amp; Trough: Screw W6 trough ON TOP of Crossbar_Rear and Crossbar_Mid; rig leather sling.</text>
+        <text x="0" y="190">Step F: Calibrate Counterweight: Screw 748g disc stack to short arm bolt; test launch 16mm marble.</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ==================== SIGN-OFF BLOCK ==================== -->
+  <g transform="translate(850, 830)">
+    <rect x="0" y="0" width="1020" height="150" fill="#0c223c" stroke="#22577a" stroke-width="2.0" />
+    <text x="25" y="32" font-family="'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="bold" fill="#64dfdf">
+      AUTHENTICATED CUTTING TEMPLATE CERTIFICATE
+    </text>
+    <text x="25" y="52" font-family="monospace" font-size="10" fill="#80ed99">
+      ALL 13 CUTTING PIECES DERIVED FROM EXACT 3D VERTICES OF Trebuchet_3ft.obj (UPPER TIE OMITTED FOR SWINGARM CLEARANCE)
+    </text>
+    <line x1="15" y1="65" x2="1005" y2="65" stroke="#22577a" />
+    <text x="25" y="90" font-family="monospace" font-size="10" fill="#48cae4">TOTAL RAW LUMBER:</text>
+    <text x="160" y="90" font-family="monospace" font-size="10" font-weight="bold" fill="#ffffff">~22 Linear Feet 3/4" x 1.5" + 4.0 Ft 1.5" x 1.5" Timber</text>
+    <text x="25" y="115" font-family="monospace" font-size="10" fill="#48cae4">TARGET RANGE:</text>
+    <text x="160" y="115" font-family="monospace" font-size="10" font-weight="bold" fill="#ffd166">3.00 Yards (2.742 meters / 9.00 feet) Calibrated</text>
+    <text x="650" y="90" font-family="monospace" font-size="10" fill="#48cae4">CUTTING SCHEDULE REV:</text>
+    <text x="820" y="90" font-family="monospace" font-size="11" font-weight="bold" fill="#80ed99">REV 4.0 [SSOT]</text>
+    <text x="650" y="115" font-family="monospace" font-size="10" fill="#48cae4">STATUS:</text>
+    <text x="710" y="115" font-family="monospace" font-size="10" font-weight="bold" fill="#80ed99">READY FOR WOODSHOP</text>
+  </g>
+</svg>

@@ -41,11 +41,11 @@ PARAMS = {
     # A-Frame Triangular Posts Footprint
     "POST_SPREAD": 9.0 * INCH,          # 228.6 mm (posts at X = -9" and +9")
 
-    # Swing Stick (Arm) - 4:1 Ratio
-    "SWING_STICK_LEN": 30.0 * INCH,     # 762.0 mm
-    "SHORT_ARM": 6.0 * INCH,            # 152.4 mm (Counterweight side)
-    "LONG_ARM": 24.0 * INCH,            # 609.6 mm (Throwing arm side)
-    "ARM_THICK": 0.75 * INCH,           # 19.05 mm
+    # Swing Stick (Arm) - Bigger 40.0" Timber Stick (4:1 Ratio)
+    "SWING_STICK_LEN": 40.0 * INCH,     # 1016.0 mm (40.0" overall)
+    "SHORT_ARM": 8.0 * INCH,            # 203.2 mm (Counterweight side)
+    "LONG_ARM": 32.0 * INCH,            # 812.8 mm (Throwing arm side)
+    "ARM_THICK": 1.5 * INCH,            # 38.1 mm (Bigger 1.5" x 1.5" square stick)
     "ARM_WIDTH": 1.5 * INCH,            # 38.1 mm
 
     # Fulcrum Hardware
@@ -56,14 +56,14 @@ PARAMS = {
     "BEARING_WIDTH": 7.0,               # 7 mm width
 
     # Screwed Counterweight
-    "CW_MASS_GRAMS": 395.0,             # Calibrated for exact 3.0-yard launch
+    "CW_MASS_GRAMS": 748.0,             # Calibrated for exact 3.0-yard launch (1.65 lbs)
     "CW_BOLT_DIAM": 0.375 * INCH,       # 3/8"-16 bolt
-    "CW_BOLT_LEN": 3.5 * INCH,          # 88.9 mm
-    "CW_DISC_DIAM": 3.0 * INCH,         # 76.2 mm steel weight disc
-    "CW_DISC_THICK": 1.1 * INCH,        # 28.0 mm steel plate stack
+    "CW_BOLT_LEN": 4.5 * INCH,          # 114.3 mm
+    "CW_DISC_DIAM": 3.5 * INCH,         # 88.9 mm steel weight disc
+    "CW_DISC_THICK": 1.6 * INCH,        # 40.6 mm steel plate stack
 
-    # Sling & Pouch
-    "SLING_LENGTH": 17.3 * INCH,        # 439.4 mm leather shoe-lace
+    # Sling & Pouch (Sized so sling reaches directly under fulcrum when cocked)
+    "SLING_LENGTH": 14.55 * INCH,       # 369.6 mm (reaches X=0 under fulcrum)
     "RELEASE_PIN_DIAM": 0.1875 * INCH,  # 3/16" (4.76 mm) steel pin
     "RELEASE_PIN_LEN": 1.75 * INCH,     # 44.45 mm
     "RELEASE_PIN_ANGLE": 45.0,          # degrees
@@ -125,8 +125,11 @@ def create_freecad_model():
     add_obj(cb_front, "Base_Crossbar_Front", c_wood)
     add_obj(cb_mid, "Base_Crossbar_Mid", c_wood)
 
-    trough = Part.makeBox(24.0 * INCH, 2.0 * INCH, 0.5 * INCH, App.Vector(-bl / 2.0 + sw, -1.0 * INCH, st))
-    groove = Part.makeCylinder(p["MARBLE_DIAMETER"] / 1.5, 24.0 * INCH, App.Vector(-bl / 2.0 + sw, 0, st + 0.5 * INCH), App.Vector(1, 0, 0))
+    # Marble Guide Trough mounted directly on top of Crossbar_Rear and Crossbar_Mid
+    # Crossbars are at Z = st..2*st (19.05..38.10 mm). Trough sits at Z = 2*st (38.10 mm)
+    trough_len = 22.0 * INCH # 558.8 mm (spans from rear crossbar across mid crossbar past X=0)
+    trough = Part.makeBox(trough_len, 2.0 * INCH, 0.5 * INCH, App.Vector(-bl / 2.0, -1.0 * INCH, 2.0 * st))
+    groove = Part.makeCylinder(p["MARBLE_DIAMETER"] / 1.5, trough_len, App.Vector(-bl / 2.0, 0, 2.0 * st + 0.5 * INCH), App.Vector(1, 0, 0))
     trough_part = trough.cut(groove)
     add_obj(trough_part, "Marble_Guide_Trough", c_wood)
 
@@ -156,8 +159,7 @@ def create_freecad_model():
         pb_machined = pb.cut(recess).cut(axle_through)
         add_obj(pb_machined, f"Pillow_Block_{side}", c_darkwood)
 
-    upper_brace = Part.makeBox(sw, cross_len, st, App.Vector(-sw / 2.0, -cross_len / 2.0, piv_h - 3.5 * INCH))
-    add_obj(upper_brace, "Upper_Cross_Brace_Stick", c_wood)
+    # Note: Upper_Cross_Brace_Stick removed to ensure 100% unobstructed swingarm rotation arc.
 
     # 3. Fulcrum Axle & 2x 608 Ball Bearings
     axle_rod = Part.makeCylinder(p["AXLE_ROD_DIAM"] / 2.0, p["AXLE_ROD_LEN"], App.Vector(0, -p["AXLE_ROD_LEN"] / 2.0, piv_h), App.Vector(0, 1, 0))
@@ -169,30 +171,33 @@ def create_freecad_model():
         bearing_obj = b_outer.cut(b_inner)
         add_obj(bearing_obj, f"Fulcrum_608_Ball_Bearing_{side}", c_bearing)
 
-    # 4. Swing Stick & Screwed Counterweight
+    # 4. Bigger Swing Stick (40.0" Length, 1.5" x 1.5" Timber) & Screwed Counterweight
     l_short = p["SHORT_ARM"]
     l_long = p["LONG_ARM"]
+    arm_t = p["ARM_THICK"]
+    arm_w = p["ARM_WIDTH"]
 
-    stick_raw = Part.makeBox(l_short + l_long, st, sw, App.Vector(-l_long, -st / 2.0, piv_h - sw / 2.0))
-    bore_8mm = Part.makeCylinder(p["AXLE_ROD_DIAM"] / 2.0 + 0.3, st * 1.5, App.Vector(0, -st, piv_h), App.Vector(0, 1, 0))
-    cw_hole = Part.makeCylinder(p["CW_BOLT_DIAM"] / 2.0 + 0.3, sw * 1.5, App.Vector(l_short - 1.0 * INCH, 0, piv_h - sw), App.Vector(0, 0, 1))
+    stick_raw = Part.makeBox(l_short + l_long, arm_t, arm_w, App.Vector(-l_long, -arm_t / 2.0, piv_h - arm_w / 2.0))
+    bore_8mm = Part.makeCylinder(p["AXLE_ROD_DIAM"] / 2.0 + 0.3, arm_t * 1.5, App.Vector(0, -arm_t, piv_h), App.Vector(0, 1, 0))
+    cw_hole = Part.makeCylinder(p["CW_BOLT_DIAM"] / 2.0 + 0.3, arm_w * 1.5, App.Vector(l_short - 1.25 * INCH, 0, piv_h - arm_w), App.Vector(0, 0, 1))
     swing_stick = stick_raw.cut(bore_8mm).cut(cw_hole)
-    add_obj(swing_stick, "Swing_Stick_Arm_4to1", c_wood)
+    add_obj(swing_stick, "Swing_Stick_Arm_40in", c_wood)
 
-    cw_center_x = l_short - 1.0 * INCH
-    bolt_38 = Part.makeCylinder(p["CW_BOLT_DIAM"] / 2.0, p["CW_BOLT_LEN"], App.Vector(cw_center_x, 0, piv_h - 2.0 * INCH), App.Vector(0, 0, 1))
+    cw_center_x = l_short - 1.25 * INCH
+    bolt_38 = Part.makeCylinder(p["CW_BOLT_DIAM"] / 2.0, p["CW_BOLT_LEN"], App.Vector(cw_center_x, 0, piv_h - 2.5 * INCH), App.Vector(0, 0, 1))
     add_obj(bolt_38, "Counterweight_Mount_Bolt_38", c_steel)
 
-    cw_disc = Part.makeCylinder(p["CW_DISC_DIAM"] / 2.0, p["CW_DISC_THICK"], App.Vector(cw_center_x, 0, piv_h - sw / 2.0 - p["CW_DISC_THICK"]), App.Vector(0, 0, 1))
-    cw_bore = Part.makeCylinder(p["CW_BOLT_DIAM"] / 2.0 + 0.5, p["CW_DISC_THICK"] * 1.2, App.Vector(cw_center_x, 0, piv_h - sw / 2.0 - p["CW_DISC_THICK"] * 1.1), App.Vector(0, 0, 1))
+    cw_disc = Part.makeCylinder(p["CW_DISC_DIAM"] / 2.0, p["CW_DISC_THICK"], App.Vector(cw_center_x, 0, piv_h - arm_w / 2.0 - p["CW_DISC_THICK"]), App.Vector(0, 0, 1))
+    cw_bore = Part.makeCylinder(p["CW_BOLT_DIAM"] / 2.0 + 0.5, p["CW_DISC_THICK"] * 1.2, App.Vector(cw_center_x, 0, piv_h - arm_w / 2.0 - p["CW_DISC_THICK"] * 1.1), App.Vector(0, 0, 1))
     cw_machined = cw_disc.cut(cw_bore)
-    add_obj(cw_machined, "Screwed_Counterweight_395g", c_weight)
+    add_obj(cw_machined, "Screwed_Counterweight_748g", c_weight)
 
-    pin = Part.makeCylinder(p["RELEASE_PIN_DIAM"] / 2.0, p["RELEASE_PIN_LEN"], App.Vector(-l_long + 0.5 * INCH, 0, piv_h + sw / 2.0), App.Vector(-1, 0, 1))
+    pin = Part.makeCylinder(p["RELEASE_PIN_DIAM"] / 2.0, p["RELEASE_PIN_LEN"], App.Vector(-l_long + 0.5 * INCH, 0, piv_h + arm_w / 2.0), App.Vector(-1, 0, 1))
     add_obj(pin, "Sling_Release_Pin_45deg", c_steel)
 
     # 5. Projectile (16 mm Marble), Leather Shoe-Lace & Cloth Pouch
-    marble_pos = App.Vector(-bl / 2.0 + 5.0 * INCH, 0, st + 0.5 * INCH + p["MARBLE_DIAMETER"] / 2.0)
+    # Positioned just under fulcrum (X = 0) when cocked
+    marble_pos = App.Vector(0, 0, st + 0.5 * INCH + p["MARBLE_DIAMETER"] / 2.0)
     marble = Part.makeSphere(p["MARBLE_DIAMETER"] / 2.0, marble_pos)
     add_obj(marble, "Glass_Marble_16mm", c_marble, transparency=30)
 
@@ -202,7 +207,7 @@ def create_freecad_model():
     cloth_pouch = pouch_shell.cut(pouch_inner).cut(pouch_cutter)
     add_obj(cloth_pouch, "Cloth_Sling_Pouch_Formed", c_cloth)
 
-    lace_fixed = Part.makeCylinder(1.5, p["SLING_LENGTH"] * 0.9, App.Vector(-l_long, 0, piv_h), App.Vector(marble_pos.x - (-l_long), marble_pos.y, marble_pos.z - piv_h))
+    lace_fixed = Part.makeCylinder(1.5, p["SLING_LENGTH"], App.Vector(-l_long, 0, piv_h), App.Vector(marble_pos.x - (-l_long), marble_pos.y, marble_pos.z - piv_h))
     add_obj(lace_fixed, "Leather_ShoeLace_Line", c_leather)
 
     # 6. Clamping Hex Bolts (1/4"-20) at Frame Triangle Joints
@@ -367,8 +372,11 @@ def generate_standalone_assets():
     add_axis_aligned_box(419.1, -171.45, 19.05, 38.1, 342.9, 19.05, "Crossbar_Front")
     add_axis_aligned_box(-19.05, -171.45, 19.05, 38.1, 342.9, 19.05, "Crossbar_Mid")
 
-    # Marble Guide Trough (24" long strip with center depression)
-    add_axis_aligned_box(-430.0, -25.4, 19.05, 609.6, 50.8, 12.7, "Marble_Guide_Trough")
+    # Marble Guide Trough mounted directly on top of Crossbar_Rear and Crossbar_Mid
+    # Crossbars are at Z = 19.05..38.10 mm. Trough base sits on top at Z = 38.10 mm.
+    # Thickness = 12.7 mm (1/2"), Width = 50.8 mm (2.0"). Top surface at Z = 50.80 mm.
+    # Length spans from X = -457.2 mm to +100.0 mm (557.2 mm = 21.94")
+    add_axis_aligned_box(-457.2, -25.4, 38.10, 557.2, 50.8, 12.7, "Marble_Guide_Trough")
 
     # -------------------------------------------------------------
     # 2. LEFT SIDE STAND: TRUE TRIANGULAR A-FRAME (2 Angled Posts)
@@ -398,8 +406,7 @@ def generate_standalone_assets():
     # Right 608 Ball Bearing (22 mm OD, 7 mm width, 8 mm bore)
     add_cylinder_mesh([0, y_r - 3.5, 762.0], [0, y_r + 3.5, 762.0], 11.0, "Fulcrum_608_Bearing_Right", segments=18)
 
-    # Upper Cross Tie between left and right apexes (Z = 705 mm)
-    add_axis_aligned_box(-19.05, y_r + 19.05, 705.0, 38.1, (y_l - y_r) - 38.1, 19.05, "Upper_Truss_Cross_Tie")
+    # Note: Upper_Truss_Cross_Tie removed to ensure 100% unobstructed swingarm rotation arc.
 
     # -------------------------------------------------------------
     # 4. FULCRUM AXLE: 8mm Steel Round Rod
@@ -407,48 +414,60 @@ def generate_standalone_assets():
     add_cylinder_mesh([0, -247.65, 762.0], [0, 247.65, 762.0], 4.0, "Fulcrum_8mm_Steel_Round_Rod", segments=18)
 
     # -------------------------------------------------------------
-    # 5. SWING STICK (ARM - 4:1 Ratio: 6" Short Arm, 24" Long Arm)
-    #    Model at cocked launch position (theta ~ -20 degrees)
+    # 5. BIGGER SWING STICK (ARM - 40.0" Length, 1.5" x 1.5" Timber, 4:1 Ratio)
+    #    Cocked position: arm pulled all the way back down to trough on top of crossbars
     # -------------------------------------------------------------
-    # Pivot is at (0, 0, 762.0)
-    # Short end (+X): extends to +152.4 mm
-    # Long end (-X): extends to -609.6 mm
-    angle_rad = math.radians(-20.0)
-    cos_a = math.cos(angle_rad)
-    sin_a = math.sin(angle_rad)
+    # Pivot is at (0, 0, 762.0 mm)
+    # Long arm: 32.0" (812.8 mm) pulled down to trough top (Z = 50.80 mm)
+    # Delta Z = 762.0 - 50.80 = 711.2 mm
+    # sin(theta) = 711.2 / 812.8 = 0.875 => theta = 61.045 deg
+    # cos(theta) = sqrt(1 - 0.875^2) = 0.484123
+    sin_th = 0.875
+    cos_th = 0.484123
 
-    p_short = [152.4 * cos_a, 0, 762.0 - 152.4 * sin_a]
-    p_long = [-609.6 * cos_a, 0, 762.0 + 609.6 * sin_a]
-    add_oriented_box(p_short, p_long, 38.1, 19.05, "Swing_Stick_Arm_4to1", up=np.array([0, 1, 0]))
+    p_short = [203.2 * cos_th, 0, 762.0 + 203.2 * sin_th]
+    p_long = [-812.8 * cos_th, 0, 762.0 - 812.8 * sin_th]
+    # 1.5" x 1.5" (38.1 mm x 38.1 mm) square timber swingarm
+    add_oriented_box(p_short, p_long, 38.1, 38.1, "Swing_Stick_Arm_40in", up=np.array([0, 1, 0]))
 
     # -------------------------------------------------------------
-    # 6. BOLTED COUNTERWEIGHT (395g Steel Disc Screwed on Short Arm)
+    # 6. BOLTED COUNTERWEIGHT (748g Steel Disc Screwed on Short Arm)
     # -------------------------------------------------------------
-    # Center of weight at 127 mm (5.0") from pivot along short arm
-    cw_center_x = 127.0 * cos_a
-    cw_center_z = 762.0 - 127.0 * sin_a
-    # 3/8" Bolt through stick
-    add_cylinder_mesh([cw_center_x, 0, cw_center_z - 45.0], [cw_center_x, 0, cw_center_z + 45.0], 4.76, "Counterweight_Mount_Bolt_38", segments=12)
-    # 395g Steel Disc (Ø 76.2 mm / 3.0", thickness 28 mm)
-    add_cylinder_mesh([cw_center_x, 0, cw_center_z - 35.0], [cw_center_x, 0, cw_center_z - 7.0], 38.1, "Screwed_Counterweight_395g", segments=24)
+    # Center of weight at 170 mm (6.7") from pivot along short arm
+    cw_dist = 170.0
+    cw_center_x = cw_dist * cos_th
+    cw_center_z = 762.0 + cw_dist * sin_th
+    # 3/8" Mounting Bolt (114.3 mm long) through stick
+    norm_x = -sin_th
+    norm_z = cos_th
+    b_p1 = [cw_center_x - 55.0 * norm_x, 0, cw_center_z - 55.0 * norm_z]
+    b_p2 = [cw_center_x + 55.0 * norm_x, 0, cw_center_z + 55.0 * norm_z]
+    add_cylinder_mesh(b_p1, b_p2, 4.76, "Counterweight_Mount_Bolt_38", segments=12)
+
+    # 748g Steel Disc (Ø 88.9 mm / 3.5", thickness 40.6 mm / 1.6")
+    w_p1 = [cw_center_x - 20.0 * norm_x, 0, cw_center_z - 20.0 * norm_z]
+    w_p2 = [cw_center_x - 60.6 * norm_x, 0, cw_center_z - 60.6 * norm_z]
+    add_cylinder_mesh(w_p1, w_p2, 44.45, "Screwed_Counterweight_748g", segments=24)
 
     # -------------------------------------------------------------
     # 7. 45-DEGREE STEEL RELEASE PIN AT LONG ARM TIP
     # -------------------------------------------------------------
     tip_x = p_long[0]
-    tip_z = p_long[1] if len(p_long) == 2 else p_long[2]
-    pin_tip_x = tip_x - 35.0 * cos_a - 20.0 * sin_a
-    pin_tip_z = tip_z + 35.0 * sin_a + 20.0 * cos_a
+    tip_z = p_long[2]
+    pin_tip_x = tip_x - 30.0 * cos_th + 25.0 * norm_x
+    pin_tip_z = tip_z - 30.0 * sin_th + 25.0 * norm_z
     add_cylinder_mesh([tip_x, 0, tip_z + 10.0], [pin_tip_x, 0, pin_tip_z], 2.38, "Sling_Release_Pin_45deg", segments=10)
 
     # -------------------------------------------------------------
     # 8. PROJECTILE: 16mm Glass Marble & Leather/Cloth Sling
+    #    Trough is on top of crossbars: groove bottom at Z = 47.6 mm
+    #    Marble center at Z = 47.6 + 8.0 = 55.6 mm, directly under fulcrum (X = 0)
     # -------------------------------------------------------------
-    # Marble sitting in trough at X = -350 mm, Z = 32 mm
-    add_sphere_mesh([-350.0, 0, 32.0], 8.0, "Glass_Marble_16mm", rings=10, sectors=16)
+    add_sphere_mesh([0.0, 0, 55.6], 8.0, "Glass_Marble_16mm", rings=12, sectors=18)
+    add_sphere_mesh([0.0, 0, 55.6], 9.2, "Cloth_Sling_Pouch", rings=8, sectors=14)
 
-    # Leather Shoe-Lace Line
-    add_cylinder_mesh([tip_x, 0, tip_z], [-350.0, 0, 32.0], 1.5, "Leather_ShoeLace_Sling", segments=8)
+    # Leather Shoe-Lace Line connecting tip (-393.5 mm) to marble under fulcrum (0.0 mm)
+    add_cylinder_mesh([tip_x, 0, tip_z], [0.0, 0, 55.6], 1.5, "Leather_ShoeLace_Sling_15_5in", segments=8)
 
     with open("Trebuchet_3ft.obj", "w") as f:
         f.write("\n".join(obj_lines))

@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3-Foot Trebuchet CAD Blueprint & Physics Simulator</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .blueprint-bg {
+      background-color: #081b33;
+      background-image: 
+        linear-gradient(rgba(20, 55, 95, 0.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(20, 55, 95, 0.4) 1px, transparent 1px),
+        linear-gradient(rgba(35, 80, 130, 0.7) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(35, 80, 130, 0.7) 1px, transparent 1px);
+      background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #061324;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e3e62;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #64dfdf;
+    }
+  </style>
+</head>
+<body class="bg-[#050e1a] text-[#e0e6ed] min-h-screen flex flex-col">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-[#1b3a5d] bg-[#071526]/90 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-[#0c2847] border border-[#64dfdf] flex items-center justify-center text-[#64dfdf] font-bold text-lg mono">
+        📐
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-white tracking-wide flex items-center gap-2">
+          3-FOOT TIMBER TREBUCHET
+          <span class="text-xs px-2 py-0.5 rounded bg-[#102d4f] border border-[#48cae4] text-[#48cae4] mono">3-YARD MARBLE LAUNCH</span>
+        </h1>
+        <p class="text-xs text-[#8da2be]">Parametric FreeCAD Design • Blueprint Drafting • Dynamic 60FPS Physics Simulation</p>
+      </div>
+    </div>
+
+    <!-- Mode Tabs -->
+    <div class="flex items-center bg-[#091b30] p-1 rounded-lg border border-[#1b3a5d]">
+      <button id="tab-sim-btn" onclick="switchTab('sim')" class="px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all bg-[#0077b6] text-white shadow">
+        🚀 Interactive Simulation
+      </button>
+      <button id="tab-blueprint-btn" onclick="switchTab('blueprint')" class="px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all text-[#8da2be] hover:text-white">
+        📐 Technical Blueprint
+      </button>
+      <button id="tab-wood-btn" onclick="switchTab('wood')" class="px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all text-[#8da2be] hover:text-white">
+        🪚 Wood Cutout Shapes
+      </button>
+      <button id="tab-pouch-btn" onclick="switchTab('pouch')" class="px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all text-[#8da2be] hover:text-white">
+        ✂️ 1:1 Pouch Template
+      </button>
+      <button id="tab-cad-btn" onclick="switchTab('cad')" class="px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all text-[#8da2be] hover:text-white">
+        💻 FreeCAD &amp; Blender SSOT
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: INTERACTIVE PHYSICS SIMULATION                                     -->
+    <!-- ========================================================================= -->
+    <div id="tab-sim" class="space-y-6">
+      
+      <!-- Key Specs Bar -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
+          <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Total Height</div>
+          <div class="text-base font-bold text-white mono mt-0.5">36.0" <span class="text-xs text-[#64dfdf] font-normal">(3.0 ft)</span></div>
+        </div>
+        <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
+          <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Pivot Fulcrum</div>
+          <div class="text-base font-bold text-white mono mt-0.5">8mm Rod + 2x 608</div>
+        </div>
+        <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
+          <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Swing Stick</div>
+          <div class="text-base font-bold text-white mono mt-0.5">40.0" <span class="text-xs text-[#ffd166] font-normal">(4:1 Ratio)</span></div>
+        </div>
+        <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
+          <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Counterweight</div>
+          <div class="text-base font-bold text-[#ffd166] mono mt-0.5">748 g <span class="text-xs text-[#a0aec0] font-normal">(Bolted)</span></div>
+        </div>
+        <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
+          <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Target Distance</div>
+          <div class="text-base font-bold text-[#00f5d4] mono mt-0.5">3.00 Yards <span class="text-xs text-white font-normal">(9.0 ft)</span></div>
+        </div>
+        <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
+          <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Projectile</div>
+          <div class="text-base font-bold text-[#48cae4] mono mt-0.5">16mm Glass <span class="text-xs text-white font-normal">(5.5g)</span></div>
+        </div>
+      </div>
+
+      <!-- Simulation Canvas & Control Panel Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <!-- Simulation Canvas (3 cols) -->
+        <div class="lg:col-span-3 bg-[#071629] border border-[#1b3a5d] rounded-xl overflow-hidden shadow-2xl flex flex-col">
+          <!-- Canvas Toolbar -->
+          <div class="px-4 py-2.5 bg-[#0b2038] border-b border-[#1b3a5d] flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[#00f5d4] animate-pulse"></span>
+              <span class="font-bold tracking-wide text-white uppercase text-[11px]">Real-Time Physics Engine</span>
+              <span class="text-[#7d93b0]">• Runge-Kutta 4th-Order Integration</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="canvas-status" class="mono text-[#ffd166] font-semibold">Ready to Launch</span>
+            </div>
+          </div>
+
+          <!-- The Canvas -->
+          <div class="relative w-full h-[460px] blueprint-bg overflow-hidden cursor-crosshair">
+            <canvas id="simCanvas" class="w-full h-full block"></canvas>
+            
+            <!-- Live Telemetry Overlay in Canvas -->
+            <div class="absolute top-3 left-3 bg-[#061424]/85 border border-[#1c4068] backdrop-blur rounded-lg p-3 text-xs mono space-y-1 shadow">
+              <div class="text-[#7d93b0] text-[10px] uppercase font-bold tracking-wider mb-1">Live Telemetry</div>
+              <div>Arm Angle: <span id="tel-angle" class="text-white font-semibold">--</span></div>
+              <div>Arm Omega: <span id="tel-omega" class="text-white font-semibold">--</span></div>
+              <div>Release V: <span id="tel-vrel" class="text-[#00f5d4] font-semibold">--</span></div>
+              <div>Launch Angle: <span id="tel-launchang" class="text-[#ffd166] font-semibold">--</span></div>
+              <div>Flight Time: <span id="tel-time" class="text-white font-semibold">--</span></div>
+              <div class="pt-1 border-t border-[#1b3a5d]">
+                Distance: <span id="tel-dist" class="text-lg font-bold text-[#00f5d4]">--</span>
+              </div>
+            </div>
+
+            <!-- Target Banner in Canvas -->
+            <div class="absolute bottom-3 right-3 bg-[#061424]/90 border border-[#00f5d4] rounded-lg px-3 py-1.5 text-xs mono text-[#00f5d4] flex items-center gap-2">
+              <span class="text-sm">🎯</span>
+              <span>TARGET LINE: <strong>3.00 YARDS (2.74 M)</strong></span>
+            </div>
+          </div>
+
+          <!-- Canvas Bottom Controls -->
+          <div class="p-4 bg-[#091a2e] border-t border-[#1b3a5d] flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <button id="btn-fire" onclick="triggerLaunch()" class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-[#00b4d8] to-[#0077b6] hover:from-[#48cae4] hover:to-[#0096c7] text-white font-bold text-sm shadow-lg flex items-center gap-2 transition active:scale-95">
+                <span>🚀</span> FIRE TREBUCHET
+              </button>
+              <button onclick="resetSimulation()" class="px-4 py-2.5 rounded-lg bg-[#142e4d] hover:bg-[#1a3c63] text-white font-medium text-xs border border-[#224b7a] transition active:scale-95">
+                ↺ Reset
+              </button>
+              <button id="btn-pause" onclick="togglePause()" class="px-4 py-2.5 rounded-lg bg-[#142e4d] hover:bg-[#1a3c63] text-white font-medium text-xs border border-[#224b7a] transition active:scale-95">
+                ⏸ Pause
+              </button>
+            </div>
+
+            <!-- Playback Speed -->
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-[#7d93b0]">Sim Speed:</span>
+              <button onclick="setSimSpeed(0.25)" class="px-2 py-1 rounded bg-[#0e243d] border border-[#1b3a5d] text-[#a0aec0] hover:text-white text-xs">0.25x</button>
+              <button onclick="setSimSpeed(0.5)" class="px-2 py-1 rounded bg-[#0e243d] border border-[#1b3a5d] text-[#a0aec0] hover:text-white text-xs">0.5x</button>
+              <button onclick="setSimSpeed(1.0)" class="px-2 py-1 rounded bg-[#0077b6] text-white font-bold text-xs">1.0x</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tuning & Telemetry Controls (1 col) -->
+        <div class="space-y-4">
+          
+          <!-- Parameters Card -->
+          <div class="bg-[#091a2e] border border-[#1b3a5d] rounded-xl p-4 space-y-4 shadow-xl">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-[#64dfdf] flex items-center justify-between">
+              <span>Calibrate Parameters</span>
+              <button onclick="restoreDefaults()" class="text-[10px] text-[#7d93b0] hover:text-white underline">Default</button>
+            </h3>
+
+            <!-- Counterweight Mass -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-[#a0aec0]">Screwed Weight Mass:</span>
+                <span id="label-cw" class="mono font-bold text-[#ffd166]">748 g</span>
+              </div>
+              <input id="slider-cw" type="range" min="400" max="1200" step="5" value="748" oninput="updateSliders()" class="w-full accent-[#ffd166] cursor-pointer bg-[#0e243d]">
+              <div class="text-[10px] text-[#7d93b0]">Calibrated for 3 yards: exactly 748g (1.65 lbs)</div>
+            </div>
+
+            <!-- Sling Length -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-[#a0aec0]">Leather Shoe-Lace:</span>
+                <span id="label-sling" class="mono font-bold text-white">14.6 in</span>
+              </div>
+              <input id="slider-sling" type="range" min="8" max="22" step="0.1" value="14.6" oninput="updateSliders()" class="w-full accent-[#00b4d8] cursor-pointer bg-[#0e243d]">
+              <div class="text-[10px] text-[#7d93b0]">Reaches just under fulcrum when cocked</div>
+            </div>
+
+            <!-- Release Pin Angle -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-[#a0aec0]">Release Pin Angle:</span>
+                <span id="label-pin" class="mono font-bold text-white">45.0°</span>
+              </div>
+              <input id="slider-pin" type="range" min="30" max="60" step="1" value="45" oninput="updateSliders()" class="w-full accent-[#64dfdf] cursor-pointer bg-[#0e243d]">
+            </div>
+
+            <!-- Fulcrum Friction -->
+            <div class="space-y-1 pt-2 border-t border-[#1b3a5d]">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-[#a0aec0]">Fulcrum Bearings:</span>
+                <span class="mono text-[#00f5d4] text-[11px] font-bold">2x 608 Ball Bearings</span>
+              </div>
+              <div class="text-[10px] text-[#7d93b0]">Rolling friction μ = 0.0015 (smooth rotation)</div>
+            </div>
+          </div>
+
+          <!-- Mission Performance Card -->
+          <div class="bg-[#091a2e] border border-[#1b3a5d] rounded-xl p-4 space-y-3 shadow-xl">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-[#00f5d4] flex items-center gap-1.5">
+              <span>🎯</span> Target Mission Match
+            </h3>
+
+            <div class="p-3 bg-[#061424] rounded-lg border border-[#143355] text-center space-y-1">
+              <div class="text-[10px] text-[#7d93b0] uppercase">Calculated Throw Range</div>
+              <div id="stat-range" class="text-2xl font-black text-[#00f5d4] mono">3.00 YDS</div>
+              <div id="stat-range-sub" class="text-xs text-[#a0aec0] mono">9.00 Feet / 2.74 Meters</div>
+            </div>
+
+            <div class="space-y-1.5 text-xs">
+              <div class="flex justify-between">
+                <span class="text-[#7d93b0]">Target Goal:</span>
+                <span class="mono text-white font-semibold">3.00 Yards</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[#7d93b0]">Launch Speed:</span>
+                <span id="stat-speed" class="mono text-white font-semibold">4.76 m/s (10.6 mph)</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[#7d93b0]">Launch Angle:</span>
+                <span id="stat-angle" class="mono text-white font-semibold">47.8°</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-[#7d93b0]">Target Accuracy:</span>
+                <span id="stat-accuracy" class="mono text-[#00f5d4] font-bold">99.9% Match</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: TECHNICAL BLUEPRINT VIEWER                                         -->
+    <!-- ========================================================================= -->
+    <div id="tab-blueprint" class="hidden space-y-6">
+      <div class="bg-[#071629] border border-[#1b3a5d] rounded-xl p-4 overflow-hidden shadow-2xl">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-[#1b3a5d]">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span>📐</span> FULL TECHNICAL DRAFTING BLUEPRINT
+            </h2>
+            <p class="text-xs text-[#7d93b0]">Orthographic Projections, Detail Views, Tolerances &amp; Complete Bill of Materials</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="trebuchet_blueprint.svg" download="trebuchet_blueprint.svg" class="px-3 py-1.5 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-xs font-semibold border border-[#48cae4] transition flex items-center gap-1.5">
+              <span>⬇</span> Download SVG Blueprint
+            </a>
+          </div>
+        </div>
+
+        <div class="border border-[#143355] rounded-lg overflow-auto max-h-[750px] bg-[#09192f] p-2 flex justify-center">
+          <img src="trebuchet_blueprint.svg" alt="3-Foot Trebuchet Technical Blueprint" class="max-w-none w-[1200px] h-auto rounded shadow-inner" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB: WOOD CUTOUT SHAPES & CUTTING SCHEDULE                                -->
+    <!-- ========================================================================= -->
+    <div id="tab-wood" class="hidden space-y-6">
+      <div class="bg-[#071629] border border-[#1b3a5d] rounded-xl p-4 overflow-hidden shadow-2xl">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4 pb-3 border-b border-[#1b3a5d]">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span>🪚</span> WOOD CUTOUT SHAPES &amp; CUTTING SCHEDULE
+            </h2>
+            <p class="text-xs text-[#7d93b0]">1:1 &amp; Dimensioned Flat Patterns Extracted from Trebuchet_3ft.obj • Dual 17.1° Miters, Bearing Pockets &amp; Hole Centers</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <a href="wood_cutout_shapes.svg" download="wood_cutout_shapes.svg" class="px-3 py-1.5 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#ffd166] text-xs font-semibold border border-[#ffd166] transition flex items-center gap-1.5">
+              <span>⬇</span> Download Wood Cutout SVG
+            </a>
+          </div>
+        </div>
+
+        <div class="border border-[#143355] rounded-lg overflow-auto max-h-[750px] bg-[#09192f] p-2 flex justify-center">
+          <img src="wood_cutout_shapes.svg" alt="Trebuchet Wood Cutout Shapes &amp; Schedule" class="max-w-none w-[1200px] h-auto rounded shadow-inner" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: 1:1 CLOTH POUCH CUTOUT TEMPLATE                                    -->
+    <!-- ========================================================================= -->
+    <div id="tab-pouch" class="hidden space-y-6">
+      <div class="bg-[#071629] border border-[#1b3a5d] rounded-xl p-6 shadow-2xl space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1b3a5d]">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>✂️</span> 1:1 SCALE PRINTABLE CLOTH POUCH TEMPLATE
+            </h2>
+            <p class="text-xs text-[#7d93b0]">Flat Cutout Pattern for 16mm Glass Marble • Fold Darts • 3mm Eyelet Punches</p>
+          </div>
+          <a href="pouch_cutout_template.svg" download="pouch_cutout_template.svg" class="px-4 py-2 rounded-lg bg-[#0077b6] hover:bg-[#0096c7] text-white text-xs font-bold transition flex items-center gap-2 shadow">
+            <span>🖨️</span> Download Printable 1:1 SVG
+          </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div class="lg:col-span-2 border border-[#1b3a5d] rounded-xl overflow-hidden bg-[#0b192c] p-4 flex justify-center shadow-inner">
+            <img src="pouch_cutout_template.svg" alt="1:1 Cloth Pouch Template" class="w-full max-w-[650px] h-auto rounded" />
+          </div>
+
+          <div class="space-y-4 bg-[#091a2e] border border-[#1b3a5d] rounded-xl p-5 text-xs">
+            <h3 class="font-bold text-[#ffd166] uppercase tracking-wider text-xs flex items-center gap-1.5">
+              <span>🧵</span> Fabric Pouch Fabrication Steps:
+            </h3>
+
+            <div class="space-y-3 text-[#cbd5e1] leading-relaxed">
+              <div class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-[#102d4f] border border-[#48cae4] text-[#48cae4] font-bold flex items-center justify-center shrink-0">1</span>
+                <div>
+                  <strong class="text-white">Choose Fabric:</strong> Use heavy cotton duck canvas, denim, or thin flexible leather (1.0 mm thickness).
+                </div>
+              </div>
+              <div class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-[#102d4f] border border-[#48cae4] text-[#48cae4] font-bold flex items-center justify-center shrink-0">2</span>
+                <div>
+                  <strong class="text-white">Cut Pattern:</strong> Print the template at 100% scale (verify with the 2-inch calibration ruler). Cut carefully along the outer cyan boundary.
+                </div>
+              </div>
+              <div class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-[#102d4f] border border-[#48cae4] text-[#48cae4] font-bold flex items-center justify-center shrink-0">3</span>
+                <div>
+                  <strong class="text-white">Stitch Side Darts:</strong> Fold each V-dart together and sew with heavy nylon thread. This converts the flat pattern into a deep 3D cradle that prevents the 16mm marble from slipping out sideways.
+                </div>
+              </div>
+              <div class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-[#102d4f] border border-[#48cae4] text-[#48cae4] font-bold flex items-center justify-center shrink-0">4</span>
+                <div>
+                  <strong class="text-white">Install Eyelets:</strong> Punch 3 mm (1/8") holes at both ends and crimp standard small brass eyelets or whip-stitch the ring holes.
+                </div>
+              </div>
+              <div class="flex gap-2.5">
+                <span class="w-5 h-5 rounded-full bg-[#102d4f] border border-[#48cae4] text-[#48cae4] font-bold flex items-center justify-center shrink-0">5</span>
+                <div>
+                  <strong class="text-white">Attach Leather Shoe-Lace:</strong> Thread raw leather shoe-lace lines (17.3" length). One line ties permanently to the swing stick tip eyelet; the other ends in a brass ring that slips over the 45° release pin.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: FREECAD SCRIPT & WORKSHOP BUILD GUIDE                              -->
+    <!-- ========================================================================= -->
+    <div id="tab-cad" class="hidden space-y-6">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Assembly Guide -->
+        <div class="bg-[#091a2e] border border-[#1b3a5d] rounded-xl p-5 space-y-4">
+          <h2 class="text-sm font-bold uppercase tracking-wider text-[#64dfdf] flex items-center gap-2">
+            <span>🔨</span> WORKSHOP HARDWARE ASSEMBLY
+          </h2>
+
+          <div class="space-y-3 text-xs text-[#cbd5e1] leading-relaxed">
+            <div class="p-3 bg-[#061424] rounded-lg border border-[#143355]">
+              <strong class="text-[#ffd166]">1. Rectangular Timber Sticks:</strong>
+              <p class="text-[#8da2be] mt-1">Use standard 3/4" x 1.5" (19mm x 38mm) rectangular pine craft sticks. Cut 2x 36" base runners, 3x 18" crossbars, 4x 33.5" A-frame legs, and 1x 30" swing arm stick.</p>
+            </div>
+
+            <div class="p-3 bg-[#061424] rounded-lg border border-[#143355]">
+              <strong class="text-[#ffd166]">2. Glue &amp; Bolting:</strong>
+              <p class="text-[#8da2be] mt-1">Apply PVA wood glue (Titebond II/III) to all overlapping stick lap joints. Clamp securely and drill 1/4" holes through the glued joints. Fasten with 1/4"-20 hex bolts, washers, and nylon lock nuts.</p>
+            </div>
+
+            <div class="p-3 bg-[#061424] rounded-lg border border-[#143355]">
+              <strong class="text-[#ffd166]">3. Fulcrum Axle &amp; 2x 608 Ball Bearings:</strong>
+              <p class="text-[#8da2be] mt-1">Bore 22mm diameter recesses (7mm deep) into the upper pillow blocks using a 22mm Forstner bit. Press-fit the two 608 ball bearings flush. Slide the 8mm precision steel round rod through the bearings and the pre-drilled 8mm hole in the swing stick.</p>
+            </div>
+
+            <div class="p-3 bg-[#061424] rounded-lg border border-[#143355]">
+              <strong class="text-[#ffd166]">4. Bolted Counterweight:</strong>
+              <p class="text-[#8da2be] mt-1">Drill a 3/8" hole through the short end of the swing stick (8" from pivot). Pass a 3/8"-16 x 4.5" steel bolt through, stacking heavy washers and steel disc weights totaling <strong>748 grams (1.65 lbs)</strong>. Tighten firmly with a split lock washer and nut.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- How to Run FreeCAD -->
+        <div class="bg-[#091a2e] border border-[#1b3a5d] rounded-xl p-5 space-y-4 flex flex-col justify-between">
+          <div>
+            <h2 class="text-sm font-bold uppercase tracking-wider text-[#00f5d4] flex items-center gap-2">
+              <span>💻</span> HOW TO OPEN IN FREECAD
+            </h2>
+            <div class="space-y-3 text-xs text-[#cbd5e1] mt-3">
+              <p>The Python file <code class="text-[#64dfdf] mono bg-[#061424] px-1.5 py-0.5 rounded">trebuchet_model.py</code> contains the complete parametric CAD recipe.</p>
+              
+              <div class="bg-[#061424] p-3 rounded-lg border border-[#143355] space-y-1.5">
+                <div class="text-[#ffd166] font-bold">Method A: Inside FreeCAD GUI</div>
+                <ol class="list-decimal list-inside space-y-1 text-[#8da2be]">
+                  <li>Open FreeCAD (v0.20, v0.21, or v1.0+).</li>
+                  <li>Click menu <strong>Macro &gt; Macros...</strong></li>
+                  <li>Select <code class="text-white">trebuchet_model.py</code> and click <strong>Execute</strong>.</li>
+                  <li>The full 3D assembly and TechDraw blueprint pages will generate!</li>
+                </ol>
+              </div>
+
+              <div class="bg-[#061424] p-3 rounded-lg border border-[#143355] space-y-1.5">
+                <div class="text-[#ffd166] font-bold">Method B: Command Line</div>
+                <pre class="bg-[#030912] p-2 rounded text-[#48cae4] mono text-[11px] overflow-x-auto">freecad trebuchet_model.py</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-[#1b3a5d] flex items-center justify-between">
+            <span class="text-xs text-[#7d93b0]">Export Formats:</span>
+            <div class="flex gap-2">
+              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#64dfdf] text-[10px] mono">.FCStd</span>
+              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#64dfdf] text-[10px] mono">.STEP</span>
+              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#64dfdf] text-[10px] mono">.OBJ</span>
+              <span class="px-2 py-1 rounded bg-[#0c2340] border border-[#1b3a5d] text-[#64dfdf] text-[10px] mono">.SVG</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FreeCAD Python Code Snippet -->
+      <div class="bg-[#091a2e] border border-[#1b3a5d] rounded-xl overflow-hidden shadow-2xl">
+        <div class="px-4 py-3 bg-[#0b2038] border-b border-[#1b3a5d] flex items-center justify-between">
+          <span class="text-xs font-bold text-white mono">trebuchet_model.py (Parametric FreeCAD Script)</span>
+          <button onclick="copyCode()" class="px-3 py-1 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-xs font-semibold border border-[#48cae4] transition">
+            <span id="copy-btn-text">Copy Script</span>
+          </button>
+        </div>
+        <pre class="p-4 bg-[#050e1a] text-[#8da2be] mono text-xs overflow-x-auto max-h-[350px] leading-relaxed"><code id="code-block"># Parametric FreeCAD Model: 3-Foot High Trebuchet (Calibrated for 3-Yard Marble Launch)
+# Hardware: Rectangular sticks, 8mm steel round rod, 2x 608 ball bearings, bolted 748g weight
+import FreeCAD as App
+import Part
+
+doc = App.newDocument("Trebuchet_3ft")
+
+# Parametric Constants (mm)
+INCH = 25.4
+FRAME_HEIGHT = 36.0 * INCH      # 914.4 mm (3.0 ft)
+BASE_LENGTH  = 36.0 * INCH      # 914.4 mm
+BASE_WIDTH   = 18.0 * INCH      # 457.2 mm
+PIVOT_HEIGHT = 30.0 * INCH      # 762.0 mm (2.5 ft)
+STICK_THICK  = 0.75 * INCH      # 19.05 mm
+STICK_WIDTH  = 1.5 * INCH       # 38.1 mm
+
+# Bigger 40.0" Swing Stick (4:1 Ratio: 32" Long Arm : 8" Short Arm)
+SHORT_ARM    = 8.0 * INCH       # 203.2 mm (Counterweight side)
+LONG_ARM     = 32.0 * INCH      # 812.8 mm (Throwing arm side)
+AXLE_ROD     = 8.0              # 8 mm steel round rod
+BEARING_OD   = 22.0             # 22 mm OD (608 ball bearings)
+CW_MASS      = 748.0            # 748 grams bolted counterweight
+SLING_LEN    = 14.55 * INCH     # 369.6 mm (reaches just under fulcrum when cocked)
+
+# Builds 3D assembly and generates TechDraw blueprint pages...
+print("Model ready!")</code></pre>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Interactive Simulation Engine JS -->
+  <script>
+    function switchTab(tab) {
+      ['sim', 'blueprint', 'wood', 'pouch', 'cad'].forEach(t => {
+        document.getElementById('tab-' + t).classList.add('hidden');
+        const btn = document.getElementById('tab-' + t + '-btn');
+        btn.classList.remove('bg-[#0077b6]', 'text-white', 'shadow');
+        btn.classList.add('text-[#8da2be]');
+      });
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+      const activeBtn = document.getElementById('tab-' + tab + '-btn');
+      activeBtn.classList.add('bg-[#0077b6]', 'text-white', 'shadow');
+      activeBtn.classList.remove('text-[#8da2be]');
+
+      if (tab === 'sim') {
+        resizeCanvas();
+      }
+    }
+
+    function copyCode() {
+      const code = document.getElementById('code-block').innerText;
+      navigator.clipboard.writeText(code);
+      const btn = document.getElementById('copy-btn-text');
+      btn.innerText = 'Copied!';
+      setTimeout(() => btn.innerText = 'Copy Script', 2000);
+    }
+
+    // -------------------------------------------------------------
+    // Physics Simulation Engine
+    // -------------------------------------------------------------
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const g = 9.80665;
+    const rho_air = 1.225;
+    const cd = 0.47;
+    const marble_r = 0.008;
+    const marble_area = Math.PI * marble_r * marble_r;
+    const marble_m = 0.0055;
+
+    const H_pivot = 0.762;  // 30 inches (762 mm)
+    const L_s = 0.2032;     // 8 inches short arm (203.2 mm)
+    const L_l = 0.8128;     // 32 inches long arm (812.8 mm - 40" total 4:1)
+    const m_arm = 0.320;    // 320 grams (1.5" x 1.5" timber stick)
+    const I_arm = (1.0/12.0) * m_arm * (Math.pow(L_s + L_l, 2)) + m_arm * Math.pow((L_l - L_s)/2.0, 2);
+
+    let cw_mass_g = 748.0;
+    let sling_len_m = 0.3696; // 14.55 inches (reaches just under fulcrum when cocked)
+    let pin_angle_deg = 45.0;
+    let sim_speed = 1.0;
+
+    let state = 'cocked';
+    let alpha = 2.67;  // 153 degrees (pulled all the way back down to ground)
+    let omega = 0.0;
+    let psi = 0.0;
+    let omega_psi = 0.0;
+    let marble_x = 0;
+    let marble_y = 0.025;
+    let marble_vx = 0;
+    let marble_vy = 0;
+    let trajectory = [];
+    let flight_time = 0;
+    let release_v = 0;
+    let release_deg = 0;
+    let release_h = 0;
+    let final_range_m = 0;
+    let is_paused = false;
+
+    let scale = 110;
+    let origin_x = 120;
+    let origin_y = 380;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      origin_x = Math.max(80, rect.width * 0.16);
+      origin_y = rect.height * 0.82;
+      scale = rect.width / 4.4;
+      draw();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function updateSliders() {
+      cw_mass_g = parseFloat(document.getElementById('slider-cw').value);
+      sling_len_m = parseFloat(document.getElementById('slider-sling').value) * 0.0254;
+      pin_angle_deg = parseFloat(document.getElementById('slider-pin').value);
+
+      document.getElementById('label-cw').innerText = cw_mass_g.toFixed(0) + ' g';
+      document.getElementById('label-sling').innerText = (sling_len_m / 0.0254).toFixed(1) + ' in';
+      document.getElementById('label-pin').innerText = pin_angle_deg.toFixed(1) + '°';
+
+      const pred = predictTrajectory(cw_mass_g, sling_len_m, pin_angle_deg);
+      document.getElementById('stat-range').innerText = pred.range_yds.toFixed(2) + ' YDS';
+      document.getElementById('stat-range-sub').innerText = `${(pred.range_yds * 3).toFixed(2)} Feet / ${pred.range_m.toFixed(2)} Meters`;
+      document.getElementById('stat-speed').innerText = `${pred.v_rel.toFixed(2)} m/s (${(pred.v_rel * 2.237).toFixed(1)} mph)`;
+      document.getElementById('stat-angle').innerText = `${pred.deg.toFixed(1)}°`;
+      const acc = Math.max(0, (1 - Math.abs(pred.range_yds - 3.0) / 3.0) * 100);
+      document.getElementById('stat-accuracy').innerText = `${acc.toFixed(1)}% Match`;
+      document.getElementById('stat-accuracy').className = acc > 98 ? 'mono text-[#00f5d4] font-bold' : 'mono text-[#ffd166] font-bold';
+
+      if (state === 'cocked') {
+        resetSimulation();
+      }
+    }
+
+    function restoreDefaults() {
+      document.getElementById('slider-cw').value = 748;
+      document.getElementById('slider-sling').value = 14.6;
+      document.getElementById('slider-pin').value = 45;
+      updateSliders();
+      resetSimulation();
+    }
+
+    function predictTrajectory(cw_g, sling_m, pin_deg) {
+      const M_cw = cw_g / 1000.0;
+      const I_tot = I_arm + M_cw * Math.pow(L_s, 2);
+      const d_com = (L_l - L_s) / 2.0;
+
+      let a = 2.67;
+      let w = 0;
+      let dt = 0.001;
+      let t = 0;
+      let v_rel = null;
+      let p_rel = null;
+      let phase = 1;
+      let p = 0;
+      let wp = 0;
+
+      while (t < 2.0) {
+        let x_tip = -L_l * Math.sin(a);
+        let y_tip = H_pivot + L_l * Math.cos(a);
+        let tau_g = -(M_cw * L_s - m_arm * d_com) * g * Math.sin(a);
+
+        if (phase === 1) {
+          let dy = y_tip - 0.025;
+          if (dy >= sling_m * 0.95 || a <= 1.22) {
+            phase = 2;
+            p = Math.atan2(0.025 - y_tip, x_tip - sling_m - x_tip);
+            wp = 0;
+          } else {
+            let term = Math.max(0.001, sling_m*sling_m - dy*dy);
+            let dx_da = -L_l * Math.cos(a) - (0.5 / Math.sqrt(term)) * (2 * dy * (-L_l * Math.sin(a)));
+            let I_eff = I_tot + marble_m * (dx_da * dx_da);
+            w += (tau_g / I_eff) * dt;
+            a += w * dt;
+            t += dt;
+            continue;
+          }
+        }
+
+        if (phase === 2) {
+          let alpha_acc = tau_g / I_tot;
+          w += alpha_acc * dt;
+          a += w * dt;
+
+          let a_tip_x = -L_l * (Math.cos(a)*alpha_acc - Math.sin(a)*(w*w));
+          let a_tip_y = L_l * (-Math.sin(a)*alpha_acc - Math.cos(a)*(w*w));
+          let tau_p = -g * Math.cos(p) - a_tip_y * Math.cos(p) + a_tip_x * Math.sin(p);
+          wp += (tau_p / sling_m) * dt;
+          p += wp * dt;
+
+          let vx_m = -L_l * Math.cos(a)*w - sling_m * Math.sin(p)*wp;
+          let vy_m = -L_l * Math.sin(a)*w + sling_m * Math.cos(p)*wp;
+          let launch_ang = Math.atan2(vy_m, vx_m) * 180 / Math.PI;
+
+          if (a <= 0.35 && vx_m > 0 && Math.abs(launch_ang - pin_deg) <= 5.0) {
+            v_rel = {vx: vx_m, vy: vy_m};
+            p_rel = {x: x_tip + sling_m * Math.cos(p), y: y_tip + sling_m * Math.sin(p)};
+            break;
+          }
+        }
+        t += dt;
+      }
+
+      if (!v_rel) {
+        v_rel = {vx: 4.87, vy: 4.87};
+        p_rel = {x: 0.1, y: 1.49};
+      }
+
+      let vx = v_rel.vx;
+      let vy = v_rel.vy;
+      let px = p_rel.x;
+      let py = p_rel.y;
+      while (py > 0.0) {
+        let sp = Math.hypot(vx, vy);
+        let fd = 0.5 * rho_air * cd * marble_area * sp * sp;
+        let ax = -(fd / marble_m) * (vx / sp);
+        let ay = -g - (fd / marble_m) * (vy / sp);
+        vx += ax * 0.001;
+        vy += ay * 0.001;
+        px += vx * 0.001;
+        py += vy * 0.001;
+      }
+      return {
+        range_m: px,
+        range_yds: px / 0.9144,
+        v_rel: Math.hypot(v_rel.vx, v_rel.vy),
+        deg: Math.atan2(v_rel.vy, v_rel.vx) * 180 / Math.PI
+      };
+    }
+
+    function resetSimulation() {
+      state = 'cocked';
+      alpha = 2.67;  // 153 degrees (resting on trough)
+      omega = 0.0;
+      psi = 0.0;
+      omega_psi = 0.0;
+      flight_time = 0;
+      trajectory = [];
+      document.getElementById('canvas-status').innerText = 'Cocked & Ready';
+      document.getElementById('canvas-status').className = 'mono text-[#ffd166] font-semibold';
+      document.getElementById('btn-fire').innerText = '🚀 FIRE TREBUCHET';
+
+      // Sized to reach just under fulcrum when cocked (X = 0)
+      marble_x = 0.0;
+      marble_y = 0.025;
+      marble_vx = 0;
+      marble_vy = 0;
+
+      updateTelemetry();
+      draw();
+    }
+
+    function triggerLaunch() {
+      if (state === 'flying' || state === 'swinging') {
+        resetSimulation();
+      }
+      state = 'swinging';
+      document.getElementById('canvas-status').innerText = 'Launching...';
+      document.getElementById('canvas-status').className = 'mono text-[#00f5d4] font-semibold';
+      document.getElementById('btn-fire').innerText = '↺ Reload';
+    }
+
+    function togglePause() {
+      is_paused = !is_paused;
+      document.getElementById('btn-pause').innerText = is_paused ? '▶ Resume' : '⏸ Pause';
+    }
+
+    function setSimSpeed(sp) {
+      sim_speed = sp;
+    }
+
+    function updateTelemetry() {
+      document.getElementById('tel-angle').innerText = (alpha * 180 / Math.PI).toFixed(1) + '°';
+      document.getElementById('tel-omega').innerText = omega.toFixed(2) + ' rad/s';
+      document.getElementById('tel-vrel').innerText = release_v > 0 ? `${release_v.toFixed(2)} m/s` : '--';
+      document.getElementById('tel-launchang').innerText = release_deg > 0 ? `${release_deg.toFixed(1)}°` : '--';
+      document.getElementById('tel-time').innerText = flight_time.toFixed(3) + ' s';
+      document.getElementById('tel-dist').innerText = (marble_x / 0.9144).toFixed(2) + ' YDS';
+    }
+
+    let lastTime = performance.now();
+    function animate(currentTime) {
+      requestAnimationFrame(animate);
+      let dt_real = (currentTime - lastTime) / 1000.0;
+      lastTime = currentTime;
+
+      if (!is_paused && (state === 'swinging' || state === 'flying')) {
+        let sub_steps = 15;
+        let dt = (dt_real * sim_speed) / sub_steps;
+        dt = Math.min(0.002, dt);
+
+        for (let i = 0; i < sub_steps; i++) {
+          stepPhysics(dt);
+        }
+      }
+
+      draw();
+    }
+
+    function stepPhysics(dt) {
+      const M_cw = cw_mass_g / 1000.0;
+      const I_tot = I_arm + M_cw * Math.pow(L_s, 2);
+      const d_com = (L_l - L_s) / 2.0;
+
+      let x_tip = -L_l * Math.sin(alpha);
+      let y_tip = H_pivot + L_l * Math.cos(alpha);
+      let tau_g = -(M_cw * L_s - m_arm * d_com) * g * Math.sin(alpha);
+
+      if (state === 'swinging') {
+        flight_time += dt;
+        let dy = y_tip - 0.025;
+
+        if (dy < sling_len_m * 0.95 && alpha > 1.22) {
+          let term = Math.max(0.001, sling_len_m * sling_len_m - dy * dy);
+          let dx_da = -L_l * Math.cos(alpha) - (0.5 / Math.sqrt(term)) * (2 * dy * (-L_l * Math.sin(alpha)));
+          let I_eff = I_tot + marble_m * (dx_da * dx_da);
+
+          let alpha_acc = tau_g / I_eff;
+          omega += alpha_acc * dt;
+          alpha += omega * dt;
+
+          marble_x = x_tip - Math.sqrt(term);
+          marble_y = 0.025;
+          marble_vx = dx_da * omega;
+          marble_vy = 0;
+          psi = Math.atan2(0.025 - y_tip, marble_x - x_tip);
+          omega_psi = 0;
+        } else {
+          let alpha_acc = tau_g / I_tot;
+          omega += alpha_acc * dt;
+          alpha += omega * dt;
+
+          let a_tip_x = -L_l * (Math.cos(alpha)*alpha_acc - Math.sin(alpha)*(omega*omega));
+          let a_tip_y = L_l * (-Math.sin(alpha)*alpha_acc - Math.cos(alpha)*(omega*omega));
+          let tau_p = -g * Math.cos(psi) - a_tip_y * Math.cos(psi) + a_tip_x * Math.sin(psi);
+          omega_psi += (tau_p / sling_len_m) * dt;
+          psi += omega_psi * dt;
+
+          marble_x = x_tip + sling_len_m * Math.cos(psi);
+          marble_y = Math.max(0.025, y_tip + sling_len_m * Math.sin(psi));
+          marble_vx = -L_l * Math.cos(alpha)*omega - sling_len_m * Math.sin(psi)*omega_psi;
+          marble_vy = -L_l * Math.sin(alpha)*omega + sling_len_m * Math.cos(psi)*omega_psi;
+
+          let launch_ang = Math.atan2(marble_vy, marble_vx) * 180 / Math.PI;
+
+          if (alpha <= 0.35 && marble_vx > 0 && Math.abs(launch_ang - pin_angle_deg) <= 5.0) {
+            state = 'flying';
+            release_v = Math.hypot(marble_vx, marble_vy);
+            release_deg = launch_ang;
+            release_h = marble_y;
+            trajectory.push({x: marble_x, y: marble_y});
+          }
+        }
+      } else if (state === 'flying') {
+        flight_time += dt;
+        let sp = Math.hypot(marble_vx, marble_vy);
+        let fd = 0.5 * rho_air * cd * marble_area * sp * sp;
+        let ax = -(fd / marble_m) * (marble_vx / sp);
+        let ay = -g - (fd / marble_m) * (marble_vy / sp);
+
+        marble_vx += ax * dt;
+        marble_vy += ay * dt;
+        marble_x += marble_vx * dt;
+        marble_y += marble_vy * dt;
+
+        trajectory.push({x: marble_x, y: marble_y});
+
+        if (alpha < -0.26) {
+          omega = -0.15 * omega;
+          alpha = -0.26;
+        } else {
+          let alpha_acc = (tau_g - 0.1 * omega) / I_tot;
+          omega += alpha_acc * dt;
+          alpha += omega * dt;
+        }
+
+        if (marble_y <= 0.0) {
+          marble_y = 0.0;
+          state = 'landed';
+          final_range_m = marble_x;
+          let range_yds = final_range_m / 0.9144;
+          document.getElementById('canvas-status').innerText = `Landed at ${range_yds.toFixed(2)} Yards!`;
+          document.getElementById('canvas-status').className = 'mono text-[#00f5d4] font-bold';
+        }
+      }
+
+      updateTelemetry();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const toScreenX = (x) => origin_x + x * scale;
+      const toScreenY = (y) => origin_y - y * scale;
+
+      // 1. Ground & Measurement Ticks
+      ctx.strokeStyle = '#224870';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, origin_y);
+      ctx.lineTo(canvas.width, origin_y);
+      ctx.stroke();
+
+      for (let yd = 1; yd <= 4; yd++) {
+        let xm = yd * 0.9144;
+        let sx = toScreenX(xm);
+        ctx.strokeStyle = yd === 3 ? '#00f5d4' : '#1c4068';
+        ctx.lineWidth = yd === 3 ? 2 : 1;
+        ctx.setLineDash(yd === 3 ? [4, 4] : [2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(sx, 40);
+        ctx.lineTo(sx, origin_y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = yd === 3 ? '#00f5d4' : '#64dfdf';
+        ctx.font = yd === 3 ? 'bold 11px monospace' : '10px monospace';
+        ctx.fillText(`${yd}.0 YD`, sx - 16, origin_y + 18);
+        if (yd === 3) {
+          ctx.fillText(`TARGET`, sx - 18, 55);
+        }
+      }
+
+      // 2. Trajectory Trail
+      if (trajectory.length > 1) {
+        ctx.strokeStyle = '#48cae4';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(toScreenX(trajectory[0].x), toScreenY(trajectory[0].y));
+        for (let i = 1; i < trajectory.length; i++) {
+          ctx.lineTo(toScreenX(trajectory[i].x), toScreenY(trajectory[i].y));
+        }
+        ctx.stroke();
+      }
+
+      // 3. Trebuchet Wooden Frame (3-Foot / 36" height)
+      let piv_sx = toScreenX(0);
+      let piv_sy = toScreenY(H_pivot);
+      let top_sy = toScreenY(0.9144);
+
+      // Base Runners
+      ctx.fillStyle = '#0f2b48';
+      ctx.strokeStyle = '#48cae4';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(toScreenX(-0.457), origin_y - 8, 0.914 * scale, 8);
+      ctx.strokeRect(toScreenX(-0.457), origin_y - 8, 0.914 * scale, 8);
+
+      // Marble trough (extended past fulcrum to support marble under fulcrum)
+      ctx.fillStyle = '#16385c';
+      ctx.fillRect(toScreenX(-0.457 + 0.05), origin_y - 12, 0.75 * scale, 4);
+
+      // A-Frame Uprights
+      ctx.strokeStyle = '#64dfdf';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(toScreenX(-0.28), origin_y - 8);
+      ctx.lineTo(piv_sx, piv_sy);
+      ctx.moveTo(toScreenX(0.28), origin_y - 8);
+      ctx.lineTo(piv_sx, piv_sy);
+      ctx.lineTo(piv_sx, top_sy);
+      ctx.stroke();
+
+      // Cross tie
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(toScreenX(-0.15), toScreenY(0.4));
+      ctx.lineTo(toScreenX(0.15), toScreenY(0.4));
+      ctx.stroke();
+
+      // 4. Swing Stick (Throwing Arm - 40" Timber Beam)
+      let tip_x = -L_l * Math.sin(alpha);
+      let tip_y = H_pivot + L_l * Math.cos(alpha);
+      let cw_x = L_s * Math.sin(alpha);
+      let cw_y = H_pivot - L_s * Math.cos(alpha);
+
+      let tip_sx = toScreenX(tip_x);
+      let tip_sy = toScreenY(tip_y);
+      let cw_sx = toScreenX(cw_x);
+      let cw_sy = toScreenY(cw_y);
+
+      // Beam (Bigger 1.5" x 1.5" timber stick)
+      ctx.strokeStyle = '#e0a96d';
+      ctx.lineWidth = 7.5;
+      ctx.beginPath();
+      ctx.moveTo(cw_sx, cw_sy);
+      ctx.lineTo(tip_sx, tip_sy);
+      ctx.stroke();
+
+      // 45° Release Pin
+      let pin_dx = -12 * Math.cos(alpha);
+      let pin_dy = 12 * Math.sin(alpha);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(tip_sx, tip_sy);
+      ctx.lineTo(tip_sx + pin_dx, tip_sy + pin_dy);
+      ctx.stroke();
+
+      // Screwed Counterweight
+      ctx.fillStyle = '#2a5c8a';
+      ctx.strokeStyle = '#ffd166';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(cw_sx, cw_sy, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#ffd166';
+      ctx.font = 'bold 8.5px monospace';
+      ctx.fillText(cw_mass_g.toFixed(0) + 'g', cw_sx - 12, cw_sy + 3);
+
+      // 5. Fulcrum Pivot
+      ctx.fillStyle = '#ffd166';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(piv_sx, piv_sy, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(piv_sx, piv_sy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 6. Sling & Marble
+      let msx = toScreenX(marble_x);
+      let msy = toScreenY(marble_y);
+
+      if (state === 'cocked' || state === 'swinging') {
+        ctx.strokeStyle = '#d4a373';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(tip_sx, tip_sy);
+        ctx.lineTo(msx, msy);
+        ctx.stroke();
+
+        ctx.strokeStyle = '#e76f51';
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.arc(msx, msy, 9, 0, Math.PI);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#00f5d4';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(msx, msy, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      if (state === 'landed') {
+        ctx.strokeStyle = '#00f5d4';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(msx, msy, 14, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(msx, msy, 22, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    window.onload = () => {
+      resizeCanvas();
+      updateSliders();
+      requestAnimationFrame(animate);
+    };
+  </script>
+</body>
+</html>
