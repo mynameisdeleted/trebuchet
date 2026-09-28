@@ -26,11 +26,12 @@ import shutil
 import mathutils
 import time
 
-def build_simulation(wind_mph=0.0):
+def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None, wind_mph=0.0, duration_sec=6.0):
     t_start = time.time()
     v_wind = wind_mph * 0.44704
     print("=====================================================================")
-    print(f"Starting 60-Second Native Blender Bullet Sim (Wind: {wind_mph:.1f} mph / {v_wind:.2f} m/s)")
+    print(f"Starting Native Blender Bullet Sim ({duration_sec:.1f}s at 60 FPS / 1200 FPS physics | Wind: {wind_mph:.1f} mph)")
+    print(f"Sling Architecture: {num_segments} Articulated Segments per Line | Material: {sling_material}")
     print("Realistic Aerodynamics: Quadratic Drag & Ambient Wind Force Fields")
     print("=====================================================================")
 
@@ -44,13 +45,11 @@ def build_simulation(wind_mph=0.0):
     scene.unit_settings.length_unit = 'METERS'
     scene.unit_settings.scale_length = 1.0
 
-    # 300 FPS timebase for physics simulation:
-    # 1 physics step = 1/300s = 0.2 frames at 60 FPS
-    # Frames 1 to 3600 at 60 FPS -> 17,996 discrete simulation steps
-    TOTAL_STEPS = 17996
-    scene.render.fps = 300
+    # 60 FPS timeline for rendering and animation:
+    TOTAL_FRAMES = int(duration_sec * 60)
+    scene.render.fps = 60
     scene.frame_start = 1
-    scene.frame_end = TOTAL_STEPS
+    scene.frame_end = TOTAL_FRAMES
 
     # -------------------------------------------------------------
     # 2. STUDIO LIGHTING & SKY ENVIRONMENT
@@ -114,12 +113,57 @@ def build_simulation(wind_mph=0.0):
                 bsdf.inputs['Transmission Weight'].default_value = transmission
         return mat
 
+    SLING_MATERIALS = {
+        'nylon': {
+            'name': 'Braided Nylon (Standard)',
+            'total_mass_g': 8.0,
+            'elasticity_k': 8500.0,
+            'linear_damping': 0.35,
+            'angular_damping': 0.45,
+            'constraint_type': 'GENERIC_SPRING',
+            'color': (0.85, 0.82, 0.75, 1.0),
+            'metallic': 0.0,
+            'roughness': 0.88,
+            'bevel_depth': 0.0013
+        },
+        'chain': {
+            'name': 'Steel Link Chain (Rigid)',
+            'total_mass_g': 120.0,
+            'elasticity_k': 1e9,
+            'linear_damping': 0.20,
+            'angular_damping': 0.30,
+            'constraint_type': 'POINT',
+            'color': (0.65, 0.70, 0.75, 1.0),
+            'metallic': 0.95,
+            'roughness': 0.25,
+            'bevel_depth': 0.0018
+        },
+        'yarn': {
+            'name': 'Wool Yarn (Compliant)',
+            'total_mass_g': 4.0,
+            'elasticity_k': 600.0,
+            'linear_damping': 0.50,
+            'angular_damping': 0.60,
+            'constraint_type': 'GENERIC_SPRING',
+            'color': (0.92, 0.65, 0.45, 1.0),
+            'metallic': 0.0,
+            'roughness': 0.95,
+            'bevel_depth': 0.0015
+        }
+    }
+    mat_cfg = SLING_MATERIALS.get(sling_material, SLING_MATERIALS['nylon'])
+    total_sling_mass_kg = mat_cfg['total_mass_g'] / 1000.0
+    seg_mass_kg = total_sling_mass_kg / num_segments
+    k_line = float(elasticity_k) if elasticity_k is not None else mat_cfg['elasticity_k']
+    k_joint = num_segments * k_line
+    c_joint = 2.0 * math.sqrt(seg_mass_kg * k_joint) * 0.4 if k_line < 1e8 else 0.0
+
     mat_wood   = make_mat("PBR_Timber_Pine",          (0.55, 0.35, 0.18, 1.0), metallic=0.0,  roughness=0.65)
     mat_steel  = make_mat("PBR_Polished_Steel",       (0.85, 0.88, 0.92, 1.0), metallic=0.95, roughness=0.15)
     mat_cw     = make_mat("PBR_Bronze_Weight",        (0.88, 0.68, 0.32, 1.0), metallic=0.85, roughness=0.30)
     mat_marble = make_mat("PBR_Glass_Marble_Cyan",     (0.05, 0.92, 0.88, 1.0), metallic=0.1,  roughness=0.05, transmission=0.85)
     mat_cloth  = make_mat("PBR_Woven_Canvas_Cloth",   (0.78, 0.72, 0.62, 1.0), metallic=0.0,  roughness=0.92)
-    mat_string = make_mat("PBR_Braided_Twine_String", (0.85, 0.82, 0.75, 1.0), metallic=0.0,  roughness=0.88)
+    mat_string = make_mat(f"PBR_Sling_{sling_material.capitalize()}", mat_cfg['color'], metallic=mat_cfg['metallic'], roughness=mat_cfg['roughness'])
     mat_floor  = make_mat("PBR_Concrete_Floor",       (0.88, 0.90, 0.92, 1.0), roughness=0.7)
     mat_target = make_mat("PBR_Target_Red",           (0.90, 0.15, 0.15, 1.0), roughness=0.3)
 
@@ -165,26 +209,19 @@ def build_simulation(wind_mph=0.0):
     target_20y.data.materials.append(mat_target)
 
     # -------------------------------------------------------------
-    # 6. CONFIGURE BULLET RIGID BODY WORLD (300 FPS ENGINE)
+    # 6. CONFIGURE BULLET RIGID BODY WORLD (1200 FPS PHYSICS ENGINE)
     # -------------------------------------------------------------
     bpy.ops.rigidbody.world_add()
     rbw = scene.rigidbody_world
-    rbw.substeps_per_frame = 15
-    rbw.solver_iterations = 40
+    # 60 FPS * 20 substeps_per_frame = 1200 FPS native physics simulation rate:
+    rbw.substeps_per_frame = 20
+    rbw.solver_iterations = 50
     rbw.point_cache.frame_start = 1
-    rbw.point_cache.frame_end = TOTAL_STEPS
+    rbw.point_cache.frame_end = TOTAL_FRAMES
     rbw.effector_weights.wind = 1.0
-    rbw.effector_weights.drag = 1.0
+    rbw.effector_weights.drag = 0.0
 
-    # 6-aero. Quadratic Aerodynamic Drag & Ambient Wind Force Fields
-    bpy.ops.object.effector_add(type='DRAG', location=(0.0, 0.0, 1.0))
-    drag_field = bpy.context.active_object
-    drag_field.name = "Aero_Quadratic_Drag"
-    drag_field.field.linear_drag = 0.0
-    drag_field.field.quadratic_drag = 1.0
-    drag_field.field.falloff_power = 0.0
-    drag_field.field.use_max_distance = False
-
+    # Ambient Wind Force Field
     wind_field = None
     if abs(wind_mph) > 0.05:
         bpy.ops.object.effector_add(type='WIND', location=(0.0, 0.0, 1.0))
@@ -336,69 +373,81 @@ def build_simulation(wind_mph=0.0):
         pouch.rigid_body.collision_collections[0] = False
         pouch.rigid_body.collision_collections[1] = False
 
-    # Line 1: From Arm Tip to Pouch (Fixed line)
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.002, depth=0.392, location=(p_tip + p_pouch)*0.5, rotation=(0.0, math.radians(90.0), 0.0))
-    line1 = bpy.context.active_object
-    line1.name = "Phys_Line1"
-    bpy.ops.rigidbody.object_add()
-    line1.rigid_body.type = 'ACTIVE'
-    line1.rigid_body.mass = 0.008
-    # Doubled damping on sling twine line 1:
-    line1.rigid_body.linear_damping = 0.50
-    line1.rigid_body.angular_damping = 0.50
-    line1.rigid_body.collision_collections[0] = False
-    line1.rigid_body.collision_collections[1] = False
-    line1.hide_render = True
+    # Line 1 & Line 2: Multi-Segment Articulated Physics Chains (16 Segments Default)
+    line_vec = p_pouch - p_tip
+    L_total = line_vec.length
+    seg_len = L_total / num_segments
+    rot_cyl = (0.0, math.radians(90.0), 0.0)
 
-    # Line 2: From Pouch to Pin (Release line)
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.002, depth=0.392, location=(p_tip + p_pouch)*0.5, rotation=(0.0, math.radians(90.0), 0.0))
-    line2 = bpy.context.active_object
-    line2.name = "Phys_Line2"
-    bpy.ops.rigidbody.object_add()
-    line2.rigid_body.type = 'ACTIVE'
-    line2.rigid_body.mass = 0.008
-    # Doubled damping on sling twine line 2:
-    line2.rigid_body.linear_damping = 0.50
-    line2.rigid_body.angular_damping = 0.50
-    line2.rigid_body.collision_collections[0] = False
-    line2.rigid_body.collision_collections[1] = False
-    line2.hide_render = True
+    line1_segs = []
+    line2_segs = []
+    line1_joints = []
+    line2_joints = []
 
-    # Joint 1: Arm Tip <-> Line 1
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_tip)
-    j1 = bpy.context.active_object
-    j1.name = "Joint_Arm_Line1"
-    bpy.ops.rigidbody.constraint_add()
-    j1.rigid_body_constraint.type = 'POINT'
-    j1.rigid_body_constraint.object1 = arm
-    j1.rigid_body_constraint.object2 = line1
+    for i in range(num_segments):
+        frac_mid = (i + 0.5) / num_segments
+        p_seg = p_tip + frac_mid * line_vec
 
-    # Joint 2: Line 1 <-> Pouch
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_pouch)
-    j2 = bpy.context.active_object
-    j2.name = "Joint_Line1_Pouch"
-    bpy.ops.rigidbody.constraint_add()
-    j2.rigid_body_constraint.type = 'POINT'
-    j2.rigid_body_constraint.object1 = line1
-    j2.rigid_body_constraint.object2 = pouch
+        # Line 1 segment (Fixed)
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.0013, depth=seg_len, location=p_seg, rotation=rot_cyl)
+        s1 = bpy.context.active_object
+        s1.name = f"Phys_Line1_{i}"
+        bpy.ops.rigidbody.object_add()
+        s1.rigid_body.type = 'ACTIVE'
+        s1.rigid_body.mass = seg_mass_kg
+        s1.rigid_body.linear_damping = mat_cfg['linear_damping']
+        s1.rigid_body.angular_damping = mat_cfg['angular_damping']
+        s1.rigid_body.collision_collections[0] = False
+        s1.rigid_body.collision_collections[1] = False
+        s1.hide_render = True
+        line1_segs.append(s1)
 
-    # Joint 3: Pouch <-> Line 2
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_pouch)
-    j3 = bpy.context.active_object
-    j3.name = "Joint_Pouch_Line2"
-    bpy.ops.rigidbody.constraint_add()
-    j3.rigid_body_constraint.type = 'POINT'
-    j3.rigid_body_constraint.object1 = pouch
-    j3.rigid_body_constraint.object2 = line2
+        # Line 2 segment (Release)
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.0013, depth=seg_len, location=p_seg, rotation=rot_cyl)
+        s2 = bpy.context.active_object
+        s2.name = f"Phys_Line2_{i}"
+        bpy.ops.rigidbody.object_add()
+        s2.rigid_body.type = 'ACTIVE'
+        s2.rigid_body.mass = seg_mass_kg
+        s2.rigid_body.linear_damping = mat_cfg['linear_damping']
+        s2.rigid_body.angular_damping = mat_cfg['angular_damping']
+        s2.rigid_body.collision_collections[0] = False
+        s2.rigid_body.collision_collections[1] = False
+        s2.hide_render = True
+        line2_segs.append(s2)
 
-    # Joint 4: Line 2 <-> Pin on Arm (Dynamic release at release step!)
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_tip)
-    j4 = bpy.context.active_object
-    j4.name = "Joint_Line2_Pin"
-    bpy.ops.rigidbody.constraint_add()
-    j4.rigid_body_constraint.type = 'POINT'
-    j4.rigid_body_constraint.object1 = arm
-    j4.rigid_body_constraint.object2 = line2
+    def create_sling_joint(name, obj1, obj2, loc):
+        bpy.ops.object.empty_add(type='PLAIN_AXES', location=loc)
+        emp = bpy.context.active_object
+        emp.name = name
+        bpy.ops.rigidbody.constraint_add()
+        con = emp.rigid_body_constraint
+        con.object1 = obj1
+        con.object2 = obj2
+        con.disable_collisions = True
+        con.type = 'POINT'
+        return emp
+
+    # Line 1 Joints: Arm Tip -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch
+    j1_0 = create_sling_joint("Joint_Arm_Line1_0", arm, line1_segs[0], p_tip)
+    line1_joints.append(j1_0)
+    for i in range(1, num_segments):
+        loc_i = p_tip + (i / num_segments) * line_vec
+        ji = create_sling_joint(f"Joint_Line1_{i-1}_{i}", line1_segs[i-1], line1_segs[i], loc_i)
+        line1_joints.append(ji)
+    j1_N = create_sling_joint("Joint_Line1_Pouch", line1_segs[-1], pouch, p_pouch)
+    line1_joints.append(j1_N)
+
+    # Line 2 Joints: Pin on Arm -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch
+    # (The joint between Arm and seg 0 is the dynamic release trigger!)
+    j_release = create_sling_joint("Joint_Line2_Pin_Release", arm, line2_segs[0], p_tip)
+    line2_joints.append(j_release)
+    for i in range(1, num_segments):
+        loc_i = p_tip + (i / num_segments) * line_vec
+        ji = create_sling_joint(f"Joint_Line2_{i-1}_{i}", line2_segs[i-1], line2_segs[i], loc_i)
+        line2_joints.append(ji)
+    j2_N = create_sling_joint("Joint_Line2_Pouch", line2_segs[-1], pouch, p_pouch)
+    line2_joints.append(j2_N)
 
     # Joint M: Pouch <-> Marble (Cradles marble, opens at release!)
     bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_pouch)
@@ -413,108 +462,92 @@ def build_simulation(wind_mph=0.0):
     pin_dir_local = mathutils.Vector((-0.4311 - (-0.3922), 0.0, 0.0348 - 0.0627)).normalized()
 
     # -------------------------------------------------------------
-    # 7. DYNAMIC FORCE-BASED RELEASE EVALUATION
+    # 7. RUN FULL 60-SECOND SIMULATION WITH LIVE DYNAMIC RELEASE
     # -------------------------------------------------------------
-    print("Evaluating dynamic pin-release angle from Bullet physics at 300 FPS...")
-    dynamic_release_step = None
+    print(f"Running native Bullet physics simulation (60 FPS render, 1200 FPS physics, {TOTAL_FRAMES} frames)...")
 
-    for s in range(1, 300):
-        scene.frame_set(s)
-        dg = bpy.context.evaluated_depsgraph_get()
-        arm_eval = arm.evaluated_get(dg)
-        m_eval = marble.evaluated_get(dg)
-        mat_arm = arm_eval.matrix_world
+    # Sample every single frame across the full 6-second timeline:
+    sampled_frames = list(range(1, TOTAL_FRAMES + 1))
+    sampled_set = set(sampled_frames)
 
-        p_base_w = mat_arm @ pin_base_local
-        p_dir_w = (mat_arm.to_3x3() @ pin_dir_local).normalized()
-        m_loc = m_eval.matrix_world.translation
-
-        T_vec = (m_loc - p_base_w).normalized()
-        dot_val = T_vec.dot(p_dir_w)
-        rot_deg = math.degrees(arm_eval.matrix_world.to_euler().y)
-
-        if dynamic_release_step is None and s > 80 and rot_deg > 90.0 and dot_val > 0.80:
-            dynamic_release_step = s
-            f_60_rel = 1.0 + (s - 1) * 0.2
-            print(f">>> 100% DYNAMIC HOOK RELEASE at Step {s} (F60={f_60_rel:.2f}, t={(s-1)/300:.3f}s): arm_rot={rot_deg:.2f}°, dot={dot_val:.4f} <<<")
-            break
-
-    if dynamic_release_step is None:
-        dynamic_release_step = 145
-
-    # Apply dynamic release to constraints:
-    for j in [j4, jm]:
-        j.rigid_body_constraint.enabled = True
-        j.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=1)
-        j.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=dynamic_release_step - 1)
-        j.rigid_body_constraint.enabled = False
-        j.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=dynamic_release_step)
-
-    # -------------------------------------------------------------
-    # 8. RUN FULL 60-SECOND SIMULATION & EXTRACT MATRICES
-    # -------------------------------------------------------------
-    print(f"Running full native Bullet physics simulation across {TOTAL_STEPS} steps (60.0s at dt=1/300s)...")
-    
-    # Sampling plan:
-    # Frames 1 to 720 (Steps 1 to 3596): sample every step (0.2 frame resolution)
-    # Frames 721 to 3600 (Steps 3597 to 17996): sample every 5th step (1.0 frame resolution)
-    sampled_steps = []
-    # Dynamic phase: every step
-    for s in range(1, 3597):
-        sampled_steps.append(s)
-    # Settling phase: every 5 steps (every integer frame)
-    for s in range(3601, TOTAL_STEPS + 1, 5):
-        sampled_steps.append(s)
-    if sampled_steps[-1] != TOTAL_STEPS:
-        sampled_steps.append(TOTAL_STEPS)
-
-    sampled_set = set(sampled_steps)
     step_data = {}
+    released = False
+    dynamic_release_frame = 28 # fallback default
 
     t_sim_0 = time.time()
-    for s in range(1, TOTAL_STEPS + 1):
-        scene.frame_set(s)
-        if s in sampled_set:
-            dg = bpy.context.evaluated_depsgraph_get()
-            step_data[s] = {
+    for f in range(1, TOTAL_FRAMES + 1):
+        scene.frame_set(f)
+        dg = bpy.context.evaluated_depsgraph_get()
+
+        # Check live dynamic release condition if not yet released
+        if not released and f > 15:
+            arm_eval = arm.evaluated_get(dg)
+            m_eval = marble.evaluated_get(dg)
+            mat_arm = arm_eval.matrix_world
+            p_base_w = mat_arm @ pin_base_local
+            p_dir_w = (mat_arm.to_3x3() @ pin_dir_local).normalized()
+            m_loc = m_eval.matrix_world.translation
+
+            T_vec = (m_loc - p_base_w).normalized()
+            dot_val = T_vec.dot(p_dir_w)
+            rot_deg = math.degrees(arm_eval.matrix_world.to_euler().y)
+
+            if rot_deg > 85.0 and dot_val > 0.80:
+                released = True
+                dynamic_release_frame = f
+                j_release.rigid_body_constraint.enabled = False
+                jm.rigid_body_constraint.enabled = False
+                print(f">>> 100% DYNAMIC HOOK RELEASE at Frame {f} (t={(f-1)/60:.3f}s): arm_rot={rot_deg:.2f}°, dot={dot_val:.4f} <<<")
+
+        if f in sampled_set:
+            step_data[f] = {
                 'arm': arm.evaluated_get(dg).matrix_world.copy(),
                 'cw': cw.evaluated_get(dg).matrix_world.copy(),
                 'marble': marble.evaluated_get(dg).matrix_world.copy(),
                 'pouch': pouch.evaluated_get(dg).matrix_world.copy(),
-                'line2': line2.evaluated_get(dg).matrix_world.copy(),
+                'line2_0': line2_segs[0].evaluated_get(dg).matrix_world.copy(),
+                'line1_locs': [seg.evaluated_get(dg).matrix_world.translation.copy() for seg in line1_segs],
+                'line2_locs': [seg.evaluated_get(dg).matrix_world.translation.copy() for seg in line2_segs],
             }
-        if s % 3000 == 0 or s == TOTAL_STEPS:
-            t_sec = (s - 1) / 300.0
-            f_60 = 1.0 + (s - 1) * 0.2
-            dg = bpy.context.evaluated_depsgraph_get()
+
+        if f % 600 == 0 or f == TOTAL_FRAMES:
+            t_sec = (f - 1) / 60.0
             arm_rot = math.degrees(arm.evaluated_get(dg).matrix_world.to_euler().y)
             m_pos = marble.evaluated_get(dg).matrix_world.translation
-            print(f"  Step {s:5d} / {TOTAL_STEPS} (t={t_sec:4.1f}s, F60={f_60:6.1f}): arm_rot={arm_rot:6.2f}°, marble=({m_pos.x:5.2f}, {m_pos.z:5.2f})")
+            print(f"  Frame {f:4d} / {TOTAL_FRAMES} (t={t_sec:4.1f}s): arm_rot={arm_rot:6.2f}°, marble=({m_pos.x:5.2f}, {m_pos.z:5.2f})")
 
     print(f"Physics simulation completed in {time.time() - t_sim_0:.2f}s!")
 
-    # Remove rigid body world so baked keyframes have full deterministic control
+    # Disable rigid body world and strip rigid bodies so baked keyframes have full deterministic control
     if scene.rigidbody_world:
-        bpy.ops.rigidbody.world_remove()
+        scene.rigidbody_world.enabled = False
 
-    for obj in [line1, line2, j1, j2, j3, j4, jm, axle_anchor, hinge_empty, cw_fix, drag_field, wind_field]:
+    for obj in [arm, cw, marble, pouch]:
+        if obj and obj.rigid_body:
+            bpy.ops.object.select_all(action='DESELECT')
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+            bpy.ops.rigidbody.object_remove()
+
+    helpers_to_hide = (
+        line1_segs + line2_segs +
+        line1_joints + line2_joints +
+        [jm, axle_anchor, hinge_empty, cw_fix, wind_field]
+    )
+    for obj in helpers_to_hide:
         if obj and obj.name in bpy.data.objects:
-            bpy.data.objects.remove(obj, do_unlink=True)
+            obj.hide_viewport = True
+            obj.hide_render = True
 
     # -------------------------------------------------------------
-    # 9. SET 60 FPS TIMELINE & BAKE KEYFRAMES ACROSS 3,600 FRAMES
+    # 8. BAKE KEYFRAMES ACROSS 3,600 FRAMES (60 FPS)
     # -------------------------------------------------------------
-    print("Setting scene to 60 FPS (Frames 1 to 3600) and baking keyframes...")
-    scene.render.fps = 60
-    scene.frame_start = 1
-    scene.frame_end = 3600
-
+    print("Baking keyframes to 60 FPS timeline...")
     marble_positions = []
     t_bake_0 = time.time()
 
-    for s in sampled_steps:
-        f = 1.0 + (s - 1) * 0.2
-        d = step_data[s]
+    for f in sampled_frames:
+        d = step_data[f]
 
         # Arm
         loc_a, rot_a, _ = d['arm'].decompose()
@@ -548,9 +581,9 @@ def build_simulation(wind_mph=0.0):
     print(f"Keyframe baking completed in {time.time() - t_bake_0:.2f}s!")
 
     # -------------------------------------------------------------
-    # 10. CONSTRUCT VISUAL STRING CURVES, LOOP TORUS, AND RIG
+    # 9. CONSTRUCT VISUAL STRING CURVES, LOOP TORUS, AND RIG
     # -------------------------------------------------------------
-    print("Building visual braided twine strings and spliced cord loop rig across 3,600 frames...")
+    print("Building visual articulated string curves and spliced cord loop rig across 3,600 frames...")
     bpy.ops.mesh.primitive_torus_add(
         major_radius=0.0055,
         minor_radius=0.0013,
@@ -566,19 +599,21 @@ def build_simulation(wind_mph=0.0):
     scene.collection.children.link(rig_col)
     rig_col.hide_viewport = True
 
-    def create_string_curve(name):
+    total_curve_pts = num_segments + 2
+
+    def create_string_curve(name, num_pts):
         c_data = bpy.data.curves.new(name, type='CURVE')
         c_data.dimensions = '3D'
-        c_data.bevel_depth = 0.0013 # 2.6mm braided twine
+        c_data.bevel_depth = mat_cfg.get('bevel_depth', 0.0013)
         c_data.bevel_resolution = 3
         spline = c_data.splines.new('POLY')
-        spline.points.add(2)
+        spline.points.add(num_pts - 1)
         c_obj = bpy.data.objects.new(name, c_data)
         c_obj.data.materials.append(mat_string)
         scene.collection.objects.link(c_obj)
 
         empties = []
-        for i in range(3):
+        for i in range(num_pts):
             emp = bpy.data.objects.new(f"{name}_Driver_{i}", None)
             rig_col.objects.link(emp)
             empties.append(emp)
@@ -587,32 +622,31 @@ def build_simulation(wind_mph=0.0):
             mod.vertex_indices_set([i])
         return c_obj, empties
 
-    str_fixed, emps_fixed = create_string_curve("Sling_String_Fixed")     # Line 1 (Fixed to arm tip eyelet)
-    str_rel,   emps_rel   = create_string_curve("Sling_String_Release")   # Line 2 (Loop on 45° pin)
+    str_fixed, emps_fixed = create_string_curve("Sling_String_Fixed", total_curve_pts)     # Line 1 (Fixed to arm tip eyelet)
+    str_rel,   emps_rel   = create_string_curve("Sling_String_Release", total_curve_pts)   # Line 2 (Loop on 45° pin)
 
     tip_local = mathutils.Vector((-0.3922, 0.0, 0.0627 - 0.762))
     pin_vec_local = mathutils.Vector((-0.4311 - (-0.3922), 0.0, 0.0348 - 0.0627))
 
-    for s in sampled_steps:
-        f = 1.0 + (s - 1) * 0.2
-        d = step_data[s]
+    for f in sampled_frames:
+        d = step_data[f]
         mat_a = d['arm']
         mat_p = d['pouch']
-        mat_l2 = d['line2']
+        mat_l2_0 = d['line2_0']
         rot_mat = mat_a.to_3x3()
 
         tip_w = mat_a.translation + rot_mat @ tip_local
         pvec_w = rot_mat @ pin_vec_local
         pouch_w = mat_p.translation
 
-        if s < dynamic_release_step:
-            slide_frac = 0.05 if s < 90 else 0.05 + 0.95 * (((s - 90) / (dynamic_release_step - 90)) ** 1.5)
+        if f < dynamic_release_frame:
+            slide_frac = 0.05 if f < 18 else 0.05 + 0.95 * (((f - 18) / max(1, dynamic_release_frame - 18)) ** 1.5)
             loop_w = tip_w + slide_frac * pvec_w
             q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(pvec_w.normalized())
             loop_rot = q_torus.to_euler()
         else:
-            loop_w = mat_l2 @ mathutils.Vector((-0.196, 0.0, 0.0))
-            line2_dir = (loop_w - pouch_w).normalized()
+            loop_w = mat_l2_0 @ mathutils.Vector((-seg_len / 2.0, 0.0, 0.0))
+            line2_dir = (d['line2_locs'][0] - loop_w).normalized() if num_segments > 0 else (pouch_w - loop_w).normalized()
             q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(line2_dir)
             loop_rot = q_torus.to_euler()
 
@@ -621,25 +655,27 @@ def build_simulation(wind_mph=0.0):
         loop_obj.keyframe_insert(data_path="location", frame=f)
         loop_obj.keyframe_insert(data_path="rotation_euler", frame=f)
 
-        # Line 1 (Fixed: Arm Tip Eyelet <-> Pouch)
+        # Line 1 (Fixed: Arm Tip Eyelet <-> Segments <-> Pouch)
         p1_anc = tip_w + mathutils.Vector((0.0, -0.008, 0.0))
         p1_end = pouch_w + mathutils.Vector((0.0, -0.008, 0.0))
-        p1_mid = (p1_anc + p1_end) * 0.5 + (mathutils.Vector((0.0, 0.0, -0.006)) if s == 1 else mathutils.Vector((0,0,0)))
         emps_fixed[0].location = p1_anc
-        emps_fixed[1].location = p1_mid
-        emps_fixed[2].location = p1_end
-        for i in range(3):
-            emps_fixed[i].keyframe_insert(data_path="location", frame=f)
+        emps_fixed[0].keyframe_insert(data_path="location", frame=f)
+        for i in range(num_segments):
+            emps_fixed[i + 1].location = d['line1_locs'][i] + mathutils.Vector((0.0, -0.008, 0.0))
+            emps_fixed[i + 1].keyframe_insert(data_path="location", frame=f)
+        emps_fixed[-1].location = p1_end
+        emps_fixed[-1].keyframe_insert(data_path="location", frame=f)
 
-        # Line 2 (Release: Loop <-> Pouch)
+        # Line 2 (Release: Loop <-> Segments <-> Pouch)
         p2_anc = loop_w + mathutils.Vector((0.0, 0.006, 0.0))
         p2_end = pouch_w + mathutils.Vector((0.0, 0.008, 0.0))
-        p2_mid = (p2_anc + p2_end) * 0.5 + (mathutils.Vector((0.0, 0.0, -0.006)) if s == 1 else mathutils.Vector((0,0,0)))
         emps_rel[0].location = p2_anc
-        emps_rel[1].location = p2_mid
-        emps_rel[2].location = p2_end
-        for i in range(3):
-            emps_rel[i].keyframe_insert(data_path="location", frame=f)
+        emps_rel[0].keyframe_insert(data_path="location", frame=f)
+        for i in range(num_segments):
+            emps_rel[i + 1].location = d['line2_locs'][i] + mathutils.Vector((0.0, 0.008, 0.0))
+            emps_rel[i + 1].keyframe_insert(data_path="location", frame=f)
+        emps_rel[-1].location = p2_end
+        emps_rel[-1].keyframe_insert(data_path="location", frame=f)
 
     # -------------------------------------------------------------
     # 11. NEON CYAN MARBLE TRAJECTORY PATH
@@ -722,22 +758,23 @@ def build_simulation(wind_mph=0.0):
     scene.render.resolution_y = 720
 
     render_side = [
-        (1,    "native_sim_f1_cocked.png"),
-        (20,   "native_sim_f20_centrifugal_whip.png"),
-        (27,   "native_sim_f27_dynamic_release.png"),
-        (28,   "native_sim_f28_sling_fling.png"),
-        (32,   "native_sim_f32_wide_open.png"),
-        (600,  "native_sim_f600_arm_10s.png"),
-        (1800, "native_sim_f1800_arm_30s.png"),
-        (3600, "native_sim_f3600_arm_60s_rest.png"),
+        (1,   "native_sim_f1_cocked.png"),
+        (20,  "native_sim_f20_centrifugal_whip.png"),
+        (27,  "native_sim_f27_dynamic_release.png"),
+        (28,  "native_sim_f28_sling_fling.png"),
+        (32,  "native_sim_f32_wide_open.png"),
+        (90,  "native_sim_f90_apex.png"),
+        (150, "native_sim_f150_touchdown.png"),
+        (360, "native_sim_f360_rest.png"),
     ]
     scene.camera = cam_side
     for f_idx, out_name in render_side:
-        scene.frame_set(f_idx)
-        out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
-        scene.render.filepath = out_path
-        bpy.ops.render.render(write_still=True)
-        print(f"Rendered Frame {f_idx} (Side Close) to {out_path}")
+        if f_idx <= TOTAL_FRAMES:
+            scene.frame_set(f_idx)
+            out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+            scene.render.filepath = out_path
+            bpy.ops.render.render(write_still=True)
+            print(f"Rendered Frame {f_idx} (Side Close) to {out_path}")
 
     render_iso = [
         (1,   "native_iso_f1.png"),
@@ -745,32 +782,36 @@ def build_simulation(wind_mph=0.0):
         (27,  "native_iso_f27.png"),
         (28,  "native_iso_f28.png"),
         (32,  "native_iso_f32.png"),
+        (90,  "native_iso_f90.png"),
+        (150, "native_iso_f150.png"),
     ]
     scene.camera = cam_iso
     for f_idx, out_name in render_iso:
-        scene.frame_set(f_idx)
-        out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
-        scene.render.filepath = out_path
-        bpy.ops.render.render(write_still=True)
-        print(f"Rendered Frame {f_idx} (Iso Close) to {out_path}")
+        if f_idx <= TOTAL_FRAMES:
+            scene.frame_set(f_idx)
+            out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+            scene.render.filepath = out_path
+            bpy.ops.render.render(write_still=True)
+            print(f"Rendered Frame {f_idx} (Iso Close) to {out_path}")
 
     render_wide = [
-        (27,   "native_wide_f27_release.png"),
-        (72,   "native_wide_f72_apex.png"),
-        (144,  "native_wide_f144_touchdown.png"),
-        (300,  "native_wide_f300_floor_roll.png"),
-        (600,  "native_wide_f600_marble_rest.png"),
-        (3600, "native_wide_f3600_full_60s_rest.png"),
+        (28,  "native_wide_f28_release.png"),
+        (90,  "native_wide_f90_apex.png"),
+        (150, "native_wide_f150_touchdown.png"),
+        (300, "native_wide_f300_floor_roll.png"),
+        (360, "native_wide_f360_rest.png"),
     ]
     scene.camera = cam_wide
     for f_idx, out_name in render_wide:
-        scene.frame_set(f_idx)
-        out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
-        scene.render.filepath = out_path
-        bpy.ops.render.render(write_still=True)
-        print(f"Rendered Frame {f_idx} (Wide Full Journey) to {out_path}")
+        if f_idx <= TOTAL_FRAMES:
+            scene.frame_set(f_idx)
+            out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+            scene.render.filepath = out_path
+            bpy.ops.render.render(write_still=True)
+            print(f"Rendered Frame {f_idx} (Wide Full Journey) to {out_path}")
 
-    print(f"All 3,600 frames (60.0s) simulation and baking completed in {time.time() - t_start:.2f}s!")
+    print(f"All {TOTAL_FRAMES} frames ({duration_sec:.1f}s) simulation and baking completed in {time.time() - t_start:.2f}s!")
+    os._exit(0)
 
 if __name__ == '__main__':
     import sys
@@ -780,7 +821,11 @@ if __name__ == '__main__':
         argv = argv[argv.index("--") + 1:]
     else:
         argv = []
-    parser = argparse.ArgumentParser(description="Trebuchet Blender Physics Simulation with Aerodynamics and Wind")
+    parser = argparse.ArgumentParser(description="Trebuchet Blender Physics Simulation with Multi-Segment Elastic Sling & Aerodynamics")
+    parser.add_argument("--segments", type=int, default=16, help="Number of articulated rigid body segments per sling string (default: 16)")
+    parser.add_argument("--material", type=str, default="nylon", choices=["nylon", "chain", "yarn"], help="Sling material type (nylon, chain, yarn)")
+    parser.add_argument("--elasticity", type=float, default=None, help="Custom tensile spring stiffness k in N/m")
     parser.add_argument("--wind", type=float, default=0.0, help="Ambient horizontal wind speed in mph (+X tailwind, -X headwind)")
+    parser.add_argument("--duration", type=float, default=6.0, help="Simulation duration in seconds (default: 6.0s = 360 frames)")
     args, unknown = parser.parse_known_args(argv)
-    build_simulation(wind_mph=args.wind)
+    build_simulation(num_segments=args.segments, sling_material=args.material, elasticity_k=args.elasticity, wind_mph=args.wind, duration_sec=args.duration)

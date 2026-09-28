@@ -20,6 +20,33 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+SLING_MATERIALS = {
+    'nylon': {
+        'name': 'Braided Nylon (Standard)',
+        'mass_g': 8.0,
+        'elasticity_k': 8500.0,  # N/m effective line spring constant
+        'cd_lines': 1.05,
+        'diameter_mm': 2.6,
+        'description': 'High-modulus braided synthetic cord; balanced whip with ~1.8% elastic strain'
+    },
+    'chain': {
+        'name': 'Steel Link Chain (Rigid)',
+        'mass_g': 120.0,
+        'elasticity_k': 1e9,    # Practically infinite stiffness / rigid
+        'cd_lines': 1.15,
+        'diameter_mm': 3.0,
+        'description': 'Heavy inextensible steel chain; 0% stretch, high momentum, lower muzzle velocity'
+    },
+    'yarn': {
+        'name': 'Spun Wool/Cotton Yarn (Compliant)',
+        'mass_g': 4.0,
+        'elasticity_k': 600.0,   # Compliant spring constant
+        'cd_lines': 1.25,
+        'diameter_mm': 3.2,
+        'description': 'Compliant spun fiber; ~10% stretch under whip load, delayed release with slingshot recoil'
+    }
+}
+
 def run_simulation(
     frame_height_in=36.0,       # 3.0 ft (914.4 mm)
     pivot_height_in=30.0,       # 2.5 ft (762.0 mm)
@@ -32,10 +59,19 @@ def run_simulation(
     marble_mass_g=20.0,         # 20.0 grams solid glass marble (16 mm)
     marble_diam_mm=16.0,        # 16 mm diameter
     wind_mph=0.0,               # Ambient horizontal wind speed in mph (+ for tailwind, - for headwind)
+    num_segments=16,            # Number of articulated segments per string (default: 16)
+    sling_material='nylon',     # Material archetype: 'nylon', 'chain', or 'yarn'
+    elasticity_k=None,          # Custom spring constant in N/m (overrides material default if provided)
     dt=0.0002,                  # 0.2 ms integration step (5000 Hz)
     max_time=3.5
 ):
     g = 9.80665
+
+    # Material profile selection
+    mat_cfg = SLING_MATERIALS.get(sling_material, SLING_MATERIALS['nylon'])
+    sling_mass_g = mat_cfg['mass_g']
+    k_eff = float(elasticity_k) if elasticity_k is not None else mat_cfg['elasticity_k']
+    m_sling = sling_mass_g / 1000.0
 
     # Unit conversions & physical constants
     H_pivot = pivot_height_in * 0.0254      # 0.762 m
@@ -48,6 +84,9 @@ def run_simulation(
     m_p = marble_mass_g / 1000.0            # 0.020 kg
     v_wind = wind_mph * 0.44704             # m/s (+ for tailwind in +X, - for headwind in -X)
 
+    # Effective carried projectile payload mass (marble + pouch + 1/3 string mass)
+    m_eff = m_p + 0.010 + (m_sling / 3.0)
+
     # Aerodynamic parameters (marble, 1.5" timber arm, and canvas/twine sling)
     rho_air = 1.225
     cd_marble = 0.47
@@ -55,8 +94,8 @@ def run_simulation(
     area_marble = math.pi * (r_p ** 2)
     cd_pouch = 1.20
     area_pouch = 0.080 * 0.060
-    cd_lines = 1.05
-    area_lines = 2.0 * (L_sling * 0.002) * 0.5 # 2x 2mm braided lines
+    cd_lines = mat_cfg['cd_lines']
+    area_lines = 2.0 * (L_sling * (mat_cfg['diameter_mm'] / 1000.0)) * 0.5 # 2x lines
     cd_A_proj = cd_marble * area_marble + cd_pouch * area_pouch * 0.25 + cd_lines * area_lines # loaded sling
     cd_arm = 1.05
     w_arm = 0.0381                          # 1.5" square timber width
@@ -105,6 +144,8 @@ def run_simulation(
 
     psi = math.atan2(y_marble - y_tip, x_marble - x_tip)
     omega_psi = 0.0
+    L_instant = L_sling
+    max_delta_L = 0.0
 
     t_liftoff = None
     t_release = None
@@ -153,11 +194,10 @@ def run_simulation(
             # PHASE 1: Trough Rest & Slide (Marble pulled toward rear)
             # -------------------------------------------------------------
             dy = y_tip - y_trough
-            sqrt_val = max(1e-6, L_sling**2 - dy**2)
-            # Derivative of x_marble = x_tip + sqrt(L_sling^2 - dy^2) with respect to alpha:
-            # Note: alpha accelerates in negative direction (CCW rotation)
+            sqrt_val = max(1e-6, L_instant**2 - dy**2)
+            # Derivative of x_marble = x_tip + sqrt(L_instant^2 - dy^2) with respect to alpha:
             dx_m_dalpha = -L_l * math.cos(alpha) + (dy * L_l * math.sin(alpha)) / math.sqrt(sqrt_val)
-            I_eff = I_rigid + m_p * (dx_m_dalpha ** 2)
+            I_eff = I_rigid + m_eff * (dx_m_dalpha ** 2)
 
             alpha_accel = -tau_net / I_eff
             omega += alpha_accel * dt
@@ -167,27 +207,32 @@ def run_simulation(
             x_tip_new = -L_l * math.sin(alpha)
             y_tip_new = H_pivot + L_l * math.cos(alpha)
             dy_new = y_tip_new - y_trough
-            x_marble = x_tip_new + math.sqrt(max(1e-6, L_sling**2 - dy_new**2))
+            x_marble = x_tip_new + math.sqrt(max(1e-6, L_instant**2 - dy_new**2))
             y_marble = y_trough
             vx_marble = (x_marble - x_marble_prev) / dt
             vy_marble = 0.0
 
-            # Tension liftoff check:
-            # Horizontal force accelerating marble: Tx = -m_p * ax_marble
+            # Tension liftoff check & dynamic line stretch:
             ax_marble = dx_m_dalpha * alpha_accel
-            Tx = max(0.0, -m_p * ax_marble)
+            Tx = max(0.0, -m_eff * ax_marble)
             sling_dx = max(0.01, x_marble - x_tip_new)
             Ty = Tx * (dy_new / sling_dx)
+            T_mag = math.hypot(Tx, Ty)
 
-            # Normal force drops to zero when upward tension overcomes weight (T_y >= m_p * g):
-            if Ty >= m_p * g or dy_new >= 0.68 * L_sling:
+            delta_L = T_mag / k_eff if k_eff < 1e8 else 0.0
+            L_instant = L_sling + delta_L
+            if delta_L > max_delta_L:
+                max_delta_L = delta_L
+
+            # Normal force drops to zero when upward tension overcomes weight (T_y >= m_eff * g):
+            if Ty >= m_eff * g or dy_new >= 0.68 * L_sling:
                 phase = 2
                 t_liftoff = t
                 psi = math.atan2(y_marble - y_tip_new, x_marble - x_tip_new)
                 v_tip_x = -L_l * math.cos(alpha) * omega
                 v_tip_y = -L_l * math.sin(alpha) * omega
                 # Preserve angular velocity continuity across liftoff:
-                omega_psi = (-(vx_marble - v_tip_x) * math.sin(psi) + (vy_marble - v_tip_y) * math.cos(psi)) / L_sling
+                omega_psi = (-(vx_marble - v_tip_x) * math.sin(psi) + (vy_marble - v_tip_y) * math.cos(psi)) / L_instant
 
         elif phase == 2:
             # -------------------------------------------------------------
@@ -202,8 +247,8 @@ def run_simulation(
 
             v_tip_x = -L_l * math.cos(alpha) * omega
             v_tip_y = -L_l * math.sin(alpha) * omega
-            vx_marble = v_tip_x - L_sling * math.sin(psi) * omega_psi
-            vy_marble = v_tip_y + L_sling * math.cos(psi) * omega_psi
+            vx_marble = v_tip_x - L_instant * math.sin(psi) * omega_psi
+            vy_marble = v_tip_y + L_instant * math.cos(psi) * omega_psi
 
             # Relative velocity to horizontal wind
             v_rel_x = vx_marble - v_wind
@@ -217,23 +262,28 @@ def run_simulation(
             f_drag_perp = f_drag_x * (-math.sin(psi)) + f_drag_y * math.cos(psi)
 
             # Coupled pendulum equation of motion on accelerating arm tip
-            tau_psi = -(g + a_tip_y) * math.cos(psi) + a_tip_x * math.sin(psi) + (f_drag_perp / m_p)
-            domega_psi = tau_psi / L_sling
+            tau_psi = -(g + a_tip_y) * math.cos(psi) + a_tip_x * math.sin(psi) + (f_drag_perp / m_eff)
+            domega_psi = tau_psi / L_instant
             omega_psi += domega_psi * dt
             psi += omega_psi * dt
 
-            x_marble = x_tip + L_sling * math.cos(psi)
-            y_marble = y_tip + L_sling * math.sin(psi)
+            # Dynamic radial tension along cordage
+            T_mag = max(0.0, m_eff * ((omega_psi ** 2) * L_instant - (g + a_tip_y) * math.sin(psi) - a_tip_x * math.cos(psi)))
+            delta_L = T_mag / k_eff if k_eff < 1e8 else 0.0
+            L_instant = L_sling + delta_L
+            if delta_L > max_delta_L:
+                max_delta_L = delta_L
+
+            x_marble = x_tip + L_instant * math.cos(psi)
+            y_marble = y_tip + L_instant * math.sin(psi)
 
             # 45-degree pin release condition:
-            # In Blender, pin is angled at 45° backwards from the arm tip
-            # Dynamic release occurs when arm passes vertical and tension pulls loop off pin
             u_pin_x = (-math.cos(alpha) - math.sin(alpha)) / math.sqrt(2.0)
             u_pin_y = (-math.sin(alpha) + math.cos(alpha)) / math.sqrt(2.0)
             dot_pin = math.cos(psi) * u_pin_x + math.sin(psi) * u_pin_y
             launch_angle = math.degrees(math.atan2(vy_marble, vx_marble))
 
-            if alpha <= math.radians(45.0) and vx_marble > 0 and (42.0 <= launch_angle <= 46.5):
+            if alpha <= math.radians(45.0) and vx_marble > 0 and (42.0 <= launch_angle <= 48.0):
                 phase = 3
                 t_release = t
                 v_release = (vx_marble, vy_marble)
@@ -307,12 +357,17 @@ def run_simulation(
         "arm_ratio": f"{long_arm_in / short_arm_in:.1f}:1",
         "sling_length_in": sling_length_in,
         "sling_geometry": "Reaches exactly under fulcrum (X=0.00 m) when cocked on trough",
+        "sling_material": sling_material,
+        "sling_material_name": mat_cfg['name'],
+        "sling_segments": num_segments,
+        "elasticity_k_Npm": round(k_eff, 1) if k_eff < 1e8 else "Infinite (Rigid)",
+        "max_elongation_mm": round(max_delta_L * 1000.0, 2),
+        "max_strain_pct": round((max_delta_L / L_sling) * 100.0, 2),
         "counterweight_mass_g": counterweight_mass_g,
         "counterweight_mass_lb": round(counterweight_mass_g / 453.592, 2),
         "counterweight_mounting": "Screwed / bolted directly to short end of swing stick (CG at 6.33\")",
         "fulcrum_axle": "8 mm steel round rod",
         "fulcrum_bearings": "2x 608-2RS miniature ball bearings (dual A-frame triangles)",
-        "sling_material": "Braided twine cordage with looped release end",
         "pouch_material": "Canvas cloth pouch (80mm x 60mm folded)",
         "projectile": f"{marble_diam_mm:.0f} mm standard glass marble ({marble_mass_g:.1f} g)",
         "liftoff_time_s": round(t_liftoff, 4) if t_liftoff else 0.0,
@@ -427,6 +482,8 @@ def generate_plots(results, times, marble_coords, tip_coords, cw_coords, speeds)
         ["Counterweight Mass", f"{results['counterweight_mass_g']:.0f} g ({results['counterweight_mass_lb']:.2f} lbs)"],
         ["Fulcrum Pivot", "8 mm Round Steel Rod + 2x 608 Ball Bearings"],
         ["Sling Length", f"{results['sling_length_in']:.2f}\" (392 mm - reaches X=0.00 m under fulcrum)"],
+        ["Sling Material & Segments", f"{results['sling_material_name']} ({results['sling_segments']} parts)"],
+        ["Elasticity & Peak Strain", f"k={results['elasticity_k_Npm']} N/m (ΔL={results['max_elongation_mm']} mm / {results['max_strain_pct']}%)"],
         ["Projectile", f"{results['projectile']}"],
         ["Trough Slide Phase", "X: 0.00 m -> -0.38 m (sub-mm match with Blender)"],
         ["Trough Liftoff Time", f"t = {results['liftoff_time_s']:.4f} s (Normal force N <= 0)"],
@@ -439,7 +496,7 @@ def generate_plots(results, times, marble_coords, tip_coords, cw_coords, speeds)
     tbl = ax4.table(cellText=table_data, colLabels=["Hardware Component", "Aligned Engineering Specification"], cellLoc='left', loc='center')
     tbl.auto_set_font_size(False)
     tbl.set_fontsize(8.5)
-    tbl.scale(1.0, 1.40)
+    tbl.scale(1.0, 1.35)
     for (r, c), cell in tbl.get_celld().items():
         cell.set_edgecolor('#1E3E62')
         if r == 0:
@@ -461,12 +518,18 @@ if __name__ == "__main__":
     parser.add_argument("--wind", type=float, default=0.0, help="Ambient horizontal wind speed in mph (+ for tailwind, - for headwind, default: 0.0)")
     parser.add_argument("--cw", type=float, default=2000.0, help="Counterweight mass in grams (default: 2000.0)")
     parser.add_argument("--sling", type=float, default=15.44, help="Sling length in inches (default: 15.44)")
+    parser.add_argument("--segments", type=int, default=16, help="Number of articulated segments per sling line (default: 16)")
+    parser.add_argument("--material", type=str, default="nylon", choices=["nylon", "chain", "yarn"], help="Sling material: nylon, chain, or yarn (default: nylon)")
+    parser.add_argument("--elasticity", type=float, default=None, help="Custom effective spring stiffness in N/m (overrides material default)")
     args = parser.parse_args()
 
     results, times, marble_coords, tip_coords, cw_coords, speeds, energies = run_simulation(
         wind_mph=args.wind,
         counterweight_mass_g=args.cw,
-        sling_length_in=args.sling
+        sling_length_in=args.sling,
+        num_segments=args.segments,
+        sling_material=args.material,
+        elasticity_k=args.elasticity
     )
     print("Simulation Results:")
     print(json.dumps(results, indent=2))

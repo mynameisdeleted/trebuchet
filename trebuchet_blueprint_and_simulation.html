@@ -153,6 +153,7 @@
               <div>Launch Angle: <span id="tel-launchang" class="text-[#ffd166] font-semibold">--</span></div>
               <div>Airspeed: <span id="tel-airspeed" class="text-[#64dfdf] font-semibold">--</span></div>
               <div>Aero Drag: <span id="tel-fdrag" class="text-[#ffd166] font-semibold">--</span></div>
+              <div>Sling Stretch: <span id="tel-stretch" class="text-[#00f5d4] font-semibold">--</span></div>
               <div>Flight Time: <span id="tel-time" class="text-white font-semibold">--</span></div>
               <div class="pt-1 border-t border-[#1b3a5d]">
                 Distance: <span id="tel-dist" class="text-lg font-bold text-[#00f5d4]">--</span>
@@ -241,6 +242,20 @@
                 <span>0 mph</span>
                 <span>+25 mph (Tailwind) ➡</span>
               </div>
+            </div>
+
+            <!-- Sling Material & Elasticity (16 Segments) -->
+            <div class="space-y-1.5 pt-2 border-t border-[#1b3a5d]">
+              <div class="flex justify-between text-xs">
+                <span class="text-[#a0aec0]">Sling Material & Elasticity:</span>
+                <span class="mono text-[#00f5d4] text-[11px] font-bold">16 Parts</span>
+              </div>
+              <select id="select-material" onchange="updateSliders()" class="w-full bg-[#0e243d] border border-[#1b3a5d] text-white rounded p-1.5 text-xs font-medium cursor-pointer focus:border-[#00f5d4]">
+                <option value="nylon" selected>Braided Nylon (Standard, k=8500 N/m)</option>
+                <option value="chain">Steel Link Chain (Rigid, k=∞)</option>
+                <option value="yarn">Wool Yarn (Compliant, k=600 N/m)</option>
+              </select>
+              <div id="material-desc" class="text-[10px] text-[#7d93b0]">High-modulus synthetic cord; balanced whip with ~1.8% elastic strain</div>
             </div>
 
             <!-- Fulcrum Friction -->
@@ -795,9 +810,37 @@ def build_simulation():
     const marble_m = 0.020; // 20.0g standard solid glass marble
     const cd_pouch = 1.20;
     const area_pouch = 0.080 * 0.060;
-    const cd_lines = 1.05;
-    const area_lines = 2.0 * (0.3922 * 0.002) * 0.5; // 2x 2mm braided lines
-    const cd_A_proj = cd_marble * marble_area + cd_pouch * area_pouch * 0.25 + cd_lines * area_lines;
+
+    const SLING_MATERIALS = {
+      nylon: {
+        name: 'Braided Nylon (Standard)',
+        mass_g: 8.0,
+        k: 8500.0,
+        cd_lines: 1.05,
+        diam_mm: 2.6,
+        desc: 'High-modulus synthetic cord; balanced whip with ~1.8% elastic strain'
+      },
+      chain: {
+        name: 'Steel Link Chain (Rigid)',
+        mass_g: 120.0,
+        k: 1e9,
+        cd_lines: 1.15,
+        diam_mm: 3.0,
+        desc: 'Heavy inextensible steel chain; 0% stretch, high momentum, lower muzzle velocity'
+      },
+      yarn: {
+        name: 'Wool Yarn (Compliant)',
+        mass_g: 4.0,
+        k: 600.0,
+        cd_lines: 1.25,
+        diam_mm: 3.2,
+        desc: 'Compliant spun fiber; ~10% stretch under whip load, delayed release with slingshot recoil'
+      }
+    };
+    let current_material = 'nylon';
+    let sling_segments = 16;
+    let current_delta_L = 0.0;
+
     const cd_arm = 1.05;
     const w_arm = 0.0381;
 
@@ -895,6 +938,15 @@ def build_simulation():
       wind_speed_mph = parseFloat(document.getElementById('slider-wind').value);
       v_wind = wind_speed_mph * 0.44704;
 
+      const matSelect = document.getElementById('select-material');
+      if (matSelect) {
+        current_material = matSelect.value;
+        const mat = SLING_MATERIALS[current_material];
+        if (mat) {
+          document.getElementById('material-desc').innerText = mat.desc;
+        }
+      }
+
       document.getElementById('label-cw').innerText = cw_mass_g.toFixed(0) + ' g';
       document.getElementById('label-sling').innerText = (sling_len_m / 0.0254).toFixed(1) + ' in';
       document.getElementById('label-pin').innerText = pin_angle_deg.toFixed(1) + '°';
@@ -911,7 +963,7 @@ def build_simulation():
         windLabel.className = "mono font-bold text-[#00f5d4]";
       }
 
-      const pred = predictTrajectory(cw_mass_g, sling_len_m, pin_angle_deg, wind_speed_mph);
+      const pred = predictTrajectory(cw_mass_g, sling_len_m, pin_angle_deg, wind_speed_mph, current_material);
       document.getElementById('stat-range').innerText = pred.range_yds.toFixed(1) + ' YDS';
       document.getElementById('stat-range-sub').innerText = `${(pred.range_yds * 3).toFixed(1)} Feet / ${pred.range_m.toFixed(2)} Meters`;
       document.getElementById('stat-speed').innerText = `${pred.v_rel.toFixed(2)} m/s (${(pred.v_rel * 2.237).toFixed(1)} mph)`;
@@ -930,12 +982,19 @@ def build_simulation():
       document.getElementById('slider-sling').value = 15.4;
       document.getElementById('slider-pin').value = 45;
       document.getElementById('slider-wind').value = 0;
+      document.getElementById('select-material').value = 'nylon';
       updateSliders();
       resetSimulation();
     }
 
-    function predictTrajectory(cw_g, sling_m, pin_deg, wind_mph = 0.0) {
+    function predictTrajectory(cw_g, sling_m, pin_deg, wind_mph = 0.0, mat_key = 'nylon') {
       const vw = wind_mph * 0.44704;
+      const mat = SLING_MATERIALS[mat_key] || SLING_MATERIALS.nylon;
+      const m_eff = marble_m + 0.010 + (mat.mass_g / 1000.0) / 3.0;
+      const k_eff = mat.k;
+      const area_l = 2.0 * (sling_m * (mat.diam_mm / 1000.0)) * 0.5;
+      const cd_A = cd_marble * marble_area + cd_pouch * area_pouch * 0.25 + mat.cd_lines * area_l;
+
       const M_cw = cw_g / 1000.0;
       const I_cw = M_cw * L_cw * L_cw;
       const I_cw_body = (1.0 / 12.0) * M_cw * (0.089 * 0.089 + 0.040 * 0.040);
@@ -952,6 +1011,7 @@ def build_simulation():
       let wp = 0.0;
       let mx = 0.0;
       let vx_m = 0.0, vy_m = 0.0;
+      let L_inst = sling_m;
 
       while (t < 2.0) {
         let tau_cw = M_cw * g * L_cw * Math.sin(a);
@@ -986,9 +1046,9 @@ def build_simulation():
         let dy = y_tip - y_trough;
 
         if (ph === 1) {
-          let term = Math.max(1e-6, sling_m * sling_m - dy * dy);
+          let term = Math.max(1e-6, L_inst * L_inst - dy * dy);
           let dx_da = -L_l * Math.cos(a) + (dy * L_l * Math.sin(a)) / Math.sqrt(term);
-          let I_eff = I_rigid + marble_m * (dx_da * dx_da);
+          let I_eff = I_rigid + m_eff * (dx_da * dx_da);
 
           let alpha_acc = -tau_net / I_eff;
           w += alpha_acc * dt;
@@ -998,19 +1058,23 @@ def build_simulation():
           let x_tip_next = -L_l * Math.sin(a);
           let y_tip_next = H_pivot + L_l * Math.cos(a);
           let dy_next = y_tip_next - y_trough;
-          mx = x_tip_next + Math.sqrt(Math.max(1e-6, sling_m * sling_m - dy_next * dy_next));
-          vx_m = (mx - prev_x) / dt;
 
           let ax_m = dx_da * alpha_acc;
-          let Tx = Math.max(0.0, -marble_m * ax_m);
+          let Tx = Math.max(0.0, -m_eff * ax_m);
           let sling_dx = Math.max(0.01, mx - x_tip_next);
           let Ty = Tx * (dy_next / sling_dx);
+          let T_mag = Math.hypot(Tx, Ty);
+          let delta_L = k_eff < 1e8 ? T_mag / k_eff : 0;
+          L_inst = sling_m + delta_L;
 
-          if (Ty >= marble_m * g || dy_next >= 0.68 * sling_m) {
+          mx = x_tip_next + Math.sqrt(Math.max(1e-6, L_inst * L_inst - dy_next * dy_next));
+          vx_m = (mx - prev_x) / dt;
+
+          if (Ty >= m_eff * g || dy_next >= 0.68 * sling_m) {
             ph = 2;
             p = Math.atan2(y_trough - y_tip_next, mx - x_tip_next);
             let v_tip_x = -L_l * Math.cos(a) * w;
-            wp = (-(vx_m - v_tip_x) * Math.sin(p)) / sling_m;
+            wp = (-(vx_m - v_tip_x) * Math.sin(p)) / L_inst;
           }
         } else if (ph === 2) {
           let alpha_acc = -tau_net / I_rigid;
@@ -1022,27 +1086,31 @@ def build_simulation():
 
           let v_tip_x = -L_l * Math.cos(a) * w;
           let v_tip_y = -L_l * Math.sin(a) * w;
-          vx_m = v_tip_x - sling_m * Math.sin(p) * wp;
-          vy_m = v_tip_y + sling_m * Math.cos(p) * wp;
+          vx_m = v_tip_x - L_inst * Math.sin(p) * wp;
+          vy_m = v_tip_y + L_inst * Math.cos(p) * wp;
 
           let vrx = vx_m - vw;
           let vry = vy_m;
           let spd = Math.hypot(vrx, vry);
 
-          let f_drag = 0.5 * rho_air * cd_A_proj * spd * spd;
+          let f_drag = 0.5 * rho_air * cd_A * spd * spd;
           let f_drag_x = -f_drag * (vrx / Math.max(1e-4, spd));
           let f_drag_y = -f_drag * (vry / Math.max(1e-4, spd));
           let f_drag_perp = f_drag_x * (-Math.sin(p)) + f_drag_y * Math.cos(p);
 
-          let tau_p = -(g + a_tip_y) * Math.cos(p) + a_tip_x * Math.sin(p) + (f_drag_perp / marble_m);
-          wp += (tau_p / sling_m) * dt;
+          let tau_p = -(g + a_tip_y) * Math.cos(p) + a_tip_x * Math.sin(p) + (f_drag_perp / m_eff);
+          wp += (tau_p / L_inst) * dt;
           p += wp * dt;
+
+          let T_mag = Math.max(0, m_eff * ((wp * wp) * L_inst - (g + a_tip_y) * Math.sin(p) - a_tip_x * Math.cos(p)));
+          let delta_L = k_eff < 1e8 ? T_mag / k_eff : 0;
+          L_inst = sling_m + delta_L;
 
           let launch_ang = Math.atan2(vy_m, vx_m) * 180 / Math.PI;
 
           if (a <= 0.78 && vx_m > 0 && launch_ang >= 42.0 && launch_ang <= 48.0) {
             v_rel = {vx: vx_m, vy: vy_m};
-            p_rel = {x: x_tip + sling_m * Math.cos(p), y: y_tip + sling_m * Math.sin(p)};
+            p_rel = {x: x_tip + L_inst * Math.cos(p), y: y_tip + L_inst * Math.sin(p)};
             break;
           }
         }
@@ -1087,6 +1155,7 @@ def build_simulation():
       omega_psi = 0.0;
       current_airspeed = 0.0;
       current_fdrag = 0.0;
+      current_delta_L = 0.0;
       flight_time = 0;
       trajectory = [];
       document.getElementById('canvas-status').innerText = 'Cocked & Ready';
@@ -1133,6 +1202,8 @@ def build_simulation():
       document.getElementById('tel-launchang').innerText = release_deg > 0 ? `${release_deg.toFixed(1)}°` : '--';
       document.getElementById('tel-airspeed').innerText = (state === 'flying' || state === 'swinging' || current_airspeed > 0) ? `${(current_airspeed * 2.237).toFixed(1)} mph (${current_airspeed.toFixed(1)} m/s)` : '--';
       document.getElementById('tel-fdrag').innerText = (state === 'flying' || state === 'swinging' || current_fdrag > 0) ? `${(current_fdrag * 1000).toFixed(1)} mN (${current_fdrag.toFixed(3)} N)` : '--';
+      const strain_pct = (current_delta_L / Math.max(0.01, sling_len_m)) * 100;
+      document.getElementById('tel-stretch').innerText = (state === 'swinging' || current_delta_L > 0) ? `${(current_delta_L * 1000).toFixed(1)} mm (${strain_pct.toFixed(1)}%)` : '--';
       document.getElementById('tel-time').innerText = flight_time.toFixed(3) + ' s';
       document.getElementById('tel-dist').innerText = (marble_x / 0.9144).toFixed(2) + ' YDS';
     }
@@ -1157,6 +1228,12 @@ def build_simulation():
     }
 
     function stepPhysics(dt) {
+      const mat = SLING_MATERIALS[current_material] || SLING_MATERIALS.nylon;
+      const m_eff = marble_m + 0.010 + (mat.mass_g / 1000.0) / 3.0;
+      const k_eff = mat.k;
+      const area_l = 2.0 * (sling_len_m * (mat.diam_mm / 1000.0)) * 0.5;
+      const cd_A = cd_marble * marble_area + cd_pouch * area_pouch * 0.25 + mat.cd_lines * area_l;
+
       const M_cw = cw_mass_g / 1000.0;
       const I_cw = M_cw * L_cw * L_cw;
       const I_cw_body = (1.0 / 12.0) * M_cw * (0.089 * 0.089 + 0.040 * 0.040);
@@ -1197,10 +1274,11 @@ def build_simulation():
         flight_time += dt;
 
         if (phase === 1) {
-          // Slide along pine trough toward rear
-          let term = Math.max(1e-6, sling_len_m * sling_len_m - dy * dy);
+          // Slide along pine trough toward rear with dynamic strain
+          let L_inst = sling_len_m + current_delta_L;
+          let term = Math.max(1e-6, L_inst * L_inst - dy * dy);
           let dx_da = -L_l * Math.cos(alpha) + (dy * L_l * Math.sin(alpha)) / Math.sqrt(term);
-          let I_eff = I_rigid + marble_m * (dx_da * dx_da);
+          let I_eff = I_rigid + m_eff * (dx_da * dx_da);
 
           let alpha_acc = -tau_net / I_eff;
           omega += alpha_acc * dt;
@@ -1210,7 +1288,16 @@ def build_simulation():
           let x_tip_new = -L_l * Math.sin(alpha);
           let y_tip_new = H_pivot + L_l * Math.cos(alpha);
           let dy_new = y_tip_new - y_trough;
-          marble_x = x_tip_new + Math.sqrt(Math.max(1e-6, sling_len_m * sling_len_m - dy_new * dy_new));
+
+          let ax_m = dx_da * alpha_acc;
+          let Tx = Math.max(0.0, -m_eff * ax_m);
+          let sling_dx = Math.max(0.01, marble_x - x_tip_new);
+          let Ty = Tx * (dy_new / sling_dx);
+          let T_mag = Math.hypot(Tx, Ty);
+          current_delta_L = k_eff < 1e8 ? T_mag / k_eff : 0.0;
+          L_inst = sling_len_m + current_delta_L;
+
+          marble_x = x_tip_new + Math.sqrt(Math.max(1e-6, L_inst * L_inst - dy_new * dy_new));
           marble_y = y_trough;
           marble_vx = (marble_x - prev_x) / dt;
           marble_vy = 0.0;
@@ -1218,22 +1305,17 @@ def build_simulation():
           let vrx = marble_vx - v_wind;
           let vry = marble_vy;
           current_airspeed = Math.hypot(vrx, vry);
-          current_fdrag = 0.5 * rho_air * cd_A_proj * current_airspeed * current_airspeed;
+          current_fdrag = 0.5 * rho_air * cd_A * current_airspeed * current_airspeed;
 
-          let ax_m = dx_da * alpha_acc;
-          let Tx = Math.max(0.0, -marble_m * ax_m);
-          let sling_dx = Math.max(0.01, marble_x - x_tip_new);
-          let Ty = Tx * (dy_new / sling_dx);
-
-          // Liftoff when upward tension exceeds marble weight (T_y >= mg)
-          if (Ty >= marble_m * g || dy_new >= 0.68 * sling_len_m) {
+          // Liftoff when upward tension exceeds carried weight (T_y >= mg)
+          if (Ty >= m_eff * g || dy_new >= 0.68 * sling_len_m) {
             phase = 2;
             psi = Math.atan2(marble_y - y_tip_new, marble_x - x_tip_new);
             let v_tip_x = -L_l * Math.cos(alpha) * omega;
-            omega_psi = (-(marble_vx - v_tip_x) * Math.sin(psi)) / sling_len_m;
+            omega_psi = (-(marble_vx - v_tip_x) * Math.sin(psi)) / L_inst;
           }
         } else if (phase === 2) {
-          // Double pendulum whip arc
+          // Double pendulum whip arc with dynamic elasticity
           let alpha_acc = -tau_net / I_rigid;
           omega += alpha_acc * dt;
           alpha += omega * dt;
@@ -1241,26 +1323,31 @@ def build_simulation():
           let a_tip_x = -L_l * (Math.cos(alpha) * alpha_acc - Math.sin(alpha) * (omega * omega));
           let a_tip_y = L_l * (-Math.sin(alpha) * alpha_acc - Math.cos(alpha) * (omega * omega));
 
+          let L_inst = sling_len_m + current_delta_L;
           let v_tip_x = -L_l * Math.cos(alpha) * omega;
           let v_tip_y = -L_l * Math.sin(alpha) * omega;
-          marble_vx = v_tip_x - sling_len_m * Math.sin(psi) * omega_psi;
-          marble_vy = v_tip_y + sling_len_m * Math.cos(psi) * omega_psi;
+          marble_vx = v_tip_x - L_inst * Math.sin(psi) * omega_psi;
+          marble_vy = v_tip_y + L_inst * Math.cos(psi) * omega_psi;
 
           let vrx = marble_vx - v_wind;
           let vry = marble_vy;
           current_airspeed = Math.hypot(vrx, vry);
-          current_fdrag = 0.5 * rho_air * cd_A_proj * current_airspeed * current_airspeed;
+          current_fdrag = 0.5 * rho_air * cd_A * current_airspeed * current_airspeed;
 
           let f_drag_x = -current_fdrag * (vrx / Math.max(1e-4, current_airspeed));
           let f_drag_y = -current_fdrag * (vry / Math.max(1e-4, current_airspeed));
           let f_drag_perp = f_drag_x * (-Math.sin(psi)) + f_drag_y * Math.cos(psi);
 
-          let tau_p = -(g + a_tip_y) * Math.cos(psi) + a_tip_x * Math.sin(psi) + (f_drag_perp / marble_m);
-          omega_psi += (tau_p / sling_len_m) * dt;
+          let tau_p = -(g + a_tip_y) * Math.cos(psi) + a_tip_x * Math.sin(psi) + (f_drag_perp / m_eff);
+          omega_psi += (tau_p / L_inst) * dt;
           psi += omega_psi * dt;
 
-          marble_x = x_tip + sling_len_m * Math.cos(psi);
-          marble_y = y_tip + sling_len_m * Math.sin(psi);
+          let T_mag = Math.max(0, m_eff * ((omega_psi * omega_psi) * L_inst - (g + a_tip_y) * Math.sin(psi) - a_tip_x * Math.cos(psi)));
+          current_delta_L = k_eff < 1e8 ? T_mag / k_eff : 0.0;
+          L_inst = sling_len_m + current_delta_L;
+
+          marble_x = x_tip + L_inst * Math.cos(psi);
+          marble_y = y_tip + L_inst * Math.sin(psi);
 
           let launch_ang = Math.atan2(marble_vy, marble_vx) * 180 / Math.PI;
 
@@ -1270,6 +1357,7 @@ def build_simulation():
             release_v = Math.hypot(marble_vx, marble_vy);
             release_deg = launch_ang;
             release_h = marble_y;
+            current_delta_L = 0.0;
             trajectory.push({x: marble_x, y: marble_y});
           }
         }
@@ -1483,11 +1571,27 @@ def build_simulation():
       let msy = toScreenY(marble_y);
 
       if (state === 'cocked' || state === 'swinging') {
-        ctx.strokeStyle = '#d4a373';
-        ctx.lineWidth = 2;
+        // Draw 16-part segmented flexible sling
+        let segs = 16;
+        ctx.strokeStyle = current_material === 'chain' ? '#94a3b8' : (current_material === 'yarn' ? '#f4a261' : '#d4a373');
+        ctx.lineWidth = current_material === 'chain' ? 2.5 : 2;
         ctx.beginPath();
         ctx.moveTo(tip_sx, tip_sy);
-        ctx.lineTo(msx, msy);
+
+        let sag = 0;
+        if (state === 'cocked') {
+          sag = 0.012 * scale; // resting sag on pine guide trough
+        } else if (phase === 2 && current_airspeed > 0.5) {
+          // Dynamic aerodynamic catenary bowback
+          sag = -0.010 * scale * Math.min(2.0, current_airspeed / 8.0);
+        }
+
+        for (let i = 1; i <= segs; i++) {
+          let u = i / segs;
+          let px = tip_sx + (msx - tip_sx) * u;
+          let py = tip_sy + (msy - tip_sy) * u + 4 * sag * u * (1 - u);
+          ctx.lineTo(px, py);
+        }
         ctx.stroke();
 
         ctx.strokeStyle = '#e76f51';
