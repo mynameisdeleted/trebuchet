@@ -567,8 +567,10 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         loc_m, rot_m, _ = d['marble'].decompose()
         marble.location = loc_m
         marble.rotation_euler = rot_m.to_euler()
+        marble.scale = (5.0, 5.0, 5.0)  # 5x visual display scaling for clear visibility across flight
         marble.keyframe_insert(data_path="location", frame=f)
         marble.keyframe_insert(data_path="rotation_euler", frame=f)
+        marble.keyframe_insert(data_path="scale", frame=f)
         marble_positions.append(loc_m)
 
         # Pouch
@@ -698,18 +700,29 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     scene.collection.objects.link(curve_obj)
 
     # -------------------------------------------------------------
-    # 12. CAMERAS (ELEVATION, ISOMETRIC, AND FULL TRAJECTORY WIDE)
+    # 12. CAMERAS (ACTION PERSPECTIVE, ELEVATION, ISOMETRIC, AND WIDE)
     # -------------------------------------------------------------
+    cam_target = bpy.data.objects.new("Cam_Target_Center", None)
+    cam_target.location = (0.15, 0.0, 0.72)
+    scene.collection.objects.link(cam_target)
+
+    # Action View (Initial Default Camera matching user's custom perspective)
+    cam_action = bpy.data.objects.new("Camera_Action_View", bpy.data.cameras.new("Cam_Action"))
+    cam_action.data.type = 'PERSP'
+    cam_action.data.lens = 32.0
+    cam_action.location = (-1.2, 3.2, 1.35)
+    tt_act = cam_action.constraints.new('TRACK_TO')
+    tt_act.target = cam_target
+    tt_act.track_axis = 'TRACK_NEGATIVE_Z'
+    tt_act.up_axis = 'UP_Y'
+    scene.collection.objects.link(cam_action)
+
     cam_side = bpy.data.objects.new("Camera_Side_Elevation", bpy.data.cameras.new("Cam_Side"))
     cam_side.data.type = 'ORTHO'
     cam_side.data.ortho_scale = 3.6
     cam_side.location = (0.2, -4.5, 0.9)
     cam_side.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     scene.collection.objects.link(cam_side)
-
-    cam_target = bpy.data.objects.new("Cam_Target_Center", None)
-    cam_target.location = (0.0, 0.0, 0.7)
-    scene.collection.objects.link(cam_target)
 
     cam_iso = bpy.data.objects.new("Camera_Isometric", bpy.data.cameras.new("Cam_Iso"))
     cam_iso.data.type = 'ORTHO'
@@ -728,17 +741,41 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     cam_wide.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     scene.collection.objects.link(cam_wide)
 
-    cam_action = bpy.data.objects.new("Camera_Action_View", bpy.data.cameras.new("Cam_Action"))
-    cam_action.data.type = 'PERSP'
-    cam_action.data.lens = 32.0
-    cam_action.location = (-1.2, -3.2, 1.5)
-    cam_action.rotation_euler = (math.radians(72.0), 0.0, math.radians(-25.0))
-    scene.collection.objects.link(cam_action)
-
-    scene.camera = cam_side
+    # Set default active scene camera to Action View
+    scene.camera = cam_action
 
     # -------------------------------------------------------------
-    # 13. SAVE BLEND FILE & SYNC TO ARTIFACT DIRECTORY
+    # 13. CONFIGURE VIEWPORT OVERLAYS (DEFAULT OFF) & FREE PERSPECTIVE
+    # -------------------------------------------------------------
+    cpos = mathutils.Vector((-1.2, 3.2, 1.35))
+    tpos = mathutils.Vector((0.15, 0.0, 0.72))
+    dist = (cpos - tpos).length
+    fwd = (tpos - cpos).normalized()
+    up_w = mathutils.Vector((0, 0, 1))
+    r_cam = fwd.cross(up_w).normalized()
+    u_cam = r_cam.cross(fwd).normalized()
+    m_view = mathutils.Matrix([
+        [r_cam.x, u_cam.x, -fwd.x, cpos.x],
+        [r_cam.y, u_cam.y, -fwd.y, cpos.y],
+        [r_cam.z, u_cam.z, -fwd.z, cpos.z],
+        [0, 0, 0, 1]
+    ])
+    v_rot = m_view.to_quaternion()
+
+    for screen in bpy.data.screens:
+        for area in screen.areas:
+            if area.type == 'VIEW_3D':
+                for space in area.spaces:
+                    if space.type == 'VIEW_3D':
+                        space.overlay.show_overlays = False
+                        if space.region_3d:
+                            space.region_3d.view_perspective = 'PERSP'
+                            space.region_3d.view_location = tpos
+                            space.region_3d.view_distance = dist
+                            space.region_3d.view_rotation = v_rot
+
+    # -------------------------------------------------------------
+    # 14. SAVE BLEND FILE & SYNC TO ARTIFACT DIRECTORY
     # -------------------------------------------------------------
     scene.frame_set(1)
 
@@ -752,10 +789,28 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         print(f"Synchronized Trebuchet_3ft.blend to {artifact_dir}")
 
     # -------------------------------------------------------------
-    # 14. RENDER VALIDATION FRAMES ACROSS 60 SECONDS (3,600 FRAMES)
+    # 15. RENDER VALIDATION FRAMES ACROSS 60 SECONDS (3,600 FRAMES)
     # -------------------------------------------------------------
     scene.render.resolution_x = 1280
     scene.render.resolution_y = 720
+
+    render_action = [
+        (1,   "native_action_f1.png"),
+        (20,  "native_action_f20.png"),
+        (28,  "native_action_f28_release.png"),
+        (90,  "native_action_f90_apex.png"),
+        (150, "native_action_f150_touchdown.png"),
+        (194, "native_action_f194_floor_roll.png"),
+        (360, "native_action_f360_rest.png"),
+    ]
+    scene.camera = cam_action
+    for f_idx, out_name in render_action:
+        if f_idx <= TOTAL_FRAMES:
+            scene.frame_set(f_idx)
+            out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+            scene.render.filepath = out_path
+            bpy.ops.render.render(write_still=True)
+            print(f"Rendered Frame {f_idx} (Action Perspective) to {out_path}")
 
     render_side = [
         (1,   "native_sim_f1_cocked.png"),
@@ -809,6 +864,13 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
             scene.render.filepath = out_path
             bpy.ops.render.render(write_still=True)
             print(f"Rendered Frame {f_idx} (Wide Full Journey) to {out_path}")
+
+    # Re-save to guarantee active camera and frame 1 state
+    scene.camera = cam_action
+    scene.frame_set(1)
+    bpy.ops.wm.save_as_mainfile(filepath=blend_path)
+    if os.path.exists(artifact_dir):
+        shutil.copy2(blend_path, os.path.join(artifact_dir, "Trebuchet_3ft.blend"))
 
     print(f"All {TOTAL_FRAMES} frames ({duration_sec:.1f}s) simulation and baking completed in {time.time() - t_start:.2f}s!")
     os._exit(0)
