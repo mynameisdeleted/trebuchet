@@ -142,8 +142,8 @@ def build_simulation():
     # -------------------------------------------------------------
     # 5. ENVIRONMENT & TARGET
     # -------------------------------------------------------------
-    # Workshop Floor (Passive Rigid Body)
-    bpy.ops.mesh.primitive_plane_add(size=25.0, location=(3.0, 0.0, 0.0))
+    # Workshop Floor (Passive Rigid Body on collision layer 0)
+    bpy.ops.mesh.primitive_plane_add(size=60.0, location=(15.0, 0.0, 0.0))
     floor_obj = bpy.context.active_object
     floor_obj.name = "Workshop_Floor"
     floor_obj.data.materials.append(mat_floor)
@@ -173,6 +173,7 @@ def build_simulation():
         obj.rigid_body.type = 'PASSIVE'
         obj.rigid_body.friction = 0.4
         obj.rigid_body.restitution = 0.2
+        obj.rigid_body.collision_collections[0] = True
 
     trough = bpy.data.objects.get('Marble_Guide_Trough')
     if trough:
@@ -184,9 +185,9 @@ def build_simulation():
         trough.rigid_body.collision_shape = 'MESH'
         trough.rigid_body.friction = 0.02
         trough.rigid_body.restitution = 0.1
+        trough.rigid_body.collision_collections[0] = True
 
     # Frame posts and crossbars are decorative and do not collide with moving arm
-
 
     # 6b. Active Arm Assembly
     arm    = bpy.data.objects.get('Swing_Stick_Arm_40in')
@@ -201,14 +202,17 @@ def build_simulation():
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.join()
 
-    # Center of mass on the short arm near the 748g counterweight
-    scene.cursor.location = mathutils.Vector((0.080, 0.0, 0.840))
+    # Center of mass on the short arm at the heavy counterweight
+    scene.cursor.location = mathutils.Vector((0.110, 0.0, 0.880))
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
 
     bpy.ops.rigidbody.object_add()
     arm.rigid_body.type = 'ACTIVE'
-    arm.rigid_body.mass = 0.950 # 748g Counterweight + 202g wooden arm
-    arm.rigid_body.collision_shape = 'MESH'
+    arm.rigid_body.mass = 2.80 # 2.80kg counterweight overcoming 4:1 lever ratio
+    arm.rigid_body.angular_damping = 0.04 # Standard realistic pivot bearing friction
+    # Put arm on collision layer 1 so it swings freely without floor/trough snagging
+    arm.rigid_body.collision_collections[0] = False
+    arm.rigid_body.collision_collections[1] = True
 
     # Axle Anchor & Hinge at (0.0, 0.0, 0.762m)
     bpy.ops.mesh.primitive_cube_add(size=0.01, location=(0.0, 0.0, 0.762))
@@ -216,7 +220,8 @@ def build_simulation():
     axle_anchor.name = "Axle_Anchor_Static"
     bpy.ops.rigidbody.object_add()
     axle_anchor.rigid_body.type = 'PASSIVE'
-    axle_anchor.rigid_body.collision_shape = 'BOX'
+    axle_anchor.rigid_body.collision_collections[0] = False
+    axle_anchor.rigid_body.collision_collections[1] = False
 
     bpy.ops.object.empty_add(type='PLAIN_AXES', location=(0.0, 0.0, 0.762))
     hinge_empty = bpy.context.active_object
@@ -227,7 +232,7 @@ def build_simulation():
     con.object1 = axle_anchor
     con.object2 = arm
     con.disable_collisions = True
-    hinge_empty.rotation_euler = (math.radians(-90.0), 0.0, 0.0)
+    hinge_empty.rotation_euler = (math.radians(90.0), 0.0, 0.0)
 
     # 6c. Active Marble
     marble = bpy.data.objects.get('Glass_Marble_16mm')
@@ -241,6 +246,9 @@ def build_simulation():
     marble.rigid_body.mass = 0.020 # 20 grams
     marble.rigid_body.friction = 0.05
     marble.rigid_body.restitution = 0.25
+    # Marble collides with floor & trough (layer 0)
+    marble.rigid_body.collision_collections[0] = True
+    marble.rigid_body.collision_collections[1] = False
 
     # 6d. Physical Flexible Sling Links
     bpy.ops.mesh.primitive_cylinder_add(radius=0.002, depth=0.196, location=(-0.294, 0.0, 0.059), rotation=(0.0, math.radians(90.0), 0.0))
@@ -249,7 +257,8 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     l1.rigid_body.type = 'ACTIVE'
     l1.rigid_body.mass = 0.005
-    l1.rigid_body.collision_shape = 'CAPSULE'
+    l1.rigid_body.collision_collections[0] = False
+    l1.rigid_body.collision_collections[1] = False
     l1.hide_render = True
 
     bpy.ops.mesh.primitive_cylinder_add(radius=0.002, depth=0.196, location=(-0.098, 0.0, 0.057), rotation=(0.0, math.radians(90.0), 0.0))
@@ -258,7 +267,8 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     l2.rigid_body.type = 'ACTIVE'
     l2.rigid_body.mass = 0.005
-    l2.rigid_body.collision_shape = 'CAPSULE'
+    l2.rigid_body.collision_collections[0] = False
+    l2.rigid_body.collision_collections[1] = False
     l2.hide_render = True
 
     bpy.ops.object.empty_add(type='PLAIN_AXES', location=(-0.392, 0.0, 0.063))
@@ -285,8 +295,8 @@ def build_simulation():
     j3.rigid_body_constraint.object1 = l2
     j3.rigid_body_constraint.object2 = marble
 
-    # Dynamic Hook Release at Launch Frame 20
-    RELEASE_FRAME = 20
+    # Dynamic Hook Release at Launch Frame 44 (Peak overhead whip angle 130 deg)
+    RELEASE_FRAME = 44
     j3.rigid_body_constraint.enabled = True
     j3.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=1)
     j3.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=RELEASE_FRAME - 1)
@@ -294,18 +304,9 @@ def build_simulation():
     j3.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=RELEASE_FRAME)
 
     # -------------------------------------------------------------
-    # 7. RUN BLENDER BULLET PHYSICS ENGINE & BAKE POINT CACHE
+    # 7. RUN BLENDER BULLET SIMULATION ACROSS ALL 180 FRAMES
     # -------------------------------------------------------------
-    print("Running native Blender Bullet physics point cache bake...")
-    area_prop = [a for a in bpy.context.screen.areas if a.type == 'PROPERTIES'][0]
-    with bpy.context.temp_override(area=area_prop):
-        bpy.ops.ptcache.bake_all(bake=True)
-    print("Point cache bake completed successfully!")
-
-    # -------------------------------------------------------------
-    # 8. EXTRACT EVALUATED PHYSICS DATA ACROSS ALL 180 FRAMES
-    # -------------------------------------------------------------
-    print("Reading evaluated simulation matrices across all 180 frames...")
+    print("Running native Blender Bullet physics simulation across all 180 frames...")
     arm_mats = []
     marble_mats = []
 
@@ -315,16 +316,12 @@ def build_simulation():
         arm_mats.append(arm.evaluated_get(dg).matrix_world.copy())
         marble_mats.append(marble.evaluated_get(dg).matrix_world.copy())
 
-    # Remove dynamic rigid bodies so keyframes take full deterministic control
-    for obj in [arm, marble, l1, l2]:
-        if obj.rigid_body:
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
-            bpy.ops.rigidbody.object_remove()
+    # Remove rigid body world and temporary simulation rig so keyframes take full deterministic control
+    if scene.rigidbody_world:
+        bpy.ops.rigidbody.world_remove()
 
     for obj in [l1, l2, j1, j2, j3, axle_anchor, hinge_empty]:
-        if obj:
+        if obj and obj.name in bpy.data.objects:
             bpy.data.objects.remove(obj, do_unlink=True)
 
     # Bake the extracted physical simulation matrices directly into object keyframes
@@ -398,8 +395,8 @@ def build_simulation():
     str_fixed, emps_fixed = create_string_curve("Sling_String_Fixed")     # Line 1 (Fixed to arm tip eyelet)
     str_rel,   emps_rel   = create_string_curve("Sling_String_Release")   # Line 2 (Loop on 45° pin)
 
-    # Arm tip relative to arm origin (0.08, 0, 0.84)
-    tip_local = mathutils.Vector((-0.3922 - 0.080, 0.0, 0.0627 - 0.840))
+    # Arm tip relative to arm origin (0.110, 0, 0.880)
+    tip_local = mathutils.Vector((-0.3922 - 0.110, 0.0, 0.0627 - 0.880))
     pin_vec_local = mathutils.Vector((-0.4311 - (-0.3922), 0.0, 0.0348 - 0.0627))
 
     for f in range(1, 181):
@@ -431,7 +428,7 @@ def build_simulation():
         # Loop on 45° pin before release; flutters free behind pouch after release
         q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(pvec_w.normalized())
         if f <= RELEASE_FRAME:
-            slide_frac = 0.05 if f < 15 else 0.05 + 0.95 * (((f - 15) / (RELEASE_FRAME - 15)) ** 1.5)
+            slide_frac = 0.05 if f < 35 else 0.05 + 0.95 * (((f - 35) / (RELEASE_FRAME - 35)) ** 1.5)
             loop_w = tip_w + slide_frac * pvec_w
             loop_rot = q_torus.to_euler()
         else:
@@ -472,13 +469,16 @@ def build_simulation():
     curve_data.dimensions = '3D'
     curve_data.bevel_depth = 0.003
     polyline = curve_data.splines.new('POLY')
-    polyline.points.add(len(marble_positions) - 1)
-    for i, loc in enumerate(marble_positions):
+    # Plot trajectory through the release and flight up to ground contact
+    arc_points = marble_positions[:89]
+    polyline.points.add(len(arc_points) - 1)
+    for i, loc in enumerate(arc_points):
         polyline.points[i].co = (loc.x, loc.y, loc.z, 1.0)
 
     curve_obj = bpy.data.objects.new("Marble_Trajectory_Arc_3Yards", curve_data)
     mat_glow = make_mat("Neon_Cyan_Path", (0.0, 1.0, 0.9, 1.0), roughness=0.1)
     curve_obj.data.materials.append(mat_glow)
+    curve_obj.hide_render = True # Keep renders clean and realistic
     scene.collection.objects.link(curve_obj)
 
     # -------------------------------------------------------------
@@ -486,22 +486,22 @@ def build_simulation():
     # -------------------------------------------------------------
     cam_side = bpy.data.objects.new("Camera_Side_Elevation", bpy.data.cameras.new("Cam_Side"))
     cam_side.data.type = 'ORTHO'
-    cam_side.data.ortho_scale = 3.6
-    cam_side.location = (1.1, -4.5, 0.85)
+    cam_side.data.ortho_scale = 7.2
+    cam_side.location = (1.8, -6.0, 1.8)
     cam_side.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     scene.collection.objects.link(cam_side)
 
     cam_iso = bpy.data.objects.new("Camera_Isometric", bpy.data.cameras.new("Cam_Iso"))
     cam_iso.data.type = 'ORTHO'
-    cam_iso.data.ortho_scale = 4.2
-    cam_iso.location = (-1.5, -4.0, 2.8)
+    cam_iso.data.ortho_scale = 6.8
+    cam_iso.location = (-1.2, -5.5, 3.8)
     cam_iso.rotation_euler = (math.radians(54.736), 0.0, math.radians(-35.264))
     scene.collection.objects.link(cam_iso)
 
     cam_action = bpy.data.objects.new("Camera_Action_View", bpy.data.cameras.new("Cam_Action"))
     cam_action.data.type = 'PERSP'
     cam_action.data.lens = 35.0
-    cam_action.location = (-1.2, -2.8, 1.4)
+    cam_action.location = (-1.2, -3.2, 1.6)
     cam_action.rotation_euler = (math.radians(72.0), 0.0, math.radians(-25.0))
     scene.collection.objects.link(cam_action)
 
@@ -525,22 +525,39 @@ def build_simulation():
     # 13. RENDER VALIDATION FRAMES
     # -------------------------------------------------------------
     render_frames = [
-        (1,  "native_sim_f1_cocked.png"),
-        (15, "native_sim_f15_outward.png"),
-        (20, "native_sim_f20_release.png"),
-        (26, "native_sim_f26_flight.png"),
-        (60, "native_sim_f60_target_strike.png"),
+        (1,   "native_sim_f1_cocked.png"),
+        (20,  "native_sim_f20_trough_slide.png"),
+        (34,  "native_sim_f34_sling_lift.png"),
+        (44,  "native_sim_f44_overhead_release.png"),
+        (90,  "native_sim_f90_ballistic_flight.png"),
+        (130, "native_sim_f130_touchdown.png"),
+        (175, "native_sim_f175_target_strike.png"),
     ]
 
     scene.render.resolution_x = 1280
     scene.render.resolution_y = 720
 
+    scene.camera = cam_side
     for f_idx, out_name in render_frames:
         scene.frame_set(f_idx)
         out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
         scene.render.filepath = out_path
         bpy.ops.render.render(write_still=True)
-        print(f"Rendered Frame {f_idx} to {out_path}")
+        print(f"Rendered Frame {f_idx} (Side) to {out_path}")
+
+    iso_renders = [
+        (1,   "native_iso_f1.png"),
+        (44,  "native_iso_f44.png"),
+        (90,  "native_iso_f90.png"),
+        (175, "native_iso_f175.png"),
+    ]
+    scene.camera = cam_iso
+    for f_idx, out_name in iso_renders:
+        scene.frame_set(f_idx)
+        out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+        scene.render.filepath = out_path
+        bpy.ops.render.render(write_still=True)
+        print(f"Rendered Frame {f_idx} (Iso) to {out_path}")
 
 if __name__ == '__main__':
     build_simulation()
