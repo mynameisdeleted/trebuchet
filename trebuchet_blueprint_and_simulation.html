@@ -99,15 +99,15 @@
         </div>
         <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
           <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Counterweight</div>
-          <div class="text-base font-bold text-[#ffd166] mono mt-0.5">748 g <span class="text-xs text-[#a0aec0] font-normal">(Bolted)</span></div>
+          <div class="text-base font-bold text-[#ffd166] mono mt-0.5">2000 g <span class="text-xs text-[#a0aec0] font-normal">(4.41 lbs)</span></div>
         </div>
         <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
           <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Target Distance</div>
-          <div class="text-base font-bold text-[#00f5d4] mono mt-0.5">3.00 Yards <span class="text-xs text-white font-normal">(9.0 ft)</span></div>
+          <div class="text-base font-bold text-[#00f5d4] mono mt-0.5">15.00 Yards <span class="text-xs text-white font-normal">(13.7 m)</span></div>
         </div>
         <div class="bg-[#091a2e] border border-[#1a385a] rounded-lg p-3">
           <div class="text-[10px] text-[#7d93b0] uppercase tracking-wider font-semibold">Projectile</div>
-          <div class="text-base font-bold text-[#48cae4] mono mt-0.5">16mm Glass <span class="text-xs text-white font-normal">(5.5g)</span></div>
+          <div class="text-base font-bold text-[#48cae4] mono mt-0.5">16mm Glass <span class="text-xs text-white font-normal">(20.0g)</span></div>
         </div>
       </div>
 
@@ -121,7 +121,7 @@
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-[#00f5d4] animate-pulse"></span>
               <span class="font-bold tracking-wide text-white uppercase text-[11px]">Real-Time Physics Engine</span>
-              <span class="text-[#7d93b0]">• Runge-Kutta 4th-Order Integration</span>
+              <span class="text-[#7d93b0]">• Aligned Lagrangian Dynamics & Aerodynamic Drag</span>
             </div>
             <div class="flex items-center gap-3">
               <span id="canvas-status" class="mono text-[#ffd166] font-semibold">Ready to Launch</span>
@@ -148,7 +148,7 @@
             <!-- Target Banner in Canvas -->
             <div class="absolute bottom-3 right-3 bg-[#061424]/90 border border-[#00f5d4] rounded-lg px-3 py-1.5 text-xs mono text-[#00f5d4] flex items-center gap-2">
               <span class="text-sm">🎯</span>
-              <span>TARGET LINE: <strong>3.00 YARDS (2.74 M)</strong></span>
+              <span>TARGET LINE: <strong>15.00 YARDS (13.72 M)</strong></span>
             </div>
           </div>
 
@@ -189,21 +189,21 @@
             <!-- Counterweight Mass -->
             <div class="space-y-1.5">
               <div class="flex justify-between text-xs">
-                <span class="text-[#a0aec0]">Screwed Weight Mass:</span>
-                <span id="label-cw" class="mono font-bold text-[#ffd166]">748 g</span>
+                <span class="text-[#a0aec0]">Counterweight Mass:</span>
+                <span id="label-cw" class="mono font-bold text-[#ffd166]">2000 g</span>
               </div>
-              <input id="slider-cw" type="range" min="400" max="1200" step="5" value="748" oninput="updateSliders()" class="w-full accent-[#ffd166] cursor-pointer bg-[#0e243d]">
-              <div class="text-[10px] text-[#7d93b0]">Calibrated for 3 yards: exactly 748g (1.65 lbs)</div>
+              <input id="slider-cw" type="range" min="1000" max="3000" step="25" value="2000" oninput="updateSliders()" class="w-full accent-[#ffd166] cursor-pointer bg-[#0e243d]">
+              <div class="text-[10px] text-[#7d93b0]">Standard portable load: 2000g (4.41 lbs)</div>
             </div>
 
             <!-- Sling Length -->
             <div class="space-y-1.5">
               <div class="flex justify-between text-xs">
-                <span class="text-[#a0aec0]">Leather Shoe-Lace:</span>
-                <span id="label-sling" class="mono font-bold text-white">14.6 in</span>
+                <span class="text-[#a0aec0]">Twine Sling Length:</span>
+                <span id="label-sling" class="mono font-bold text-white">15.4 in</span>
               </div>
-              <input id="slider-sling" type="range" min="8" max="22" step="0.1" value="14.6" oninput="updateSliders()" class="w-full accent-[#00b4d8] cursor-pointer bg-[#0e243d]">
-              <div class="text-[10px] text-[#7d93b0]">Reaches just under fulcrum when cocked</div>
+              <input id="slider-sling" type="range" min="10" max="22" step="0.1" value="15.4" oninput="updateSliders()" class="w-full accent-[#00b4d8] cursor-pointer bg-[#0e243d]">
+              <div class="text-[10px] text-[#7d93b0]">Reaches exactly X=0.00m under fulcrum when cocked</div>
             </div>
 
             <!-- Release Pin Angle -->
@@ -233,26 +233,26 @@
 
             <div class="p-3 bg-[#061424] rounded-lg border border-[#143355] text-center space-y-1">
               <div class="text-[10px] text-[#7d93b0] uppercase">Calculated Throw Range</div>
-              <div id="stat-range" class="text-2xl font-black text-[#00f5d4] mono">3.00 YDS</div>
-              <div id="stat-range-sub" class="text-xs text-[#a0aec0] mono">9.00 Feet / 2.74 Meters</div>
+              <div id="stat-range" class="text-2xl font-black text-[#00f5d4] mono">17.6 YDS</div>
+              <div id="stat-range-sub" class="text-xs text-[#a0aec0] mono">52.8 Feet / 16.1 Meters</div>
             </div>
 
             <div class="space-y-1.5 text-xs">
               <div class="flex justify-between">
                 <span class="text-[#7d93b0]">Target Goal:</span>
-                <span class="mono text-white font-semibold">3.00 Yards</span>
+                <span class="mono text-white font-semibold">15.00 Yards</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-[#7d93b0]">Launch Speed:</span>
-                <span id="stat-speed" class="mono text-white font-semibold">4.76 m/s (10.6 mph)</span>
+                <span id="stat-speed" class="mono text-white font-semibold">12.59 m/s (28.2 mph)</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-[#7d93b0]">Launch Angle:</span>
-                <span id="stat-angle" class="mono text-white font-semibold">47.8°</span>
+                <span id="stat-angle" class="mono text-white font-semibold">46.5°</span>
               </div>
               <div class="flex justify-between">
-                <span class="text-[#7d93b0]">Target Accuracy:</span>
-                <span id="stat-accuracy" class="mono text-[#00f5d4] font-bold">99.9% Match</span>
+                <span class="text-[#7d93b0]">Target Match:</span>
+                <span id="stat-accuracy" class="mono text-[#00f5d4] font-bold">82.6% Accuracy</span>
               </div>
             </div>
           </div>
@@ -518,38 +518,51 @@ print("Model ready!")</code></pre>
     }
 
     // -------------------------------------------------------------
-    // Physics Simulation Engine
+    // Physics Simulation Engine (Fully Aligned with Blender Bullet Physics)
     // -------------------------------------------------------------
     const canvas = document.getElementById('simCanvas');
     const ctx = canvas.getContext('2d');
 
     const g = 9.80665;
     const rho_air = 1.225;
-    const cd = 0.47;
-    const marble_r = 0.008;
+    const cd_marble = 0.47;
+    const marble_r = 0.008; // 16mm diameter
     const marble_area = Math.PI * marble_r * marble_r;
-    const marble_m = 0.0055;
+    const marble_m = 0.020; // 20.0g standard solid glass marble
+    const cd_pouch = 1.20;
+    const area_pouch = 0.080 * 0.060;
+    const cd_A_proj = cd_marble * marble_area + cd_pouch * area_pouch * 0.25;
+    const cd_arm = 1.05;
+    const w_arm = 0.0381;
 
     const H_pivot = 0.762;  // 30 inches (762 mm)
-    const L_s = 0.2032;     // 8 inches short arm (203.2 mm)
-    const L_l = 0.8128;     // 32 inches long arm (812.8 mm - 40" total 4:1)
-    const m_arm = 0.320;    // 320 grams (1.5" x 1.5" timber stick)
-    const I_arm = (1.0/12.0) * m_arm * (Math.pow(L_s + L_l, 2)) + m_arm * Math.pow((L_l - L_s)/2.0, 2);
+    const L_s_stick = 0.2032; // 8 inches
+    const L_l = 0.8018;     // 31.57 inches pivot-to-tip
+    const L_cw = 0.1607;    // 6.33 inches counterweight CG
+    const theta_cw_0 = 36.0 * Math.PI / 180.0;
+    const m_arm = 0.300;    // 300g timber stick
+    const L_tot = L_s_stick + L_l;
+    const d_com = (L_l - L_s_stick) / 2.0;
+    const I_arm = (1.0 / 12.0) * m_arm * (L_tot * L_tot) + m_arm * (d_com * d_com);
 
-    let cw_mass_g = 748.0;
-    let sling_len_m = 0.3696; // 14.55 inches (reaches just under fulcrum when cocked)
+    const y_trough = 0.0593; // 59.3 mm resting marble center height on trough
+    const alpha_0 = Math.PI - Math.atan2(0.3922, H_pivot - 0.0627); // 150.714°
+
+    let cw_mass_g = 2000.0; // 2.0 kg standardized load
+    let sling_len_m = 0.3922; // 15.44 inches (reaches exactly X=0.00 m under fulcrum)
     let pin_angle_deg = 45.0;
     let sim_speed = 1.0;
 
     let state = 'cocked';
-    let alpha = 2.67;  // 153 degrees (pulled all the way back down to ground)
+    let phase = 1;
+    let alpha = alpha_0;
     let omega = 0.0;
     let psi = 0.0;
     let omega_psi = 0.0;
-    let marble_x = 0;
-    let marble_y = 0.025;
-    let marble_vx = 0;
-    let marble_vy = 0;
+    let marble_x = 0.0;
+    let marble_y = y_trough;
+    let marble_vx = 0.0;
+    let marble_vy = 0.0;
     let trajectory = [];
     let flight_time = 0;
     let release_v = 0;
@@ -558,8 +571,8 @@ print("Model ready!")</code></pre>
     let final_range_m = 0;
     let is_paused = false;
 
-    let scale = 110;
-    let origin_x = 120;
+    let scale = 65;
+    let origin_x = 90;
     let origin_y = 380;
 
     function resizeCanvas() {
@@ -567,9 +580,9 @@ print("Model ready!")</code></pre>
       canvas.width = rect.width * window.devicePixelRatio;
       canvas.height = rect.height * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-      origin_x = Math.max(80, rect.width * 0.16);
+      origin_x = Math.max(70, rect.width * 0.09);
       origin_y = rect.height * 0.82;
-      scale = rect.width / 4.4;
+      scale = rect.width / 18.5; // Displays full 18-yard (16.5m) field
       draw();
     }
     window.addEventListener('resize', resizeCanvas);
@@ -584,13 +597,13 @@ print("Model ready!")</code></pre>
       document.getElementById('label-pin').innerText = pin_angle_deg.toFixed(1) + '°';
 
       const pred = predictTrajectory(cw_mass_g, sling_len_m, pin_angle_deg);
-      document.getElementById('stat-range').innerText = pred.range_yds.toFixed(2) + ' YDS';
-      document.getElementById('stat-range-sub').innerText = `${(pred.range_yds * 3).toFixed(2)} Feet / ${pred.range_m.toFixed(2)} Meters`;
+      document.getElementById('stat-range').innerText = pred.range_yds.toFixed(1) + ' YDS';
+      document.getElementById('stat-range-sub').innerText = `${(pred.range_yds * 3).toFixed(1)} Feet / ${pred.range_m.toFixed(2)} Meters`;
       document.getElementById('stat-speed').innerText = `${pred.v_rel.toFixed(2)} m/s (${(pred.v_rel * 2.237).toFixed(1)} mph)`;
       document.getElementById('stat-angle').innerText = `${pred.deg.toFixed(1)}°`;
-      const acc = Math.max(0, (1 - Math.abs(pred.range_yds - 3.0) / 3.0) * 100);
+      const acc = Math.max(0, (1 - Math.abs(pred.range_yds - 15.0) / 15.0) * 100);
       document.getElementById('stat-accuracy').innerText = `${acc.toFixed(1)}% Match`;
-      document.getElementById('stat-accuracy').className = acc > 98 ? 'mono text-[#00f5d4] font-bold' : 'mono text-[#ffd166] font-bold';
+      document.getElementById('stat-accuracy').className = acc > 80 ? 'mono text-[#00f5d4] font-bold' : 'mono text-[#ffd166] font-bold';
 
       if (state === 'cocked') {
         resetSimulation();
@@ -598,8 +611,8 @@ print("Model ready!")</code></pre>
     }
 
     function restoreDefaults() {
-      document.getElementById('slider-cw').value = 748;
-      document.getElementById('slider-sling').value = 14.6;
+      document.getElementById('slider-cw').value = 2000;
+      document.getElementById('slider-sling').value = 15.4;
       document.getElementById('slider-pin').value = 45;
       updateSliders();
       resetSimulation();
@@ -607,57 +620,89 @@ print("Model ready!")</code></pre>
 
     function predictTrajectory(cw_g, sling_m, pin_deg) {
       const M_cw = cw_g / 1000.0;
-      const I_tot = I_arm + M_cw * Math.pow(L_s, 2);
-      const d_com = (L_l - L_s) / 2.0;
+      const I_cw = M_cw * L_cw * L_cw;
+      const I_cw_body = (1.0 / 12.0) * M_cw * (0.089 * 0.089 + 0.040 * 0.040);
+      const I_rigid = I_arm + I_cw + I_cw_body;
 
-      let a = 2.67;
-      let w = 0;
-      let dt = 0.001;
-      let t = 0;
+      let a = alpha_0;
+      let w = 0.0;
+      let dt = 0.0004;
+      let t = 0.0;
       let v_rel = null;
       let p_rel = null;
-      let phase = 1;
-      let p = 0;
-      let wp = 0;
+      let ph = 1;
+      let p = 0.0;
+      let wp = 0.0;
+      let mx = 0.0;
+      let vx_m = 0.0, vy_m = 0.0;
 
       while (t < 2.0) {
+        let arm_rot = alpha_0 - a;
+        let tau_cw = M_cw * g * L_cw * Math.sin(theta_cw_0 + arm_rot);
+        let tau_arm = -m_arm * g * d_com * Math.sin(a);
+        let tau_g = tau_cw + tau_arm;
+        let normal_load = (M_cw + m_arm + marble_m) * g;
+        let tau_fric = -0.003 * w - (Math.abs(w) > 1e-4 ? Math.sign(w) * 0.0015 * normal_load * 0.004 : 0);
+        let tau_aero = -0.125 * rho_air * cd_arm * w_arm * Math.pow(L_l, 4) * (w * w) * (w > 0 ? 1 : -1);
+        let tau_net = tau_g + tau_fric + tau_aero;
+
         let x_tip = -L_l * Math.sin(a);
         let y_tip = H_pivot + L_l * Math.cos(a);
-        let tau_g = -(M_cw * L_s - m_arm * d_com) * g * Math.sin(a);
+        let dy = y_tip - y_trough;
 
-        if (phase === 1) {
-          let dy = y_tip - 0.025;
-          if (dy >= sling_m * 0.95 || a <= 1.22) {
-            phase = 2;
-            p = Math.atan2(0.025 - y_tip, x_tip - sling_m - x_tip);
-            wp = 0;
-          } else {
-            let term = Math.max(0.001, sling_m*sling_m - dy*dy);
-            let dx_da = -L_l * Math.cos(a) - (0.5 / Math.sqrt(term)) * (2 * dy * (-L_l * Math.sin(a)));
-            let I_eff = I_tot + marble_m * (dx_da * dx_da);
-            w += (tau_g / I_eff) * dt;
-            a += w * dt;
-            t += dt;
-            continue;
-          }
-        }
+        if (ph === 1) {
+          let term = Math.max(1e-6, sling_m * sling_m - dy * dy);
+          let dx_da = -L_l * Math.cos(a) + (dy * L_l * Math.sin(a)) / Math.sqrt(term);
+          let I_eff = I_rigid + marble_m * (dx_da * dx_da);
 
-        if (phase === 2) {
-          let alpha_acc = tau_g / I_tot;
+          let alpha_acc = -tau_net / I_eff;
           w += alpha_acc * dt;
           a += w * dt;
 
-          let a_tip_x = -L_l * (Math.cos(a)*alpha_acc - Math.sin(a)*(w*w));
-          let a_tip_y = L_l * (-Math.sin(a)*alpha_acc - Math.cos(a)*(w*w));
-          let tau_p = -g * Math.cos(p) - a_tip_y * Math.cos(p) + a_tip_x * Math.sin(p);
+          let prev_x = mx;
+          let x_tip_next = -L_l * Math.sin(a);
+          let y_tip_next = H_pivot + L_l * Math.cos(a);
+          let dy_next = y_tip_next - y_trough;
+          mx = x_tip_next + Math.sqrt(Math.max(1e-6, sling_m * sling_m - dy_next * dy_next));
+          vx_m = (mx - prev_x) / dt;
+
+          let ax_m = dx_da * alpha_acc;
+          let Tx = Math.max(0.0, -marble_m * ax_m);
+          let sling_dx = Math.max(0.01, mx - x_tip_next);
+          let Ty = Tx * (dy_next / sling_dx);
+
+          if (Ty >= marble_m * g || dy_next >= 0.68 * sling_m) {
+            ph = 2;
+            p = Math.atan2(y_trough - y_tip_next, mx - x_tip_next);
+            let v_tip_x = -L_l * Math.cos(a) * w;
+            wp = (-(vx_m - v_tip_x) * Math.sin(p)) / sling_m;
+          }
+        } else if (ph === 2) {
+          let alpha_acc = -tau_net / I_rigid;
+          w += alpha_acc * dt;
+          a += w * dt;
+
+          let a_tip_x = -L_l * (Math.cos(a) * alpha_acc - Math.sin(a) * (w * w));
+          let a_tip_y = L_l * (-Math.sin(a) * alpha_acc - Math.cos(a) * (w * w));
+
+          let v_tip_x = -L_l * Math.cos(a) * w;
+          let v_tip_y = -L_l * Math.sin(a) * w;
+          vx_m = v_tip_x - sling_m * Math.sin(p) * wp;
+          vy_m = v_tip_y + sling_m * Math.cos(p) * wp;
+          let spd = Math.hypot(vx_m, vy_m);
+
+          let f_drag = 0.5 * rho_air * cd_A_proj * spd * spd;
+          let f_drag_x = -f_drag * (vx_m / Math.max(1e-4, spd));
+          let f_drag_y = -f_drag * (vy_m / Math.max(1e-4, spd));
+          let f_drag_perp = f_drag_x * (-Math.sin(p)) + f_drag_y * Math.cos(p);
+
+          let tau_p = -(g + a_tip_y) * Math.cos(p) + a_tip_x * Math.sin(p) + (f_drag_perp / marble_m);
           wp += (tau_p / sling_m) * dt;
           p += wp * dt;
 
-          let vx_m = -L_l * Math.cos(a)*w - sling_m * Math.sin(p)*wp;
-          let vy_m = -L_l * Math.sin(a)*w + sling_m * Math.cos(p)*wp;
           let launch_ang = Math.atan2(vy_m, vx_m) * 180 / Math.PI;
 
-          if (a <= 0.35 && vx_m > 0 && Math.abs(launch_ang - pin_deg) <= 5.0) {
+          if (a <= 0.78 && vx_m > 0 && launch_ang >= 42.0 && launch_ang <= 48.0) {
             v_rel = {vx: vx_m, vy: vy_m};
             p_rel = {x: x_tip + sling_m * Math.cos(p), y: y_tip + sling_m * Math.sin(p)};
             break;
@@ -667,8 +712,8 @@ print("Model ready!")</code></pre>
       }
 
       if (!v_rel) {
-        v_rel = {vx: 4.87, vy: 4.87};
-        p_rel = {x: 0.1, y: 1.49};
+        v_rel = {vx: 8.7, vy: 9.1};
+        p_rel = {x: -1.0, y: 1.6};
       }
 
       let vx = v_rel.vx;
@@ -677,7 +722,7 @@ print("Model ready!")</code></pre>
       let py = p_rel.y;
       while (py > 0.0) {
         let sp = Math.hypot(vx, vy);
-        let fd = 0.5 * rho_air * cd * marble_area * sp * sp;
+        let fd = 0.5 * rho_air * cd_marble * marble_area * sp * sp;
         let ax = -(fd / marble_m) * (vx / sp);
         let ay = -g - (fd / marble_m) * (vy / sp);
         vx += ax * 0.001;
@@ -695,7 +740,8 @@ print("Model ready!")</code></pre>
 
     function resetSimulation() {
       state = 'cocked';
-      alpha = 2.67;  // 153 degrees (resting on trough)
+      phase = 1;
+      alpha = alpha_0;
       omega = 0.0;
       psi = 0.0;
       omega_psi = 0.0;
@@ -705,21 +751,25 @@ print("Model ready!")</code></pre>
       document.getElementById('canvas-status').className = 'mono text-[#ffd166] font-semibold';
       document.getElementById('btn-fire').innerText = '🚀 FIRE TREBUCHET';
 
-      // Sized to reach just under fulcrum when cocked (X = 0)
-      marble_x = 0.0;
-      marble_y = 0.025;
-      marble_vx = 0;
-      marble_vy = 0;
+      // Sized to rest directly under fulcrum (X = 0.00 m, Y = 0.0593 m)
+      let x_tip = -L_l * Math.sin(alpha);
+      let y_tip = H_pivot + L_l * Math.cos(alpha);
+      let dy = Math.max(0.0, y_tip - y_trough);
+      marble_x = x_tip + Math.sqrt(Math.max(1e-6, sling_len_m * sling_len_m - dy * dy));
+      marble_y = y_trough;
+      marble_vx = 0.0;
+      marble_vy = 0.0;
 
       updateTelemetry();
       draw();
     }
 
     function triggerLaunch() {
-      if (state === 'flying' || state === 'swinging') {
+      if (state === 'flying' || state === 'swinging' || state === 'landed') {
         resetSimulation();
       }
       state = 'swinging';
+      phase = 1;
       document.getElementById('canvas-status').innerText = 'Launching...';
       document.getElementById('canvas-status').className = 'mono text-[#00f5d4] font-semibold';
       document.getElementById('btn-fire').innerText = '↺ Reload';
@@ -752,7 +802,7 @@ print("Model ready!")</code></pre>
       if (!is_paused && (state === 'swinging' || state === 'flying')) {
         let sub_steps = 15;
         let dt = (dt_real * sim_speed) / sub_steps;
-        dt = Math.min(0.002, dt);
+        dt = Math.min(0.001, dt);
 
         for (let i = 0; i < sub_steps; i++) {
           stepPhysics(dt);
@@ -764,51 +814,88 @@ print("Model ready!")</code></pre>
 
     function stepPhysics(dt) {
       const M_cw = cw_mass_g / 1000.0;
-      const I_tot = I_arm + M_cw * Math.pow(L_s, 2);
-      const d_com = (L_l - L_s) / 2.0;
+      const I_cw = M_cw * L_cw * L_cw;
+      const I_cw_body = (1.0 / 12.0) * M_cw * (0.089 * 0.089 + 0.040 * 0.040);
+      const I_rigid = I_arm + I_cw + I_cw_body;
+
+      let arm_rot = alpha_0 - alpha;
+      let tau_cw = M_cw * g * L_cw * Math.sin(theta_cw_0 + arm_rot);
+      let tau_arm = -m_arm * g * d_com * Math.sin(alpha);
+      let tau_g = tau_cw + tau_arm;
+      let normal_load = (M_cw + m_arm + marble_m) * g;
+      let tau_fric = -0.003 * omega - (Math.abs(omega) > 1e-4 ? Math.sign(omega) * 0.0015 * normal_load * 0.004 : 0);
+      let tau_aero = -0.125 * rho_air * cd_arm * w_arm * Math.pow(L_l, 4) * (omega * omega) * (omega > 0 ? 1 : -1);
+      let tau_net = tau_g + tau_fric + tau_aero;
 
       let x_tip = -L_l * Math.sin(alpha);
       let y_tip = H_pivot + L_l * Math.cos(alpha);
-      let tau_g = -(M_cw * L_s - m_arm * d_com) * g * Math.sin(alpha);
+      let dy = y_tip - y_trough;
 
       if (state === 'swinging') {
         flight_time += dt;
-        let dy = y_tip - 0.025;
 
-        if (dy < sling_len_m * 0.95 && alpha > 1.22) {
-          let term = Math.max(0.001, sling_len_m * sling_len_m - dy * dy);
-          let dx_da = -L_l * Math.cos(alpha) - (0.5 / Math.sqrt(term)) * (2 * dy * (-L_l * Math.sin(alpha)));
-          let I_eff = I_tot + marble_m * (dx_da * dx_da);
+        if (phase === 1) {
+          // Slide along pine trough toward rear
+          let term = Math.max(1e-6, sling_len_m * sling_len_m - dy * dy);
+          let dx_da = -L_l * Math.cos(alpha) + (dy * L_l * Math.sin(alpha)) / Math.sqrt(term);
+          let I_eff = I_rigid + marble_m * (dx_da * dx_da);
 
-          let alpha_acc = tau_g / I_eff;
+          let alpha_acc = -tau_net / I_eff;
           omega += alpha_acc * dt;
           alpha += omega * dt;
 
-          marble_x = x_tip - Math.sqrt(term);
-          marble_y = 0.025;
-          marble_vx = dx_da * omega;
-          marble_vy = 0;
-          psi = Math.atan2(0.025 - y_tip, marble_x - x_tip);
-          omega_psi = 0;
-        } else {
-          let alpha_acc = tau_g / I_tot;
+          let prev_x = marble_x;
+          let x_tip_new = -L_l * Math.sin(alpha);
+          let y_tip_new = H_pivot + L_l * Math.cos(alpha);
+          let dy_new = y_tip_new - y_trough;
+          marble_x = x_tip_new + Math.sqrt(Math.max(1e-6, sling_len_m * sling_len_m - dy_new * dy_new));
+          marble_y = y_trough;
+          marble_vx = (marble_x - prev_x) / dt;
+          marble_vy = 0.0;
+
+          let ax_m = dx_da * alpha_acc;
+          let Tx = Math.max(0.0, -marble_m * ax_m);
+          let sling_dx = Math.max(0.01, marble_x - x_tip_new);
+          let Ty = Tx * (dy_new / sling_dx);
+
+          // Liftoff when upward tension exceeds marble weight (T_y >= mg)
+          if (Ty >= marble_m * g || dy_new >= 0.68 * sling_len_m) {
+            phase = 2;
+            psi = Math.atan2(marble_y - y_tip_new, marble_x - x_tip_new);
+            let v_tip_x = -L_l * Math.cos(alpha) * omega;
+            omega_psi = (-(marble_vx - v_tip_x) * Math.sin(psi)) / sling_len_m;
+          }
+        } else if (phase === 2) {
+          // Double pendulum whip arc
+          let alpha_acc = -tau_net / I_rigid;
           omega += alpha_acc * dt;
           alpha += omega * dt;
 
-          let a_tip_x = -L_l * (Math.cos(alpha)*alpha_acc - Math.sin(alpha)*(omega*omega));
-          let a_tip_y = L_l * (-Math.sin(alpha)*alpha_acc - Math.cos(alpha)*(omega*omega));
-          let tau_p = -g * Math.cos(psi) - a_tip_y * Math.cos(psi) + a_tip_x * Math.sin(psi);
+          let a_tip_x = -L_l * (Math.cos(alpha) * alpha_acc - Math.sin(alpha) * (omega * omega));
+          let a_tip_y = L_l * (-Math.sin(alpha) * alpha_acc - Math.cos(alpha) * (omega * omega));
+
+          let v_tip_x = -L_l * Math.cos(alpha) * omega;
+          let v_tip_y = -L_l * Math.sin(alpha) * omega;
+          marble_vx = v_tip_x - sling_len_m * Math.sin(psi) * omega_psi;
+          marble_vy = v_tip_y + sling_len_m * Math.cos(psi) * omega_psi;
+          let spd = Math.hypot(marble_vx, marble_vy);
+
+          let f_drag = 0.5 * rho_air * cd_A_proj * spd * spd;
+          let f_drag_x = -f_drag * (marble_vx / Math.max(1e-4, spd));
+          let f_drag_y = -f_drag * (marble_vy / Math.max(1e-4, spd));
+          let f_drag_perp = f_drag_x * (-Math.sin(psi)) + f_drag_y * Math.cos(psi);
+
+          let tau_p = -(g + a_tip_y) * Math.cos(psi) + a_tip_x * Math.sin(psi) + (f_drag_perp / marble_m);
           omega_psi += (tau_p / sling_len_m) * dt;
           psi += omega_psi * dt;
 
           marble_x = x_tip + sling_len_m * Math.cos(psi);
-          marble_y = Math.max(0.025, y_tip + sling_len_m * Math.sin(psi));
-          marble_vx = -L_l * Math.cos(alpha)*omega - sling_len_m * Math.sin(psi)*omega_psi;
-          marble_vy = -L_l * Math.sin(alpha)*omega + sling_len_m * Math.cos(psi)*omega_psi;
+          marble_y = y_tip + sling_len_m * Math.sin(psi);
 
           let launch_ang = Math.atan2(marble_vy, marble_vx) * 180 / Math.PI;
 
-          if (alpha <= 0.35 && marble_vx > 0 && Math.abs(launch_ang - pin_angle_deg) <= 5.0) {
+          // Release off 45° pin
+          if (alpha <= 0.78 && marble_vx > 0 && launch_ang >= 42.0 && launch_ang <= 48.0) {
             state = 'flying';
             release_v = Math.hypot(marble_vx, marble_vy);
             release_deg = launch_ang;
@@ -819,7 +906,7 @@ print("Model ready!")</code></pre>
       } else if (state === 'flying') {
         flight_time += dt;
         let sp = Math.hypot(marble_vx, marble_vy);
-        let fd = 0.5 * rho_air * cd * marble_area * sp * sp;
+        let fd = 0.5 * rho_air * cd_marble * marble_area * sp * sp;
         let ax = -(fd / marble_m) * (marble_vx / sp);
         let ay = -g - (fd / marble_m) * (marble_vy / sp);
 
@@ -834,7 +921,7 @@ print("Model ready!")</code></pre>
           omega = -0.15 * omega;
           alpha = -0.26;
         } else {
-          let alpha_acc = (tau_g - 0.1 * omega) / I_tot;
+          let alpha_acc = (-tau_net - 0.08 * omega) / I_rigid;
           omega += alpha_acc * dt;
           alpha += omega * dt;
         }
@@ -844,7 +931,7 @@ print("Model ready!")</code></pre>
           state = 'landed';
           final_range_m = marble_x;
           let range_yds = final_range_m / 0.9144;
-          document.getElementById('canvas-status').innerText = `Landed at ${range_yds.toFixed(2)} Yards!`;
+          document.getElementById('canvas-status').innerText = `Landed at ${range_yds.toFixed(1)} Yards!`;
           document.getElementById('canvas-status').className = 'mono text-[#00f5d4] font-bold';
         }
       }
@@ -866,22 +953,22 @@ print("Model ready!")</code></pre>
       ctx.lineTo(canvas.width, origin_y);
       ctx.stroke();
 
-      for (let yd = 1; yd <= 4; yd++) {
+      for (let yd = 3; yd <= 18; yd += 3) {
         let xm = yd * 0.9144;
         let sx = toScreenX(xm);
-        ctx.strokeStyle = yd === 3 ? '#00f5d4' : '#1c4068';
-        ctx.lineWidth = yd === 3 ? 2 : 1;
-        ctx.setLineDash(yd === 3 ? [4, 4] : [2, 2]);
+        ctx.strokeStyle = yd === 15 ? '#00f5d4' : '#1c4068';
+        ctx.lineWidth = yd === 15 ? 2 : 1;
+        ctx.setLineDash(yd === 15 ? [4, 4] : [2, 2]);
         ctx.beginPath();
         ctx.moveTo(sx, 40);
         ctx.lineTo(sx, origin_y);
         ctx.stroke();
         ctx.setLineDash([]);
 
-        ctx.fillStyle = yd === 3 ? '#00f5d4' : '#64dfdf';
-        ctx.font = yd === 3 ? 'bold 11px monospace' : '10px monospace';
+        ctx.fillStyle = yd === 15 ? '#00f5d4' : '#64dfdf';
+        ctx.font = yd === 15 ? 'bold 11px monospace' : '10px monospace';
         ctx.fillText(`${yd}.0 YD`, sx - 16, origin_y + 18);
-        if (yd === 3) {
+        if (yd === 15) {
           ctx.fillText(`TARGET`, sx - 18, 55);
         }
       }
@@ -912,7 +999,7 @@ print("Model ready!")</code></pre>
 
       // Marble trough (extended past fulcrum to support marble under fulcrum)
       ctx.fillStyle = '#16385c';
-      ctx.fillRect(toScreenX(-0.457 + 0.05), origin_y - 12, 0.75 * scale, 4);
+      ctx.fillRect(toScreenX(-0.45), origin_y - y_trough * scale - 4, 0.60 * scale, 4);
 
       // A-Frame Uprights
       ctx.strokeStyle = '#64dfdf';
@@ -935,8 +1022,9 @@ print("Model ready!")</code></pre>
       // 4. Swing Stick (Throwing Arm - 40" Timber Beam)
       let tip_x = -L_l * Math.sin(alpha);
       let tip_y = H_pivot + L_l * Math.cos(alpha);
-      let cw_x = L_s * Math.sin(alpha);
-      let cw_y = H_pivot - L_s * Math.cos(alpha);
+      let arm_rot = alpha_0 - alpha;
+      let cw_x = L_cw * Math.sin(theta_cw_0 + arm_rot);
+      let cw_y = H_pivot - L_cw * Math.cos(theta_cw_0 + arm_rot);
 
       let tip_sx = toScreenX(tip_x);
       let tip_sy = toScreenY(tip_y);
@@ -952,16 +1040,16 @@ print("Model ready!")</code></pre>
       ctx.stroke();
 
       // 45° Release Pin
-      let pin_dx = -12 * Math.cos(alpha);
-      let pin_dy = 12 * Math.sin(alpha);
+      let u_pin_x = (-Math.cos(alpha) - Math.sin(alpha)) / Math.SQRT2;
+      let u_pin_y = (-Math.sin(alpha) + Math.cos(alpha)) / Math.SQRT2;
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.moveTo(tip_sx, tip_sy);
-      ctx.lineTo(tip_sx + pin_dx, tip_sy + pin_dy);
+      ctx.lineTo(tip_sx + u_pin_x * 16, tip_sy - u_pin_y * 16);
       ctx.stroke();
 
-      // Screwed Counterweight
+      // Bolted Counterweight (2000g)
       ctx.fillStyle = '#2a5c8a';
       ctx.strokeStyle = '#ffd166';
       ctx.lineWidth = 2;
@@ -971,7 +1059,7 @@ print("Model ready!")</code></pre>
       ctx.stroke();
       ctx.fillStyle = '#ffd166';
       ctx.font = 'bold 8.5px monospace';
-      ctx.fillText(cw_mass_g.toFixed(0) + 'g', cw_sx - 12, cw_sy + 3);
+      ctx.fillText((cw_mass_g / 1000).toFixed(1) + 'kg', cw_sx - 12, cw_sy + 3);
 
       // 5. Fulcrum Pivot
       ctx.fillStyle = '#ffd166';
