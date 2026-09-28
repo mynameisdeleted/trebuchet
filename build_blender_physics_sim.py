@@ -26,11 +26,11 @@ import shutil
 import mathutils
 import time
 
-def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None, wind_mph=0.0, duration_sec=30.0):
+def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None, wind_mph=0.0, duration_sec=30.0, pin_angle=10.0, render_stills=True):
     t_start = time.time()
     v_wind = wind_mph * 0.44704
     print("=====================================================================")
-    print(f"Starting Native Blender Bullet Sim ({duration_sec:.1f}s at 60 FPS / 1200 FPS physics | Wind: {wind_mph:.1f} mph)")
+    print(f"Starting Native Blender Bullet Sim ({duration_sec:.1f}s at 60 FPS / 1200 FPS physics | Wind: {wind_mph:.1f} mph | Pin Angle: {pin_angle:.1f}°)")
     print(f"Sling Architecture: {num_segments} Articulated Segments per Line | Material: {sling_material}")
     print("Realistic Aerodynamics: Quadratic Drag & Ambient Wind Force Fields")
     print("=====================================================================")
@@ -286,10 +286,44 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     cw.rigid_body.collision_collections[0] = False
     cw.rigid_body.collision_collections[1] = False
 
+    # 6b-pin. Compute Pin Geometry and Align Visual Mesh to Target Angle
+    p_tip = mathutils.Vector((-0.3922, 0.0, 0.0627))
+    pivot_w = mathutils.Vector((0.0, 0.0, 0.762))
+    arm_axis_w = (p_tip - pivot_w).normalized()
+
+    # Reference pin vector from model:
+    p_pin_ref = mathutils.Vector((-0.4311, 0.0, 0.0348))
+    pin_vec_ref = p_pin_ref - p_tip
+    pin_len = pin_vec_ref.length
+    pin_dir_ref = pin_vec_ref.normalized()
+
+    comp_along = pin_dir_ref.dot(arm_axis_w)
+    norm_w = (pin_dir_ref - comp_along * arm_axis_w).normalized()
+    orig_angle_deg = math.degrees(math.atan2(norm_w.length, comp_along)) # ~25.07°
+
+    actual_pin_angle = orig_angle_deg if pin_angle is None else pin_angle
+    rad = math.radians(actual_pin_angle)
+    pin_dir = (math.cos(rad) * arm_axis_w + math.sin(rad) * norm_w).normalized()
+    p_pin_tip = p_tip + pin_len * pin_dir
+    print(f"Pin Geometry: angle={actual_pin_angle:.2f}° (original was {orig_angle_deg:.2f}°), len={pin_len*1000:.1f}mm, tip=({p_pin_tip.x:.4f}, {p_pin_tip.z:.4f})")
+
+    # Replace/re-create visual pin cylinder so 3D mesh matches pin_dir exactly:
+    if pin_obj:
+        bpy.data.objects.remove(pin_obj, do_unlink=True)
+
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=0.00238,
+        depth=pin_len,
+        location=p_tip + 0.5 * pin_len * pin_dir,
+        rotation=mathutils.Vector((0, 0, 1)).rotation_difference(pin_dir).to_euler()
+    )
+    pin_obj = bpy.context.active_object
+    pin_obj.name = "Sling_Release_Pin"
+    pin_obj.data.materials.append(mat_steel)
+
     bpy.ops.object.select_all(action='DESELECT')
     arm.select_set(True)
-    if pin_obj:
-        pin_obj.select_set(True)
+    pin_obj.select_set(True)
     bpy.context.view_layer.objects.active = arm
     bpy.ops.object.join()
     scene.cursor.location = mathutils.Vector((0.0, 0.0, 0.762))
@@ -449,12 +483,9 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         return emp
 
     # 6e. Physical Sling String Loop & Pin Slider Constraint
-    p_pin_tip = mathutils.Vector((-0.4311, 0.0, 0.0348))
-    pin_vec = p_pin_tip - p_tip
-    pin_len = pin_vec.length
-    pin_dir = pin_vec.normalized()
+    # (p_pin_tip, pin_len, and pin_dir were computed in step 6b-pin according to pin_angle)
 
-    # The actual physical cord loop seated on the 45° pin:
+    # The actual physical cord loop seated on the pin:
     q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(pin_dir)
     bpy.ops.mesh.primitive_torus_add(
         major_radius=0.0055,
@@ -525,7 +556,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     jm.rigid_body_constraint.object2 = marble
 
     pin_base_local = mathutils.Vector((-0.3922, 0.0, 0.0627 - 0.762))
-    pin_dir_local = mathutils.Vector((-0.4311 - (-0.3922), 0.0, 0.0348 - 0.0627)).normalized()
+    pin_dir_local = pin_dir.copy()
 
     # -------------------------------------------------------------
     # 7. RUN FULL 60-SECOND SIMULATION WITH LIVE DYNAMIC RELEASE
@@ -836,83 +867,85 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     # -------------------------------------------------------------
     # 15. RENDER VALIDATION FRAMES ACROSS 60 SECONDS (3,600 FRAMES)
     # -------------------------------------------------------------
-    scene.render.resolution_x = 1280
-    scene.render.resolution_y = 720
+    if render_stills:
+        scene.render.resolution_x = 1280
+        scene.render.resolution_y = 720
 
-    render_action = [
-        (1,   "native_action_f1.png"),
-        (20,  "native_action_f20.png"),
-        (28,  "native_action_f28_release.png"),
-        (90,  "native_action_f90_apex.png"),
-        (150, "native_action_f150_touchdown.png"),
-        (194, "native_action_f194_floor_roll.png"),
-        (360, "native_action_f360_rest.png"),
-        (1800, "native_action_f1800_rest.png"),
-    ]
-    scene.camera = cam_action
-    for f_idx, out_name in render_action:
-        if f_idx <= TOTAL_FRAMES:
-            scene.frame_set(f_idx)
-            out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
-            scene.render.filepath = out_path
-            bpy.ops.render.render(write_still=True)
-            print(f"Rendered Frame {f_idx} (Action Perspective) to {out_path}")
+        rel_f = dynamic_release_frame
+        render_action = [
+            (1,     "native_action_f1.png"),
+            (20,    "native_action_f20.png"),
+            (rel_f, "native_action_f28_release.png"),
+            (90,    "native_action_f90_apex.png"),
+            (150,   "native_action_f150_touchdown.png"),
+            (194,   "native_action_f194_floor_roll.png"),
+            (360,   "native_action_f360_rest.png"),
+            (1800,  "native_action_f1800_rest.png"),
+        ]
+        scene.camera = cam_action
+        for f_idx, out_name in render_action:
+            if f_idx <= TOTAL_FRAMES:
+                scene.frame_set(f_idx)
+                out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+                scene.render.filepath = out_path
+                bpy.ops.render.render(write_still=True)
+                print(f"Rendered Frame {f_idx} (Action Perspective) to {out_path}")
 
-    render_side = [
-        (1,   "native_sim_f1_cocked.png"),
-        (20,  "native_sim_f20_centrifugal_whip.png"),
-        (27,  "native_sim_f27_dynamic_release.png"),
-        (28,  "native_sim_f28_sling_fling.png"),
-        (32,  "native_sim_f32_wide_open.png"),
-        (90,  "native_sim_f90_apex.png"),
-        (150, "native_sim_f150_touchdown.png"),
-        (360, "native_sim_f360_rest.png"),
-        (1800, "native_sim_f1800_rest.png"),
-    ]
-    scene.camera = cam_side
-    for f_idx, out_name in render_side:
-        if f_idx <= TOTAL_FRAMES:
-            scene.frame_set(f_idx)
-            out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
-            scene.render.filepath = out_path
-            bpy.ops.render.render(write_still=True)
-            print(f"Rendered Frame {f_idx} (Side Close) to {out_path}")
+        render_side = [
+            (1,     "native_sim_f1_cocked.png"),
+            (20,    "native_sim_f20_centrifugal_whip.png"),
+            (rel_f, "native_sim_f27_dynamic_release.png"),
+            (rel_f, "native_sim_f28_sling_fling.png"),
+            (rel_f + 4, "native_sim_f32_wide_open.png"),
+            (90,    "native_sim_f90_apex.png"),
+            (150,   "native_sim_f150_touchdown.png"),
+            (360,   "native_sim_f360_rest.png"),
+            (1800,  "native_sim_f1800_rest.png"),
+        ]
+        scene.camera = cam_side
+        for f_idx, out_name in render_side:
+            if f_idx <= TOTAL_FRAMES:
+                scene.frame_set(f_idx)
+                out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+                scene.render.filepath = out_path
+                bpy.ops.render.render(write_still=True)
+                print(f"Rendered Frame {f_idx} (Side Close) to {out_path}")
 
-    render_iso = [
-        (1,   "native_iso_f1.png"),
-        (20,  "native_iso_f20.png"),
-        (27,  "native_iso_f27.png"),
-        (28,  "native_iso_f28.png"),
-        (32,  "native_iso_f32.png"),
-        (90,  "native_iso_f90.png"),
-        (150, "native_iso_f150.png"),
-        (1800, "native_iso_f1800.png"),
-    ]
-    scene.camera = cam_iso
-    for f_idx, out_name in render_iso:
-        if f_idx <= TOTAL_FRAMES:
-            scene.frame_set(f_idx)
-            out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
-            scene.render.filepath = out_path
-            bpy.ops.render.render(write_still=True)
-            print(f"Rendered Frame {f_idx} (Iso Close) to {out_path}")
+        render_iso = [
+            (1,     "native_iso_f1.png"),
+            (20,    "native_iso_f20.png"),
+            (rel_f - 1, "native_iso_f27.png"),
+            (rel_f,     "native_iso_f28.png"),
+            (rel_f + 4, "native_iso_f32.png"),
+            (90,    "native_iso_f90.png"),
+            (150,   "native_iso_f150.png"),
+            (1800,  "native_iso_f1800.png"),
+        ]
+        scene.camera = cam_iso
+        for f_idx, out_name in render_iso:
+            if f_idx <= TOTAL_FRAMES:
+                scene.frame_set(f_idx)
+                out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+                scene.render.filepath = out_path
+                bpy.ops.render.render(write_still=True)
+                print(f"Rendered Frame {f_idx} (Iso Close) to {out_path}")
 
-    render_wide = [
-        (28,  "native_wide_f28_release.png"),
-        (90,  "native_wide_f90_apex.png"),
-        (150, "native_wide_f150_touchdown.png"),
-        (300, "native_wide_f300_floor_roll.png"),
-        (360, "native_wide_f360_rest.png"),
-        (1800, "native_wide_f1800_rest.png"),
-    ]
-    scene.camera = cam_wide
-    for f_idx, out_name in render_wide:
-        if f_idx <= TOTAL_FRAMES:
-            scene.frame_set(f_idx)
-            out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
-            scene.render.filepath = out_path
-            bpy.ops.render.render(write_still=True)
-            print(f"Rendered Frame {f_idx} (Wide Full Journey) to {out_path}")
+        render_wide = [
+            (rel_f, "native_wide_f28_release.png"),
+            (90,    "native_wide_f90_apex.png"),
+            (150,   "native_wide_f150_touchdown.png"),
+            (300,   "native_wide_f300_floor_roll.png"),
+            (360,   "native_wide_f360_rest.png"),
+            (1800,  "native_wide_f1800_rest.png"),
+        ]
+        scene.camera = cam_wide
+        for f_idx, out_name in render_wide:
+            if f_idx <= TOTAL_FRAMES:
+                scene.frame_set(f_idx)
+                out_path = os.path.join(artifact_dir, out_name) if os.path.exists(artifact_dir) else os.path.abspath(out_name)
+                scene.render.filepath = out_path
+                bpy.ops.render.render(write_still=True)
+                print(f"Rendered Frame {f_idx} (Wide Full Journey) to {out_path}")
 
     # Re-save to guarantee active camera and frame 1 state
     scene.camera = cam_action
@@ -938,5 +971,15 @@ if __name__ == '__main__':
     parser.add_argument("--elasticity", type=float, default=None, help="Custom tensile spring stiffness k in N/m")
     parser.add_argument("--wind", type=float, default=0.0, help="Ambient horizontal wind speed in mph (+X tailwind, -X headwind)")
     parser.add_argument("--duration", type=float, default=30.0, help="Simulation duration in seconds (default: 30.0s = 1800 frames)")
+    parser.add_argument("--pin-angle", type=float, default=10.0, help="Release pin angle relative to arm axis in degrees (default: 10.0°, reduced from 25.07°)")
+    parser.add_argument("--no-render", action="store_true", help="Skip rendering stills for faster physics testing")
     args, unknown = parser.parse_known_args(argv)
-    build_simulation(num_segments=args.segments, sling_material=args.material, elasticity_k=args.elasticity, wind_mph=args.wind, duration_sec=args.duration)
+    build_simulation(
+        num_segments=args.segments,
+        sling_material=args.material,
+        elasticity_k=args.elasticity,
+        wind_mph=args.wind,
+        duration_sec=args.duration,
+        pin_angle=args.pin_angle,
+        render_stills=not args.no_render
+    )
