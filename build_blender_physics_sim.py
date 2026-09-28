@@ -296,12 +296,17 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
     bpy.ops.rigidbody.object_add()
     arm.rigid_body.type = 'ACTIVE'
+    arm.rigid_body.collision_shape = 'CONVEX_HULL'
+    arm.rigid_body.use_margin = True
+    arm.rigid_body.collision_margin = 0.001
+    arm.rigid_body.friction = 0.40
+    arm.rigid_body.restitution = 0.25
     arm.rigid_body.mass = 0.30
     # Swing-arm friction kept as is (original oiled axle bearing & aerodynamic drag):
     arm.rigid_body.linear_damping = 0.04
     arm.rigid_body.angular_damping = 0.06
     arm.rigid_body.collision_collections[0] = False
-    arm.rigid_body.collision_collections[1] = False
+    arm.rigid_body.collision_collections[1] = True # Collision layer 1: Arm & Sling physical bounce/contact
 
     # Axle Anchor & Hinge at (0.0, 0.0, 0.762m)
     bpy.ops.mesh.primitive_cube_add(size=0.01, location=(0.0, 0.0, 0.762))
@@ -366,12 +371,17 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         pouch.location = p_pouch
         bpy.ops.rigidbody.object_add()
         pouch.rigid_body.type = 'ACTIVE'
+        pouch.rigid_body.collision_shape = 'CONVEX_HULL'
+        pouch.rigid_body.use_margin = True
+        pouch.rigid_body.collision_margin = 0.001
+        pouch.rigid_body.friction = 0.45
+        pouch.rigid_body.restitution = 0.20
         pouch.rigid_body.mass = 0.010 # 10 grams canvas pouch
         # Doubled damping on sling (canvas pouch air drag & fabric internal friction):
         pouch.rigid_body.linear_damping = 0.70
         pouch.rigid_body.angular_damping = 0.70
         pouch.rigid_body.collision_collections[0] = False
-        pouch.rigid_body.collision_collections[1] = False
+        pouch.rigid_body.collision_collections[1] = True # Collision layer 1: Arm & Sling physical bounce/contact
 
     # Line 1 & Line 2: Multi-Segment Articulated Physics Chains (16 Segments Default)
     line_vec = p_pouch - p_tip
@@ -394,11 +404,16 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         s1.name = f"Phys_Line1_{i}"
         bpy.ops.rigidbody.object_add()
         s1.rigid_body.type = 'ACTIVE'
+        s1.rigid_body.collision_shape = 'CAPSULE'
+        s1.rigid_body.use_margin = True
+        s1.rigid_body.collision_margin = 0.0005
+        s1.rigid_body.friction = 0.40
+        s1.rigid_body.restitution = 0.20
         s1.rigid_body.mass = seg_mass_kg
         s1.rigid_body.linear_damping = mat_cfg['linear_damping']
         s1.rigid_body.angular_damping = mat_cfg['angular_damping']
         s1.rigid_body.collision_collections[0] = False
-        s1.rigid_body.collision_collections[1] = False
+        s1.rigid_body.collision_collections[1] = True # Collision layer 1: Arm & Sling physical bounce/contact
         s1.hide_render = True
         line1_segs.append(s1)
 
@@ -408,11 +423,16 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         s2.name = f"Phys_Line2_{i}"
         bpy.ops.rigidbody.object_add()
         s2.rigid_body.type = 'ACTIVE'
+        s2.rigid_body.collision_shape = 'CAPSULE'
+        s2.rigid_body.use_margin = True
+        s2.rigid_body.collision_margin = 0.0005
+        s2.rigid_body.friction = 0.40
+        s2.rigid_body.restitution = 0.20
         s2.rigid_body.mass = seg_mass_kg
         s2.rigid_body.linear_damping = mat_cfg['linear_damping']
         s2.rigid_body.angular_damping = mat_cfg['angular_damping']
         s2.rigid_body.collision_collections[0] = False
-        s2.rigid_body.collision_collections[1] = False
+        s2.rigid_body.collision_collections[1] = True # Collision layer 1: Arm & Sling physical bounce/contact
         s2.hide_render = True
         line2_segs.append(s2)
 
@@ -428,6 +448,52 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         con.type = 'POINT'
         return emp
 
+    # 6e. Physical Sling String Loop & Pin Slider Constraint
+    p_pin_tip = mathutils.Vector((-0.4311, 0.0, 0.0348))
+    pin_vec = p_pin_tip - p_tip
+    pin_len = pin_vec.length
+    pin_dir = pin_vec.normalized()
+
+    # The actual physical cord loop seated on the 45° pin:
+    q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(pin_dir)
+    bpy.ops.mesh.primitive_torus_add(
+        major_radius=0.0055,
+        minor_radius=0.0013,
+        major_segments=24,
+        minor_segments=8,
+        location=p_tip,
+        rotation=q_torus.to_euler()
+    )
+    loop_obj = bpy.context.active_object
+    loop_obj.name = "Sling_String_Loop"
+    loop_obj.data.materials.append(mat_string)
+    bpy.ops.rigidbody.object_add()
+    loop_obj.rigid_body.type = 'ACTIVE'
+    loop_obj.rigid_body.mass = 0.003
+    loop_obj.rigid_body.collision_shape = 'CONVEX_HULL'
+    loop_obj.rigid_body.use_margin = True
+    loop_obj.rigid_body.collision_margin = 0.0005
+    loop_obj.rigid_body.linear_damping = 0.25
+    loop_obj.rigid_body.angular_damping = 0.25
+    loop_obj.rigid_body.collision_collections[0] = False
+    loop_obj.rigid_body.collision_collections[1] = True # Bounces off arm!
+
+    # Slider constraint between arm and loop along the 45° pin axis:
+    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_tip)
+    slider_emp = bpy.context.active_object
+    slider_emp.name = "Joint_Pin_Loop_Slider"
+    bpy.ops.rigidbody.constraint_add()
+    sc = slider_emp.rigid_body_constraint
+    sc.type = 'SLIDER'
+    sc.object1 = arm
+    sc.object2 = loop_obj
+    q_slider = mathutils.Vector((1, 0, 0)).rotation_difference(pin_dir)
+    slider_emp.rotation_euler = q_slider.to_euler()
+    sc.use_limit_lin_x = True
+    sc.limit_lin_x_lower = 0.0
+    sc.limit_lin_x_upper = pin_len
+    sc.disable_collisions = True
+
     # Line 1 Joints: Arm Tip -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch
     j1_0 = create_sling_joint("Joint_Arm_Line1_0", arm, line1_segs[0], p_tip)
     line1_joints.append(j1_0)
@@ -438,10 +504,10 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     j1_N = create_sling_joint("Joint_Line1_Pouch", line1_segs[-1], pouch, p_pouch)
     line1_joints.append(j1_N)
 
-    # Line 2 Joints: Pin on Arm -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch
-    # (The joint between Arm and seg 0 is the dynamic release trigger!)
-    j_release = create_sling_joint("Joint_Line2_Pin_Release", arm, line2_segs[0], p_tip)
-    line2_joints.append(j_release)
+    # Line 2 Joints: PHYSICAL LOOP -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch
+    # (The rope is directly anchored to the loop that slides along the pin!)
+    j_loop_rope = create_sling_joint("Joint_Loop_Line2_0", loop_obj, line2_segs[0], p_tip)
+    line2_joints.append(j_loop_rope)
     for i in range(1, num_segments):
         loc_i = p_tip + (i / num_segments) * line_vec
         ji = create_sling_joint(f"Joint_Line2_{i-1}_{i}", line2_segs[i-1], line2_segs[i], loc_i)
@@ -495,7 +561,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
             if rot_deg > 85.0 and dot_val > 0.80:
                 released = True
                 dynamic_release_frame = f
-                j_release.rigid_body_constraint.enabled = False
+                sc.enabled = False # Release loop from 45° pin!
                 jm.rigid_body_constraint.enabled = False
                 print(f">>> 100% DYNAMIC HOOK RELEASE at Frame {f} (t={(f-1)/60:.3f}s): arm_rot={rot_deg:.2f}°, dot={dot_val:.4f} <<<")
 
@@ -505,6 +571,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
                 'cw': cw.evaluated_get(dg).matrix_world.copy(),
                 'marble': marble.evaluated_get(dg).matrix_world.copy(),
                 'pouch': pouch.evaluated_get(dg).matrix_world.copy(),
+                'loop': loop_obj.evaluated_get(dg).matrix_world.copy(),
                 'line2_0': line2_segs[0].evaluated_get(dg).matrix_world.copy(),
                 'line1_locs': [seg.evaluated_get(dg).matrix_world.translation.copy() for seg in line1_segs],
                 'line2_locs': [seg.evaluated_get(dg).matrix_world.translation.copy() for seg in line2_segs],
@@ -522,7 +589,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     if scene.rigidbody_world:
         scene.rigidbody_world.enabled = False
 
-    for obj in [arm, cw, marble, pouch]:
+    for obj in [arm, cw, marble, pouch, loop_obj]:
         if obj and obj.rigid_body:
             bpy.ops.object.select_all(action='DESELECT')
             obj.select_set(True)
@@ -532,7 +599,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     helpers_to_hide = (
         line1_segs + line2_segs +
         line1_joints + line2_joints +
-        [jm, axle_anchor, hinge_empty, cw_fix, wind_field]
+        [jm, axle_anchor, hinge_empty, cw_fix, wind_field, slider_emp]
     )
     for obj in helpers_to_hide:
         if obj and obj.name in bpy.data.objects:
@@ -580,23 +647,19 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         pouch.keyframe_insert(data_path="location", frame=f)
         pouch.keyframe_insert(data_path="rotation_euler", frame=f)
 
+        # Physical Loop on Pin
+        loc_l, rot_l, _ = d['loop'].decompose()
+        loop_obj.location = loc_l
+        loop_obj.rotation_euler = rot_l.to_euler()
+        loop_obj.keyframe_insert(data_path="location", frame=f)
+        loop_obj.keyframe_insert(data_path="rotation_euler", frame=f)
+
     print(f"Keyframe baking completed in {time.time() - t_bake_0:.2f}s!")
 
     # -------------------------------------------------------------
-    # 9. CONSTRUCT VISUAL STRING CURVES, LOOP TORUS, AND RIG
+    # 9. CONSTRUCT VISUAL STRING CURVES AND RIG
     # -------------------------------------------------------------
-    print("Building visual articulated string curves and spliced cord loop rig across 3,600 frames...")
-    bpy.ops.mesh.primitive_torus_add(
-        major_radius=0.0055,
-        minor_radius=0.0013,
-        major_segments=24,
-        minor_segments=8,
-        location=(-0.392, 0.0, 0.063)
-    )
-    loop_obj = bpy.context.active_object
-    loop_obj.name = "Sling_String_Loop"
-    loop_obj.data.materials.append(mat_string)
-
+    print("Building visual articulated string curves rig across 3,600 frames...")
     rig_col = bpy.data.collections.new("Sling_Rig_Drivers")
     scene.collection.children.link(rig_col)
     rig_col.hide_viewport = True
@@ -628,34 +691,15 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     str_rel,   emps_rel   = create_string_curve("Sling_String_Release", total_curve_pts)   # Line 2 (Loop on 45° pin)
 
     tip_local = mathutils.Vector((-0.3922, 0.0, 0.0627 - 0.762))
-    pin_vec_local = mathutils.Vector((-0.4311 - (-0.3922), 0.0, 0.0348 - 0.0627))
 
     for f in sampled_frames:
         d = step_data[f]
         mat_a = d['arm']
         mat_p = d['pouch']
-        mat_l2_0 = d['line2_0']
         rot_mat = mat_a.to_3x3()
 
         tip_w = mat_a.translation + rot_mat @ tip_local
-        pvec_w = rot_mat @ pin_vec_local
         pouch_w = mat_p.translation
-
-        if f < dynamic_release_frame:
-            slide_frac = 0.05 if f < 18 else 0.05 + 0.95 * (((f - 18) / max(1, dynamic_release_frame - 18)) ** 1.5)
-            loop_w = tip_w + slide_frac * pvec_w
-            q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(pvec_w.normalized())
-            loop_rot = q_torus.to_euler()
-        else:
-            loop_w = mat_l2_0 @ mathutils.Vector((-seg_len / 2.0, 0.0, 0.0))
-            line2_dir = (d['line2_locs'][0] - loop_w).normalized() if num_segments > 0 else (pouch_w - loop_w).normalized()
-            q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(line2_dir)
-            loop_rot = q_torus.to_euler()
-
-        loop_obj.location = loop_w
-        loop_obj.rotation_euler = loop_rot
-        loop_obj.keyframe_insert(data_path="location", frame=f)
-        loop_obj.keyframe_insert(data_path="rotation_euler", frame=f)
 
         # Line 1 (Fixed: Arm Tip Eyelet <-> Segments <-> Pouch)
         p1_anc = tip_w + mathutils.Vector((0.0, -0.008, 0.0))
@@ -668,13 +712,14 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         emps_fixed[-1].location = p1_end
         emps_fixed[-1].keyframe_insert(data_path="location", frame=f)
 
-        # Line 2 (Release: Loop <-> Segments <-> Pouch)
-        p2_anc = loop_w + mathutils.Vector((0.0, 0.006, 0.0))
+        # Line 2 (Release: PHYSICAL LOOP <-> Segments <-> Pouch)
+        # Directly anchored to the physical loop that slides off the 45° pin!
+        p2_anc = d['loop'].translation
         p2_end = pouch_w + mathutils.Vector((0.0, 0.008, 0.0))
         emps_rel[0].location = p2_anc
         emps_rel[0].keyframe_insert(data_path="location", frame=f)
         for i in range(num_segments):
-            emps_rel[i + 1].location = d['line2_locs'][i] + mathutils.Vector((0.0, 0.008, 0.0))
+            emps_rel[i + 1].location = d['line2_locs'][i]
             emps_rel[i + 1].keyframe_insert(data_path="location", frame=f)
         emps_rel[-1].location = p2_end
         emps_rel[-1].keyframe_insert(data_path="location", frame=f)
