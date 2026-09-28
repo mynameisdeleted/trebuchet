@@ -124,6 +124,9 @@
               <span class="text-[#7d93b0]">• Aligned Lagrangian Dynamics & Aerodynamic Drag</span>
             </div>
             <div class="flex items-center gap-3">
+              <button id="view-mode-btn" onclick="toggleViewMode()" class="px-2.5 py-1 rounded bg-[#102d4f] hover:bg-[#163e6c] text-[#64dfdf] text-[11px] font-semibold border border-[#48cae4] transition">
+                🔍 Catapult View (Close)
+              </button>
               <span id="canvas-status" class="mono text-[#ffd166] font-semibold">Ready to Launch</span>
             </div>
           </div>
@@ -539,7 +542,6 @@ print("Model ready!")</code></pre>
     const L_s_stick = 0.2032; // 8 inches
     const L_l = 0.8018;     // 31.57 inches pivot-to-tip
     const L_cw = 0.1607;    // 6.33 inches counterweight CG
-    const theta_cw_0 = 36.0 * Math.PI / 180.0;
     const m_arm = 0.300;    // 300g timber stick
     const L_tot = L_s_stick + L_l;
     const d_com = (L_l - L_s_stick) / 2.0;
@@ -571,18 +573,37 @@ print("Model ready!")</code></pre>
     let final_range_m = 0;
     let is_paused = false;
 
-    let scale = 65;
-    let origin_x = 90;
+    let scale = 200;
+    let origin_x = 180;
     let origin_y = 380;
+    let view_mode = 'close'; // 'close' (catapult mechanism) or 'wide' (full 15-yard field)
+
+    function toggleViewMode() {
+      view_mode = view_mode === 'close' ? 'wide' : 'close';
+      const btn = document.getElementById('view-mode-btn');
+      if (btn) {
+        btn.innerText = view_mode === 'close' ? '🔍 Catapult View (Close)' : '🌐 Full Field View (Wide)';
+      }
+      resizeCanvas();
+    }
 
     function resizeCanvas() {
       const rect = canvas.getBoundingClientRect();
       canvas.width = rect.width * window.devicePixelRatio;
       canvas.height = rect.height * window.devicePixelRatio;
       ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-      origin_x = Math.max(70, rect.width * 0.09);
-      origin_y = rect.height * 0.82;
-      scale = rect.width / 18.5; // Displays full 18-yard (16.5m) field
+      
+      if (view_mode === 'close') {
+        // Zoomed close to catapult mechanism: shows -1.3m to +3.0m in crisp detail
+        origin_x = Math.max(90, rect.width * 0.30);
+        origin_y = rect.height * 0.84;
+        scale = rect.height / 2.2;
+      } else {
+        // Full field view: shows entire 18-yard trajectory and target line
+        origin_x = Math.max(70, rect.width * 0.09);
+        origin_y = rect.height * 0.82;
+        scale = rect.width / 18.5;
+      }
       draw();
     }
     window.addEventListener('resize', resizeCanvas);
@@ -637,8 +658,7 @@ print("Model ready!")</code></pre>
       let vx_m = 0.0, vy_m = 0.0;
 
       while (t < 2.0) {
-        let arm_rot = alpha_0 - a;
-        let tau_cw = M_cw * g * L_cw * Math.sin(theta_cw_0 + arm_rot);
+        let tau_cw = M_cw * g * L_cw * Math.sin(a);
         let tau_arm = -m_arm * g * d_com * Math.sin(a);
         let tau_g = tau_cw + tau_arm;
         let normal_load = (M_cw + m_arm + marble_m) * g;
@@ -818,8 +838,7 @@ print("Model ready!")</code></pre>
       const I_cw_body = (1.0 / 12.0) * M_cw * (0.089 * 0.089 + 0.040 * 0.040);
       const I_rigid = I_arm + I_cw + I_cw_body;
 
-      let arm_rot = alpha_0 - alpha;
-      let tau_cw = M_cw * g * L_cw * Math.sin(theta_cw_0 + arm_rot);
+      let tau_cw = M_cw * g * L_cw * Math.sin(alpha);
       let tau_arm = -m_arm * g * d_com * Math.sin(alpha);
       let tau_g = tau_cw + tau_arm;
       let normal_load = (M_cw + m_arm + marble_m) * g;
@@ -1022,56 +1041,83 @@ print("Model ready!")</code></pre>
       // 4. Swing Stick (Throwing Arm - 40" Timber Beam)
       let tip_x = -L_l * Math.sin(alpha);
       let tip_y = H_pivot + L_l * Math.cos(alpha);
-      let arm_rot = alpha_0 - alpha;
-      let cw_x = L_cw * Math.sin(theta_cw_0 + arm_rot);
-      let cw_y = H_pivot - L_cw * Math.cos(theta_cw_0 + arm_rot);
+      let stick_end_x = L_s_stick * Math.sin(alpha);
+      let stick_end_y = H_pivot - L_s_stick * Math.cos(alpha);
+      let cw_x = L_cw * Math.sin(alpha);
+      let cw_y = H_pivot - L_cw * Math.cos(alpha);
 
       let tip_sx = toScreenX(tip_x);
       let tip_sy = toScreenY(tip_y);
+      let stick_end_sx = toScreenX(stick_end_x);
+      let stick_end_sy = toScreenY(stick_end_y);
       let cw_sx = toScreenX(cw_x);
       let cw_sy = toScreenY(cw_y);
 
-      // Beam (Bigger 1.5" x 1.5" timber stick)
+      // Beam (1.5" x 1.5" timber stick, rendered from short end to long tip)
       ctx.strokeStyle = '#e0a96d';
-      ctx.lineWidth = 7.5;
+      ctx.lineWidth = Math.max(3.5, 0.0381 * scale);
+      ctx.lineCap = 'round';
       ctx.beginPath();
-      ctx.moveTo(cw_sx, cw_sy);
+      ctx.moveTo(stick_end_sx, stick_end_sy);
       ctx.lineTo(tip_sx, tip_sy);
       ctx.stroke();
 
-      // 45° Release Pin
+      // 45° Release Pin (at tip)
       let u_pin_x = (-Math.cos(alpha) - Math.sin(alpha)) / Math.SQRT2;
       let u_pin_y = (-Math.sin(alpha) + Math.cos(alpha)) / Math.SQRT2;
+      let pin_len = Math.max(8, 0.045 * scale);
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = Math.max(1.8, 0.008 * scale);
       ctx.beginPath();
       ctx.moveTo(tip_sx, tip_sy);
-      ctx.lineTo(tip_sx + u_pin_x * 16, tip_sy - u_pin_y * 16);
+      ctx.lineTo(tip_sx + u_pin_x * pin_len, tip_sy - u_pin_y * pin_len);
       ctx.stroke();
 
-      // Bolted Counterweight (2000g)
-      ctx.fillStyle = '#2a5c8a';
+      // Bolted Counterweight (2.0 kg bronze ballast block, scaled and rotated with arm)
+      let arm_angle = Math.atan2(cw_sy - piv_sy, cw_sx - piv_sx);
+      let cw_w = Math.max(10, Math.min(26, 0.075 * scale));
+      let cw_h = Math.max(6, Math.min(16, 0.045 * scale));
+
+      ctx.save();
+      ctx.translate(cw_sx, cw_sy);
+      ctx.rotate(arm_angle);
+
+      // Bronze ballast block
+      ctx.fillStyle = '#b8860b';
       ctx.strokeStyle = '#ffd166';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(cw_sx, cw_sy, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = '#ffd166';
-      ctx.font = 'bold 8.5px monospace';
-      ctx.fillText((cw_mass_g / 1000).toFixed(1) + 'kg', cw_sx - 12, cw_sy + 3);
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(-cw_w / 2, -cw_h / 2, cw_w, cw_h);
+      ctx.strokeRect(-cw_w / 2, -cw_h / 2, cw_w, cw_h);
 
-      // 5. Fulcrum Pivot
+      // Center steel mounting bolt
+      ctx.fillStyle = '#222222';
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(1.5, 0.010 * scale), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
+
+      // Weight label (unrotated for crisp readability)
+      if (view_mode === 'close') {
+        ctx.fillStyle = '#ffd166';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText((cw_mass_g / 1000).toFixed(1) + 'kg', cw_sx, cw_sy - cw_h / 2 - 5);
+      }
+
+      // 5. Fulcrum Pivot (Pins beam firmly to A-frame apex)
       ctx.fillStyle = '#ffd166';
       ctx.strokeStyle = '#000000';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(piv_sx, piv_sy, 7, 0, Math.PI * 2);
+      ctx.arc(piv_sx, piv_sy, Math.max(4.5, 0.020 * scale), 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(piv_sx, piv_sy, 2.5, 0, Math.PI * 2);
+      ctx.arc(piv_sx, piv_sy, Math.max(1.8, 0.007 * scale), 0, Math.PI * 2);
       ctx.fill();
 
       // 6. Sling & Marble
