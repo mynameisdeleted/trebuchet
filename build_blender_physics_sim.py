@@ -26,7 +26,7 @@ import shutil
 import mathutils
 import time
 
-def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None, wind_mph=0.0, duration_sec=6.0):
+def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None, wind_mph=0.0, duration_sec=30.0):
     t_start = time.time()
     v_wind = wind_mph * 0.44704
     print("=====================================================================")
@@ -802,6 +802,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         (150, "native_action_f150_touchdown.png"),
         (194, "native_action_f194_floor_roll.png"),
         (360, "native_action_f360_rest.png"),
+        (1800, "native_action_f1800_rest.png"),
     ]
     scene.camera = cam_action
     for f_idx, out_name in render_action:
@@ -821,6 +822,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         (90,  "native_sim_f90_apex.png"),
         (150, "native_sim_f150_touchdown.png"),
         (360, "native_sim_f360_rest.png"),
+        (1800, "native_sim_f1800_rest.png"),
     ]
     scene.camera = cam_side
     for f_idx, out_name in render_side:
@@ -839,6 +841,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         (32,  "native_iso_f32.png"),
         (90,  "native_iso_f90.png"),
         (150, "native_iso_f150.png"),
+        (1800, "native_iso_f1800.png"),
     ]
     scene.camera = cam_iso
     for f_idx, out_name in render_iso:
@@ -855,6 +858,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         (150, "native_wide_f150_touchdown.png"),
         (300, "native_wide_f300_floor_roll.png"),
         (360, "native_wide_f360_rest.png"),
+        (1800, "native_wide_f1800_rest.png"),
     ]
     scene.camera = cam_wide
     for f_idx, out_name in render_wide:
@@ -888,6 +892,6 @@ if __name__ == '__main__':
     parser.add_argument("--material", type=str, default="nylon", choices=["nylon", "chain", "yarn"], help="Sling material type (nylon, chain, yarn)")
     parser.add_argument("--elasticity", type=float, default=None, help="Custom tensile spring stiffness k in N/m")
     parser.add_argument("--wind", type=float, default=0.0, help="Ambient horizontal wind speed in mph (+X tailwind, -X headwind)")
-    parser.add_argument("--duration", type=float, default=6.0, help="Simulation duration in seconds (default: 6.0s = 360 frames)")
+    parser.add_argument("--duration", type=float, default=30.0, help="Simulation duration in seconds (default: 30.0s = 1800 frames)")
     args, unknown = parser.parse_known_args(argv)
     build_simulation(num_segments=args.segments, sling_material=args.material, elasticity_k=args.elasticity, wind_mph=args.wind, duration_sec=args.duration)
