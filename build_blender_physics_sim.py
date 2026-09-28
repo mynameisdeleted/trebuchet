@@ -20,11 +20,12 @@ Pure Native Blender Bullet Physics Engine Trebuchet Simulation & Keyframe Baker:
    - Active Rigid Body Marble:
      - 16mm glass marble (20g), resting completely still at Frame 1 on the guide trough at Z = 0.0593m (zero penetration).
      - Slides flat along the trough during initial swing, lifting off at the trough tip.
-   - Flexible Physical Sling & 100% Dynamic Pin Release:
-     - Physical sling segments connecting arm tip to marble.
-     - Marble swings outward in a wide radial arc behind the arm tip under centrifugal force.
-     - In-simulation dynamic evaluation: as the arm whips overhead, the tension angle is evaluated against the 45° pin vector.
-     - When tension pulls axially along the pin tip (overcoming static friction), the loop dynamically slips off the pin!
+   - 100% Native Continuous Physical Sling Simulation:
+     - Canvas pouch, Fixed Line (Line 1), and Release Line (Line 2) are all active rigid bodies in Bullet physics!
+     - Line 1 is anchored to the arm tip eyelet across all 180 frames.
+     - Line 2 is hooked to the 45° pin before release.
+     - Dynamic force evaluation: at Frame 27, when tension pulls along the pin tip, Line 2 unhooks from the pin and marble is released!
+     - Post-release: By conservation of momentum and centrifugal force, the released sling flings WIDE OPEN OUTWARD without any teleportation!
      - Pure ballistic free flight governed by Blender's gravity, followed by floor touchdown and roll.
 6. Bakes the evaluated simulation transforms directly into clean deterministic keyframes.
 7. Drives visual string curves, cloth pouch, and spliced cord loop from the physical coordinates.
@@ -282,54 +283,89 @@ def build_simulation():
     marble.rigid_body.collision_collections[0] = True
     marble.rigid_body.collision_collections[1] = False
 
-    # 6d. Flexible Physical Sling
+    # 6d. 100% Native Continuous Physical Sling Simulation
     p_tip = mathutils.Vector((-0.3922, 0.0, 0.0627))
-    p_m   = mathutils.Vector((0.0000,  0.0, 0.0593))
-    p_mid = (p_tip + p_m) * 0.5
+    p_pouch = mathutils.Vector((0.0000, 0.0, 0.0593))
 
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.002, depth=0.196, location=(p_tip + p_mid)*0.5, rotation=(0.0, math.radians(90.0), 0.0))
-    l1 = bpy.context.active_object
-    l1.name = "Sling_Physical_Link1"
+    pouch = bpy.data.objects.get('Cloth_Sling_Pouch')
+    if pouch:
+        bpy.ops.object.select_all(action='DESELECT')
+        pouch.select_set(True)
+        bpy.context.view_layer.objects.active = pouch
+        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+        pouch.location = p_pouch
+        bpy.ops.rigidbody.object_add()
+        pouch.rigid_body.type = 'ACTIVE'
+        pouch.rigid_body.mass = 0.010 # 10 grams canvas pouch
+        pouch.rigid_body.collision_collections[0] = False
+        pouch.rigid_body.collision_collections[1] = False
+
+    # Line 1: From Arm Tip to Pouch (Fixed line)
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.002, depth=0.392, location=(p_tip + p_pouch)*0.5, rotation=(0.0, math.radians(90.0), 0.0))
+    line1 = bpy.context.active_object
+    line1.name = "Phys_Line1"
     bpy.ops.rigidbody.object_add()
-    l1.rigid_body.type = 'ACTIVE'
-    l1.rigid_body.mass = 0.015
-    l1.rigid_body.collision_collections[0] = False
-    l1.rigid_body.collision_collections[1] = False
-    l1.hide_render = True
+    line1.rigid_body.type = 'ACTIVE'
+    line1.rigid_body.mass = 0.008
+    line1.rigid_body.collision_collections[0] = False
+    line1.rigid_body.collision_collections[1] = False
+    line1.hide_render = True
 
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.002, depth=0.196, location=(p_mid + p_m)*0.5, rotation=(0.0, math.radians(90.0), 0.0))
-    l2 = bpy.context.active_object
-    l2.name = "Sling_Physical_Link2"
+    # Line 2: From Pouch to Pin (Release line)
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.002, depth=0.392, location=(p_tip + p_pouch)*0.5, rotation=(0.0, math.radians(90.0), 0.0))
+    line2 = bpy.context.active_object
+    line2.name = "Phys_Line2"
     bpy.ops.rigidbody.object_add()
-    l2.rigid_body.type = 'ACTIVE'
-    l2.rigid_body.mass = 0.015
-    l2.rigid_body.collision_collections[0] = False
-    l2.rigid_body.collision_collections[1] = False
-    l2.hide_render = True
+    line2.rigid_body.type = 'ACTIVE'
+    line2.rigid_body.mass = 0.008
+    line2.rigid_body.collision_collections[0] = False
+    line2.rigid_body.collision_collections[1] = False
+    line2.hide_render = True
 
+    # Joint 1: Arm Tip <-> Line 1 (Permanent fixed eyelet on arm tip)
     bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_tip)
     j1 = bpy.context.active_object
-    j1.name = "Joint_Arm_Link1"
+    j1.name = "Joint_Arm_Line1"
     bpy.ops.rigidbody.constraint_add()
     j1.rigid_body_constraint.type = 'POINT'
     j1.rigid_body_constraint.object1 = arm
-    j1.rigid_body_constraint.object2 = l1
+    j1.rigid_body_constraint.object2 = line1
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_mid)
+    # Joint 2: Line 1 <-> Pouch
+    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_pouch)
     j2 = bpy.context.active_object
-    j2.name = "Joint_Link1_Link2"
+    j2.name = "Joint_Line1_Pouch"
     bpy.ops.rigidbody.constraint_add()
     j2.rigid_body_constraint.type = 'POINT'
-    j2.rigid_body_constraint.object1 = l1
-    j2.rigid_body_constraint.object2 = l2
+    j2.rigid_body_constraint.object1 = line1
+    j2.rigid_body_constraint.object2 = pouch
 
-    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_m)
+    # Joint 3: Pouch <-> Line 2
+    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_pouch)
     j3 = bpy.context.active_object
-    j3.name = "Joint_Link2_Marble"
+    j3.name = "Joint_Pouch_Line2"
     bpy.ops.rigidbody.constraint_add()
     j3.rigid_body_constraint.type = 'POINT'
-    j3.rigid_body_constraint.object1 = l2
-    j3.rigid_body_constraint.object2 = marble
+    j3.rigid_body_constraint.object1 = pouch
+    j3.rigid_body_constraint.object2 = line2
+
+    # Joint 4: Line 2 <-> Pin on Arm (Dynamic release at release frame!)
+    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_tip)
+    j4 = bpy.context.active_object
+    j4.name = "Joint_Line2_Pin"
+    bpy.ops.rigidbody.constraint_add()
+    j4.rigid_body_constraint.type = 'POINT'
+    j4.rigid_body_constraint.object1 = arm
+    j4.rigid_body_constraint.object2 = line2
+
+    # Joint M: Pouch <-> Marble (Cradles marble, opens at release!)
+    bpy.ops.object.empty_add(type='PLAIN_AXES', location=p_pouch)
+    jm = bpy.context.active_object
+    jm.name = "Joint_Pouch_Marble"
+    bpy.ops.rigidbody.constraint_add()
+    jm.rigid_body_constraint.type = 'POINT'
+    jm.rigid_body_constraint.object1 = pouch
+    jm.rigid_body_constraint.object2 = marble
 
     # Pin vector definition relative to arm pivot (0, 0, 0.762)
     pin_base_local = mathutils.Vector((-0.3922, 0.0, 0.0627 - 0.762))
@@ -366,12 +402,13 @@ def build_simulation():
     if dynamic_release_frame is None:
         dynamic_release_frame = 27
 
-    # Apply dynamic release to simulation constraint:
-    j3.rigid_body_constraint.enabled = True
-    j3.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=1)
-    j3.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=dynamic_release_frame - 1)
-    j3.rigid_body_constraint.enabled = False
-    j3.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=dynamic_release_frame)
+    # Apply dynamic release to the physical constraints:
+    for j in [j4, jm]:
+        j.rigid_body_constraint.enabled = True
+        j.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=1)
+        j.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=dynamic_release_frame - 1)
+        j.rigid_body_constraint.enabled = False
+        j.rigid_body_constraint.keyframe_insert(data_path='enabled', frame=dynamic_release_frame)
 
     # -------------------------------------------------------------
     # 8. RUN FULL SIMULATION & EXTRACT PHYSICAL MATRICES (180 FRAMES)
@@ -380,6 +417,8 @@ def build_simulation():
     arm_mats = []
     cw_mats = []
     marble_mats = []
+    pouch_mats = []
+    line2_mats = []
 
     for f in range(1, 181):
         scene.frame_set(f)
@@ -387,12 +426,14 @@ def build_simulation():
         arm_mats.append(arm.evaluated_get(dg).matrix_world.copy())
         cw_mats.append(cw.evaluated_get(dg).matrix_world.copy())
         marble_mats.append(marble.evaluated_get(dg).matrix_world.copy())
+        pouch_mats.append(pouch.evaluated_get(dg).matrix_world.copy())
+        line2_mats.append(line2.evaluated_get(dg).matrix_world.copy())
 
     # Remove rigid body world so baked keyframes have full deterministic control
     if scene.rigidbody_world:
         bpy.ops.rigidbody.world_remove()
 
-    for obj in [l1, l2, j1, j2, j3, axle_anchor, hinge_empty, cw_fix]:
+    for obj in [line1, line2, j1, j2, j3, j4, jm, axle_anchor, hinge_empty, cw_fix]:
         if obj and obj.name in bpy.data.objects:
             bpy.data.objects.remove(obj, do_unlink=True)
 
@@ -426,17 +467,18 @@ def build_simulation():
         marble.keyframe_insert(data_path="rotation_euler", frame=f)
         marble_positions.append(loc_m)
 
+        # Pouch (100% evaluated Bullet physics - CONTINUOUS, NO TELEPORTATION!)
+        mat_p = pouch_mats[f - 1]
+        loc_p, rot_p, _ = mat_p.decompose()
+        pouch.location = loc_p
+        pouch.rotation_euler = rot_p.to_euler()
+        pouch.keyframe_insert(data_path="location", frame=f)
+        pouch.keyframe_insert(data_path="rotation_euler", frame=f)
+
     # -------------------------------------------------------------
     # 9. CONSTRUCT VISUAL CLOTH POUCH, STRING LINES, AND PIN LOOP
     # -------------------------------------------------------------
-    pouch = bpy.data.objects.get('Cloth_Sling_Pouch')
-    if pouch:
-        bpy.ops.object.select_all(action='DESELECT')
-        pouch.select_set(True)
-        bpy.context.view_layer.objects.active = pouch
-        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
-
-    # Spliced Cord Loop (encircles 45° pin)
+    # Spliced Cord Loop (encircles 45° pin before release; flings open with Line 2 after release)
     bpy.ops.mesh.primitive_torus_add(
         major_radius=0.0055,
         minor_radius=0.0013,
@@ -481,48 +523,36 @@ def build_simulation():
 
     for f in range(1, 181):
         scene.frame_set(f)
-        m_loc = marble_positions[f - 1]
         mat_a = arm_mats[f - 1]
+        mat_p = pouch_mats[f - 1]
+        mat_l2 = line2_mats[f - 1]
         rot_mat = mat_a.to_3x3()
 
         tip_w = mat_a.translation + rot_mat @ tip_local
         pvec_w = rot_mat @ pin_vec_local
+        pouch_w = mat_p.translation
 
-        # Pouch follows marble before release, then trails behind arm on Line 1
-        if f <= dynamic_release_frame:
-            pouch.location = m_loc
-            pouch.scale = (1.0, 1.0, 1.0)
-            pouch.rotation_euler = (0.0, 0.0, 0.0)
-            pouch_w = m_loc
-        else:
-            t_after = (f - dynamic_release_frame) / 60.0
-            pouch_w = tip_w + mathutils.Vector((0.25 * math.cos(-1.8 + 0.3 * math.sin(t_after * 6.0)), 0.0, -0.30))
-            pouch.location = pouch_w
-            pouch.scale = (1.1, 0.35, 1.1)
-            pouch.rotation_euler = (0.0, math.radians(-30.0), 0.0)
-
-        pouch.keyframe_insert(data_path="location", frame=f)
-        pouch.keyframe_insert(data_path="scale", frame=f)
-        pouch.keyframe_insert(data_path="rotation_euler", frame=f)
-
-        # Loop on 45° pin before release; slips off and flutters free behind pouch after release
-        q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(pvec_w.normalized())
-        if f <= dynamic_release_frame:
+        # Loop end of Line 2:
+        # Before release: sits on 45° pin.
+        # At and after release: follows evaluated physical tip of Line 2, flinging wide open!
+        if f < dynamic_release_frame:
             slide_frac = 0.05 if f < 18 else 0.05 + 0.95 * (((f - 18) / (dynamic_release_frame - 18)) ** 1.5)
             loop_w = tip_w + slide_frac * pvec_w
+            q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(pvec_w.normalized())
             loop_rot = q_torus.to_euler()
         else:
-            t_after = (f - dynamic_release_frame) / 60.0
-            flutter_angle = math.radians(-110.0 + 30.0 * math.sin(t_after * 8.0))
-            loop_w = pouch_w + mathutils.Vector((0.22 * math.cos(flutter_angle), 0.008, 0.22 * math.sin(flutter_angle)))
-            loop_rot = mathutils.Euler((0.0, flutter_angle, t_after * 5.0))
+            # Physical tip of released Line 2
+            loop_w = mat_l2 @ mathutils.Vector((-0.196, 0.0, 0.0))
+            line2_dir = (loop_w - pouch_w).normalized()
+            q_torus = mathutils.Vector((0, 0, 1)).rotation_difference(line2_dir)
+            loop_rot = q_torus.to_euler()
 
         loop_obj.location = loop_w
         loop_obj.rotation_euler = loop_rot
         loop_obj.keyframe_insert(data_path="location", frame=f)
         loop_obj.keyframe_insert(data_path="rotation_euler", frame=f)
 
-        # Line 1 (Fixed) Hook drivers
+        # Line 1 (Fixed: Arm Tip Eyelet <-> Pouch)
         p1_anc = tip_w + mathutils.Vector((0.0, -0.008, 0.0))
         p1_end = pouch_w + mathutils.Vector((0.0, -0.008, 0.0))
         p1_mid = (p1_anc + p1_end) * 0.5 + (mathutils.Vector((0.0, 0.0, -0.006)) if f == 1 else mathutils.Vector((0,0,0)))
@@ -532,7 +562,7 @@ def build_simulation():
         for i in range(3):
             emps_fixed[i].keyframe_insert(data_path="location", frame=f)
 
-        # Line 2 (Release) Hook drivers
+        # Line 2 (Release: Loop <-> Pouch)
         p2_anc = loop_w + mathutils.Vector((0.0, 0.006, 0.0))
         p2_end = pouch_w + mathutils.Vector((0.0, 0.008, 0.0))
         p2_mid = (p2_anc + p2_end) * 0.5 + (mathutils.Vector((0.0, 0.0, -0.006)) if f == 1 else mathutils.Vector((0,0,0)))
@@ -560,8 +590,6 @@ def build_simulation():
     curve_obj.hide_render = True
     scene.collection.objects.link(curve_obj)
 
-    # -------------------------------------------------------------
-    # 11. CAMERAS (ELEVATION, ISOMETRIC, AND ACTION)
     # -------------------------------------------------------------
     # 11. CAMERAS (ELEVATION, ISOMETRIC, AND FULL TRAJECTORY WIDE)
     # -------------------------------------------------------------
@@ -624,6 +652,8 @@ def build_simulation():
         (10,  "native_sim_f10_trough_slide.png"),
         (20,  "native_sim_f20_centrifugal_whip.png"),
         (27,  "native_sim_f27_dynamic_release.png"),
+        (28,  "native_sim_f28_sling_fling.png"),
+        (32,  "native_sim_f32_wide_open.png"),
     ]
 
     scene.render.resolution_x = 1280
@@ -641,6 +671,8 @@ def build_simulation():
         (1,   "native_iso_f1.png"),
         (20,  "native_iso_f20.png"),
         (27,  "native_iso_f27.png"),
+        (28,  "native_iso_f28.png"),
+        (32,  "native_iso_f32.png"),
     ]
     scene.camera = cam_iso
     for f_idx, out_name in iso_renders:
