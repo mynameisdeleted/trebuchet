@@ -151,6 +151,8 @@
               <div>Arm Omega: <span id="tel-omega" class="text-white font-semibold">--</span></div>
               <div>Release V: <span id="tel-vrel" class="text-[#00f5d4] font-semibold">--</span></div>
               <div>Launch Angle: <span id="tel-launchang" class="text-[#ffd166] font-semibold">--</span></div>
+              <div>Airspeed: <span id="tel-airspeed" class="text-[#64dfdf] font-semibold">--</span></div>
+              <div>Aero Drag: <span id="tel-fdrag" class="text-[#ffd166] font-semibold">--</span></div>
               <div>Flight Time: <span id="tel-time" class="text-white font-semibold">--</span></div>
               <div class="pt-1 border-t border-[#1b3a5d]">
                 Distance: <span id="tel-dist" class="text-lg font-bold text-[#00f5d4]">--</span>
@@ -225,6 +227,20 @@
                 <span id="label-pin" class="mono font-bold text-white">45.0°</span>
               </div>
               <input id="slider-pin" type="range" min="30" max="60" step="1" value="45" oninput="updateSliders()" class="w-full accent-[#64dfdf] cursor-pointer bg-[#0e243d]">
+            </div>
+
+            <!-- Ambient Wind Speed -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="text-[#a0aec0]">Ambient Wind (Quadratic Drag):</span>
+                <span id="label-wind" class="mono font-bold text-[#64dfdf]">0.0 mph (Calm)</span>
+              </div>
+              <input id="slider-wind" type="range" min="-25" max="25" step="1" value="0" oninput="updateSliders()" class="w-full accent-[#64dfdf] cursor-pointer bg-[#0e243d]">
+              <div class="flex justify-between text-[10px] text-[#7d93b0]">
+                <span>⬅ -25 mph (Headwind)</span>
+                <span>0 mph</span>
+                <span>+25 mph (Tailwind) ➡</span>
+              </div>
             </div>
 
             <!-- Fulcrum Friction -->
@@ -779,9 +795,16 @@ def build_simulation():
     const marble_m = 0.020; // 20.0g standard solid glass marble
     const cd_pouch = 1.20;
     const area_pouch = 0.080 * 0.060;
-    const cd_A_proj = cd_marble * marble_area + cd_pouch * area_pouch * 0.25;
+    const cd_lines = 1.05;
+    const area_lines = 2.0 * (0.3922 * 0.002) * 0.5; // 2x 2mm braided lines
+    const cd_A_proj = cd_marble * marble_area + cd_pouch * area_pouch * 0.25 + cd_lines * area_lines;
     const cd_arm = 1.05;
     const w_arm = 0.0381;
+
+    let wind_speed_mph = 0.0;
+    let v_wind = 0.0;
+    let current_fdrag = 0.0;
+    let current_airspeed = 0.0;
 
     const H_pivot = 0.762;  // 30 inches (762 mm)
     const L_s_stick = 0.2032; // 8 inches
@@ -869,12 +892,26 @@ def build_simulation():
       cw_mass_g = parseFloat(document.getElementById('slider-cw').value);
       sling_len_m = parseFloat(document.getElementById('slider-sling').value) * 0.0254;
       pin_angle_deg = parseFloat(document.getElementById('slider-pin').value);
+      wind_speed_mph = parseFloat(document.getElementById('slider-wind').value);
+      v_wind = wind_speed_mph * 0.44704;
 
       document.getElementById('label-cw').innerText = cw_mass_g.toFixed(0) + ' g';
       document.getElementById('label-sling').innerText = (sling_len_m / 0.0254).toFixed(1) + ' in';
       document.getElementById('label-pin').innerText = pin_angle_deg.toFixed(1) + '°';
 
-      const pred = predictTrajectory(cw_mass_g, sling_len_m, pin_angle_deg);
+      const windLabel = document.getElementById('label-wind');
+      if (Math.abs(wind_speed_mph) < 0.1) {
+        windLabel.innerText = "0.0 mph (Calm)";
+        windLabel.className = "mono font-bold text-[#64dfdf]";
+      } else if (wind_speed_mph < 0) {
+        windLabel.innerText = `${Math.abs(wind_speed_mph).toFixed(0)} mph Headwind (${Math.abs(v_wind).toFixed(1)} m/s)`;
+        windLabel.className = "mono font-bold text-[#ff5964]";
+      } else {
+        windLabel.innerText = `${wind_speed_mph.toFixed(0)} mph Tailwind (${v_wind.toFixed(1)} m/s)`;
+        windLabel.className = "mono font-bold text-[#00f5d4]";
+      }
+
+      const pred = predictTrajectory(cw_mass_g, sling_len_m, pin_angle_deg, wind_speed_mph);
       document.getElementById('stat-range').innerText = pred.range_yds.toFixed(1) + ' YDS';
       document.getElementById('stat-range-sub').innerText = `${(pred.range_yds * 3).toFixed(1)} Feet / ${pred.range_m.toFixed(2)} Meters`;
       document.getElementById('stat-speed').innerText = `${pred.v_rel.toFixed(2)} m/s (${(pred.v_rel * 2.237).toFixed(1)} mph)`;
@@ -892,11 +929,13 @@ def build_simulation():
       document.getElementById('slider-cw').value = 2000;
       document.getElementById('slider-sling').value = 15.4;
       document.getElementById('slider-pin').value = 45;
+      document.getElementById('slider-wind').value = 0;
       updateSliders();
       resetSimulation();
     }
 
-    function predictTrajectory(cw_g, sling_m, pin_deg) {
+    function predictTrajectory(cw_g, sling_m, pin_deg, wind_mph = 0.0) {
+      const vw = wind_mph * 0.44704;
       const M_cw = cw_g / 1000.0;
       const I_cw = M_cw * L_cw * L_cw;
       const I_cw_body = (1.0 / 12.0) * M_cw * (0.089 * 0.089 + 0.040 * 0.040);
@@ -920,7 +959,26 @@ def build_simulation():
         let tau_g = tau_cw + tau_arm;
         let normal_load = (M_cw + m_arm + marble_m) * g;
         let tau_fric = -0.003 * w - (Math.abs(w) > 1e-4 ? Math.sign(w) * 0.0015 * normal_load * 0.004 : 0);
-        let tau_aero = -0.125 * rho_air * cd_arm * w_arm * Math.pow(L_l, 4) * (w * w) * (w > 0 ? 1 : -1);
+        
+        let tau_aero = 0;
+        if (Math.abs(vw) < 1e-4) {
+          tau_aero = -0.125 * rho_air * cd_arm * w_arm * Math.pow(L_l, 4) * (w * w) * (w > 0 ? 1 : -1);
+        } else {
+          let sin_a = Math.sin(a);
+          let cos_a = Math.cos(a);
+          const gl_nodes = [0.046910077, 0.230765345, 0.5, 0.769234655, 0.953089923];
+          const gl_weights = [0.1184634425, 0.2393143352, 0.2844444444, 0.2393143352, 0.1184634425];
+          for (let i = 0; i < 5; i++) {
+            let r_i = L_l * gl_nodes[i];
+            let vx_i = -r_i * w * cos_a;
+            let vy_i = -r_i * w * sin_a;
+            let vrx = vx_i - vw;
+            let vry = vy_i;
+            let sr = Math.hypot(vrx, vry);
+            let dtau = 0.5 * rho_air * cd_arm * w_arm * sr * r_i * (sin_a * vry + cos_a * vrx);
+            tau_aero += gl_weights[i] * dtau * L_l;
+          }
+        }
         let tau_net = tau_g + tau_fric + tau_aero;
 
         let x_tip = -L_l * Math.sin(a);
@@ -966,11 +1024,14 @@ def build_simulation():
           let v_tip_y = -L_l * Math.sin(a) * w;
           vx_m = v_tip_x - sling_m * Math.sin(p) * wp;
           vy_m = v_tip_y + sling_m * Math.cos(p) * wp;
-          let spd = Math.hypot(vx_m, vy_m);
+
+          let vrx = vx_m - vw;
+          let vry = vy_m;
+          let spd = Math.hypot(vrx, vry);
 
           let f_drag = 0.5 * rho_air * cd_A_proj * spd * spd;
-          let f_drag_x = -f_drag * (vx_m / Math.max(1e-4, spd));
-          let f_drag_y = -f_drag * (vy_m / Math.max(1e-4, spd));
+          let f_drag_x = -f_drag * (vrx / Math.max(1e-4, spd));
+          let f_drag_y = -f_drag * (vry / Math.max(1e-4, spd));
           let f_drag_perp = f_drag_x * (-Math.sin(p)) + f_drag_y * Math.cos(p);
 
           let tau_p = -(g + a_tip_y) * Math.cos(p) + a_tip_x * Math.sin(p) + (f_drag_perp / marble_m);
@@ -998,10 +1059,12 @@ def build_simulation():
       let px = p_rel.x;
       let py = p_rel.y;
       while (py > 0.0) {
-        let sp = Math.hypot(vx, vy);
+        let vrx = vx - vw;
+        let vry = vy;
+        let sp = Math.hypot(vrx, vry);
         let fd = 0.5 * rho_air * cd_marble * marble_area * sp * sp;
-        let ax = -(fd / marble_m) * (vx / sp);
-        let ay = -g - (fd / marble_m) * (vy / sp);
+        let ax = -(fd / marble_m) * (vrx / Math.max(1e-4, sp));
+        let ay = -g - (fd / marble_m) * (vry / Math.max(1e-4, sp));
         vx += ax * 0.001;
         vy += ay * 0.001;
         px += vx * 0.001;
@@ -1022,6 +1085,8 @@ def build_simulation():
       omega = 0.0;
       psi = 0.0;
       omega_psi = 0.0;
+      current_airspeed = 0.0;
+      current_fdrag = 0.0;
       flight_time = 0;
       trajectory = [];
       document.getElementById('canvas-status').innerText = 'Cocked & Ready';
@@ -1066,6 +1131,8 @@ def build_simulation():
       document.getElementById('tel-omega').innerText = omega.toFixed(2) + ' rad/s';
       document.getElementById('tel-vrel').innerText = release_v > 0 ? `${release_v.toFixed(2)} m/s` : '--';
       document.getElementById('tel-launchang').innerText = release_deg > 0 ? `${release_deg.toFixed(1)}°` : '--';
+      document.getElementById('tel-airspeed').innerText = (state === 'flying' || state === 'swinging' || current_airspeed > 0) ? `${(current_airspeed * 2.237).toFixed(1)} mph (${current_airspeed.toFixed(1)} m/s)` : '--';
+      document.getElementById('tel-fdrag').innerText = (state === 'flying' || state === 'swinging' || current_fdrag > 0) ? `${(current_fdrag * 1000).toFixed(1)} mN (${current_fdrag.toFixed(3)} N)` : '--';
       document.getElementById('tel-time').innerText = flight_time.toFixed(3) + ' s';
       document.getElementById('tel-dist').innerText = (marble_x / 0.9144).toFixed(2) + ' YDS';
     }
@@ -1100,7 +1167,26 @@ def build_simulation():
       let tau_g = tau_cw + tau_arm;
       let normal_load = (M_cw + m_arm + marble_m) * g;
       let tau_fric = -0.003 * omega - (Math.abs(omega) > 1e-4 ? Math.sign(omega) * 0.0015 * normal_load * 0.004 : 0);
-      let tau_aero = -0.125 * rho_air * cd_arm * w_arm * Math.pow(L_l, 4) * (omega * omega) * (omega > 0 ? 1 : -1);
+
+      let tau_aero = 0;
+      if (Math.abs(v_wind) < 1e-4) {
+        tau_aero = -0.125 * rho_air * cd_arm * w_arm * Math.pow(L_l, 4) * (omega * omega) * (omega > 0 ? 1 : -1);
+      } else {
+        let sin_a = Math.sin(alpha);
+        let cos_a = Math.cos(alpha);
+        const gl_nodes = [0.046910077, 0.230765345, 0.5, 0.769234655, 0.953089923];
+        const gl_weights = [0.1184634425, 0.2393143352, 0.2844444444, 0.2393143352, 0.1184634425];
+        for (let i = 0; i < 5; i++) {
+          let r_i = L_l * gl_nodes[i];
+          let vx_i = -r_i * omega * cos_a;
+          let vy_i = -r_i * omega * sin_a;
+          let vrx = vx_i - v_wind;
+          let vry = vy_i;
+          let sr = Math.hypot(vrx, vry);
+          let dtau = 0.5 * rho_air * cd_arm * w_arm * sr * r_i * (sin_a * vry + cos_a * vrx);
+          tau_aero += gl_weights[i] * dtau * L_l;
+        }
+      }
       let tau_net = tau_g + tau_fric + tau_aero;
 
       let x_tip = -L_l * Math.sin(alpha);
@@ -1129,6 +1215,11 @@ def build_simulation():
           marble_vx = (marble_x - prev_x) / dt;
           marble_vy = 0.0;
 
+          let vrx = marble_vx - v_wind;
+          let vry = marble_vy;
+          current_airspeed = Math.hypot(vrx, vry);
+          current_fdrag = 0.5 * rho_air * cd_A_proj * current_airspeed * current_airspeed;
+
           let ax_m = dx_da * alpha_acc;
           let Tx = Math.max(0.0, -marble_m * ax_m);
           let sling_dx = Math.max(0.01, marble_x - x_tip_new);
@@ -1154,11 +1245,14 @@ def build_simulation():
           let v_tip_y = -L_l * Math.sin(alpha) * omega;
           marble_vx = v_tip_x - sling_len_m * Math.sin(psi) * omega_psi;
           marble_vy = v_tip_y + sling_len_m * Math.cos(psi) * omega_psi;
-          let spd = Math.hypot(marble_vx, marble_vy);
 
-          let f_drag = 0.5 * rho_air * cd_A_proj * spd * spd;
-          let f_drag_x = -f_drag * (marble_vx / Math.max(1e-4, spd));
-          let f_drag_y = -f_drag * (marble_vy / Math.max(1e-4, spd));
+          let vrx = marble_vx - v_wind;
+          let vry = marble_vy;
+          current_airspeed = Math.hypot(vrx, vry);
+          current_fdrag = 0.5 * rho_air * cd_A_proj * current_airspeed * current_airspeed;
+
+          let f_drag_x = -current_fdrag * (vrx / Math.max(1e-4, current_airspeed));
+          let f_drag_y = -current_fdrag * (vry / Math.max(1e-4, current_airspeed));
           let f_drag_perp = f_drag_x * (-Math.sin(psi)) + f_drag_y * Math.cos(psi);
 
           let tau_p = -(g + a_tip_y) * Math.cos(psi) + a_tip_x * Math.sin(psi) + (f_drag_perp / marble_m);
@@ -1181,10 +1275,13 @@ def build_simulation():
         }
       } else if (state === 'flying') {
         flight_time += dt;
-        let sp = Math.hypot(marble_vx, marble_vy);
-        let fd = 0.5 * rho_air * cd_marble * marble_area * sp * sp;
-        let ax = -(fd / marble_m) * (marble_vx / sp);
-        let ay = -g - (fd / marble_m) * (marble_vy / sp);
+        let vrx = marble_vx - v_wind;
+        let vry = marble_vy;
+        current_airspeed = Math.hypot(vrx, vry);
+        current_fdrag = 0.5 * rho_air * cd_marble * marble_area * current_airspeed * current_airspeed;
+
+        let ax = -(current_fdrag / marble_m) * (vrx / Math.max(1e-4, current_airspeed));
+        let ay = -g - (current_fdrag / marble_m) * (vry / Math.max(1e-4, current_airspeed));
 
         marble_vx += ax * dt;
         marble_vy += ay * dt;
@@ -1417,6 +1514,32 @@ def build_simulation():
         ctx.beginPath();
         ctx.arc(msx, msy, 22, 0, Math.PI * 2);
         ctx.stroke();
+      }
+
+      // 7. Wind Vector Badge (when active)
+      if (Math.abs(wind_speed_mph) > 0.05) {
+        let badge_x = canvas.width - 130;
+        let badge_y = 45;
+        ctx.save();
+        ctx.fillStyle = 'rgba(10, 25, 47, 0.85)';
+        ctx.strokeStyle = wind_speed_mph > 0 ? '#00f5d4' : '#ff5964';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(badge_x - 70, badge_y - 18, 140, 36, 6);
+        } else {
+          ctx.rect(badge_x - 70, badge_y - 18, 140, 36);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = wind_speed_mph > 0 ? '#00f5d4' : '#ff5964';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        let arrow = wind_speed_mph > 0 ? '➡' : '⬅';
+        let typeStr = wind_speed_mph > 0 ? 'TAILWIND' : 'HEADWIND';
+        ctx.fillText(`${arrow} ${Math.abs(wind_speed_mph).toFixed(0)} mph ${typeStr}`, badge_x, badge_y + 4);
+        ctx.restore();
       }
     }
 

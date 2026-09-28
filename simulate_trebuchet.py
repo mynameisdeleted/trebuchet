@@ -31,6 +31,7 @@ def run_simulation(
     stick_mass_g=300.0,         # 300 grams (1.5" x 1.5" x 40" timber stick)
     marble_mass_g=20.0,         # 20.0 grams solid glass marble (16 mm)
     marble_diam_mm=16.0,        # 16 mm diameter
+    wind_mph=0.0,               # Ambient horizontal wind speed in mph (+ for tailwind, - for headwind)
     dt=0.0002,                  # 0.2 ms integration step (5000 Hz)
     max_time=3.5
 ):
@@ -45,15 +46,18 @@ def run_simulation(
     M_cw = counterweight_mass_g / 1000.0    # 2.0 kg
     M_arm = stick_mass_g / 1000.0           # 0.30 kg
     m_p = marble_mass_g / 1000.0            # 0.020 kg
+    v_wind = wind_mph * 0.44704             # m/s (+ for tailwind in +X, - for headwind in -X)
 
-    # Aerodynamic parameters
+    # Aerodynamic parameters (marble, 1.5" timber arm, and canvas/twine sling)
     rho_air = 1.225
     cd_marble = 0.47
     r_p = (marble_diam_mm / 2.0) / 1000.0
     area_marble = math.pi * (r_p ** 2)
     cd_pouch = 1.20
     area_pouch = 0.080 * 0.060
-    cd_A_proj = cd_marble * area_marble + cd_pouch * area_pouch * 0.25 # folded canvas pouch around marble
+    cd_lines = 1.05
+    area_lines = 2.0 * (L_sling * 0.002) * 0.5 # 2x 2mm braided lines
+    cd_A_proj = cd_marble * area_marble + cd_pouch * area_pouch * 0.25 + cd_lines * area_lines # loaded sling
     cd_arm = 1.05
     w_arm = 0.0381                          # 1.5" square timber width
 
@@ -76,7 +80,6 @@ def run_simulation(
     alpha_0 = math.pi - theta_0             # 150.714° from upward vertical (+Z)
     alpha = alpha_0
     omega = 0.0
-    theta_cw_0 = math.radians(36.0)         # Counterweight initial angle from vertical
 
     y_trough = 0.0593                       # 59.3 mm marble center height on trough
     t = 0.0
@@ -112,18 +115,35 @@ def run_simulation(
         x_tip = -L_l * math.sin(alpha)
         y_tip = H_pivot + L_l * math.cos(alpha)
 
-        arm_rot = alpha_0 - alpha
-        x_cw = L_cw * math.sin(theta_cw_0 + arm_rot)
-        y_cw = H_pivot - L_cw * math.cos(theta_cw_0 + arm_rot)
-
-        # Torques on arm
-        tau_cw = M_cw * g * L_cw * math.sin(theta_cw_0 + arm_rot)
+        # Collinear beam counterweight coordinates and torque
+        x_cw = L_cw * math.sin(alpha)
+        y_cw = H_pivot - L_cw * math.cos(alpha)
+        tau_cw = M_cw * g * L_cw * math.sin(alpha)
         tau_arm = -M_arm * g * d_com * math.sin(alpha)
         tau_g = tau_cw + tau_arm
         normal_load = (M_cw + M_arm + m_p) * g
         tau_fric = -b_angular * omega - math.copysign(mu_bearing * normal_load * r_bearing, omega) if abs(omega) > 1e-4 else 0.0
-        # Continuous aerodynamic drag on swingarm
-        tau_aero = -0.125 * rho_air * cd_arm * w_arm * (L_l ** 4) * (omega ** 2) * (1 if omega > 0 else -1)
+        
+        # Continuous aerodynamic drag on swingarm relative to horizontal wind v_wind:
+        if abs(v_wind) < 1e-4:
+            tau_aero = -0.125 * rho_air * cd_arm * w_arm * (L_l ** 4) * (omega ** 2) * (1 if omega > 0 else -1)
+        else:
+            # 5-point Gauss-Legendre quadrature along long arm [0, L_l]
+            gl_nodes = (0.046910077, 0.230765345, 0.5, 0.769234655, 0.953089923)
+            gl_weights = (0.1184634425, 0.2393143352, 0.2844444444, 0.2393143352, 0.1184634425)
+            sin_a = math.sin(alpha)
+            cos_a = math.cos(alpha)
+            tau_aero = 0.0
+            for xi, wi in zip(gl_nodes, gl_weights):
+                r_i = L_l * xi
+                vx_i = -r_i * omega * cos_a
+                vy_i = -r_i * omega * sin_a
+                vrx = vx_i - v_wind
+                vry = vy_i
+                sr = math.hypot(vrx, vry)
+                dtau = 0.5 * rho_air * cd_arm * w_arm * sr * r_i * (sin_a * vry + cos_a * vrx)
+                tau_aero += wi * dtau * L_l
+
         tau_net = tau_g + tau_fric + tau_aero
 
         pe = (M_cw * g * y_cw) + (M_arm * g * (H_pivot + d_com * math.cos(alpha))) + (m_p * g * y_marble)
@@ -184,12 +204,16 @@ def run_simulation(
             v_tip_y = -L_l * math.sin(alpha) * omega
             vx_marble = v_tip_x - L_sling * math.sin(psi) * omega_psi
             vy_marble = v_tip_y + L_sling * math.cos(psi) * omega_psi
-            spd_m = math.hypot(vx_marble, vy_marble)
 
-            # Pre-release aerodynamic drag on projectile & canvas pouch
-            f_drag_mag = 0.5 * rho_air * cd_A_proj * (spd_m ** 2)
-            f_drag_x = -f_drag_mag * (vx_marble / max(1e-4, spd_m))
-            f_drag_y = -f_drag_mag * (vy_marble / max(1e-4, spd_m))
+            # Relative velocity to horizontal wind
+            v_rel_x = vx_marble - v_wind
+            v_rel_y = vy_marble
+            spd_rel = math.hypot(v_rel_x, v_rel_y)
+
+            # Pre-release aerodynamic drag on projectile & canvas pouch relative to wind
+            f_drag_mag = 0.5 * rho_air * cd_A_proj * (spd_rel ** 2)
+            f_drag_x = -f_drag_mag * (v_rel_x / max(1e-4, spd_rel))
+            f_drag_y = -f_drag_mag * (v_rel_y / max(1e-4, spd_rel))
             f_drag_perp = f_drag_x * (-math.sin(psi)) + f_drag_y * math.cos(psi)
 
             # Coupled pendulum equation of motion on accelerating arm tip
@@ -219,10 +243,12 @@ def run_simulation(
             # -------------------------------------------------------------
             # PHASE 3: Ballistic Flight with Quadratic Aerodynamic Drag
             # -------------------------------------------------------------
-            speed = math.hypot(vx_marble, vy_marble)
-            f_drag = 0.5 * rho_air * cd_marble * area_marble * (speed ** 2)
-            ax_drag = -(f_drag / m_p) * (vx_marble / speed)
-            ay_drag = -(f_drag / m_p) * (vy_marble / speed)
+            v_rel_x = vx_marble - v_wind
+            v_rel_y = vy_marble
+            spd_rel = math.hypot(v_rel_x, v_rel_y)
+            f_drag = 0.5 * rho_air * cd_marble * area_marble * (spd_rel ** 2)
+            ax_drag = -(f_drag / m_p) * (v_rel_x / max(1e-4, spd_rel))
+            ay_drag = -(f_drag / m_p) * (v_rel_y / max(1e-4, spd_rel))
 
             vx_marble += ax_drag * dt
             vy_marble += (-g + ay_drag) * dt
@@ -300,7 +326,11 @@ def run_simulation(
         "range_yards": round(range_yards, 2),
         "range_feet": round(range_ft, 2),
         "target_yards": 15.00,
-        "accuracy_pct": round(max(0.0, (1.0 - abs(range_yards - 15.00) / 15.00) * 100.0), 1)
+        "accuracy_pct": round(max(0.0, (1.0 - abs(range_yards - 15.00) / 15.00) * 100.0), 1),
+        "wind_mph": round(wind_mph, 1),
+        "wind_mps": round(v_wind, 2),
+        "wind_condition": "0.0 mph (Calm)" if abs(wind_mph) < 0.1 else (f"{wind_mph:+.1f} mph ({'Tailwind' if wind_mph > 0 else 'Headwind'})"),
+        "aerodynamics": "Quadratic relative drag: marble Cd=0.47, timber arm Cd=1.05, sling Cd=1.20"
     }
 
     return results, times, marble_coords, tip_coords, cw_coords, speeds, energies
@@ -401,14 +431,15 @@ def generate_plots(results, times, marble_coords, tip_coords, cw_coords, speeds)
         ["Trough Slide Phase", "X: 0.00 m -> -0.38 m (sub-mm match with Blender)"],
         ["Trough Liftoff Time", f"t = {results['liftoff_time_s']:.4f} s (Normal force N <= 0)"],
         ["Pin Release Speed & Angle", f"{results['release_speed_mps']} m/s ({results['release_speed_mph']} mph) @ {results['release_angle_deg']}°"],
+        ["Ambient Wind", f"{results['wind_condition']} ({results['wind_mps']} m/s)"],
         ["Target Distance", f"{results['target_yards']:.2f} Yards (13.72 m)"],
         ["Simulated Range", f"{results['range_yards']} Yards ({results['range_meters']} m)"],
         ["Target Match", f"{results['accuracy_pct']}% Accuracy"]
     ]
     tbl = ax4.table(cellText=table_data, colLabels=["Hardware Component", "Aligned Engineering Specification"], cellLoc='left', loc='center')
     tbl.auto_set_font_size(False)
-    tbl.set_fontsize(9.0)
-    tbl.scale(1.0, 1.45)
+    tbl.set_fontsize(8.5)
+    tbl.scale(1.0, 1.40)
     for (r, c), cell in tbl.get_celld().items():
         cell.set_edgecolor('#1E3E62')
         if r == 0:
@@ -425,7 +456,18 @@ def generate_plots(results, times, marble_coords, tip_coords, cw_coords, speeds)
     print("Saved updated trebuchet_simulation_plot.png and .svg")
 
 if __name__ == "__main__":
-    results, times, marble_coords, tip_coords, cw_coords, speeds, energies = run_simulation()
+    import argparse
+    parser = argparse.ArgumentParser(description="3-Foot Trebuchet Physics Simulator with Relative Aerodynamics & Wind")
+    parser.add_argument("--wind", type=float, default=0.0, help="Ambient horizontal wind speed in mph (+ for tailwind, - for headwind, default: 0.0)")
+    parser.add_argument("--cw", type=float, default=2000.0, help="Counterweight mass in grams (default: 2000.0)")
+    parser.add_argument("--sling", type=float, default=15.44, help="Sling length in inches (default: 15.44)")
+    args = parser.parse_args()
+
+    results, times, marble_coords, tip_coords, cw_coords, speeds, energies = run_simulation(
+        wind_mph=args.wind,
+        counterweight_mass_g=args.cw,
+        sling_length_in=args.sling
+    )
     print("Simulation Results:")
     print(json.dumps(results, indent=2))
     with open("simulation_results.json", "w") as f:

@@ -26,11 +26,12 @@ import shutil
 import mathutils
 import time
 
-def build_simulation():
+def build_simulation(wind_mph=0.0):
     t_start = time.time()
+    v_wind = wind_mph * 0.44704
     print("=====================================================================")
-    print("Starting 60-Second (1 to 3600 Frames) Native Blender Bullet Sim")
-    print("Sling friction increased, swing-arm friction kept as is")
+    print(f"Starting 60-Second Native Blender Bullet Sim (Wind: {wind_mph:.1f} mph / {v_wind:.2f} m/s)")
+    print("Realistic Aerodynamics: Quadratic Drag & Ambient Wind Force Fields")
     print("=====================================================================")
 
     # -------------------------------------------------------------
@@ -172,6 +173,30 @@ def build_simulation():
     rbw.solver_iterations = 40
     rbw.point_cache.frame_start = 1
     rbw.point_cache.frame_end = TOTAL_STEPS
+    rbw.effector_weights.wind = 1.0
+    rbw.effector_weights.drag = 1.0
+
+    # 6-aero. Quadratic Aerodynamic Drag & Ambient Wind Force Fields
+    bpy.ops.object.effector_add(type='DRAG', location=(0.0, 0.0, 1.0))
+    drag_field = bpy.context.active_object
+    drag_field.name = "Aero_Quadratic_Drag"
+    drag_field.field.linear_drag = 0.0
+    drag_field.field.quadratic_drag = 1.0
+    drag_field.field.falloff_power = 0.0
+    drag_field.field.use_max_distance = False
+
+    wind_field = None
+    if abs(wind_mph) > 0.05:
+        bpy.ops.object.effector_add(type='WIND', location=(0.0, 0.0, 1.0))
+        wind_field = bpy.context.active_object
+        wind_field.name = "Ambient_Wind_Field"
+        wind_rot_y = 90.0 if v_wind > 0 else -90.0
+        wind_field.rotation_euler = (0.0, math.radians(wind_rot_y), 0.0)
+        wind_field.field.shape = 'PLANE'
+        # Air kinetic force ~ 0.5 * rho * v_w^2
+        wind_field.field.strength = 0.5 * 1.225 * (v_wind ** 2) * (1.0 if v_wind > 0 else -1.0)
+        wind_field.field.falloff_power = 0.0
+        wind_field.field.use_max_distance = False
 
     # 6a. Passive Collision Bodies
     for obj in [floor_obj, target_3y, target_15y, target_20y]:
@@ -472,7 +497,7 @@ def build_simulation():
     if scene.rigidbody_world:
         bpy.ops.rigidbody.world_remove()
 
-    for obj in [line1, line2, j1, j2, j3, j4, jm, axle_anchor, hinge_empty, cw_fix]:
+    for obj in [line1, line2, j1, j2, j3, j4, jm, axle_anchor, hinge_empty, cw_fix, drag_field, wind_field]:
         if obj and obj.name in bpy.data.objects:
             bpy.data.objects.remove(obj, do_unlink=True)
 
@@ -748,4 +773,14 @@ def build_simulation():
     print(f"All 3,600 frames (60.0s) simulation and baking completed in {time.time() - t_start:.2f}s!")
 
 if __name__ == '__main__':
-    build_simulation()
+    import sys
+    import argparse
+    argv = sys.argv
+    if "--" in argv:
+        argv = argv[argv.index("--") + 1:]
+    else:
+        argv = []
+    parser = argparse.ArgumentParser(description="Trebuchet Blender Physics Simulation with Aerodynamics and Wind")
+    parser.add_argument("--wind", type=float, default=0.0, help="Ambient horizontal wind speed in mph (+X tailwind, -X headwind)")
+    args, unknown = parser.parse_known_args(argv)
+    build_simulation(wind_mph=args.wind)
