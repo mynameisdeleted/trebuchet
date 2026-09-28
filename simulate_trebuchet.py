@@ -26,12 +26,12 @@ def run_simulation(
     short_arm_in=8.0,           # 8.0 in (203.2 mm)
     long_arm_in=32.0,           # 32.0 in (812.8 mm) - 4:1 ratio
     sling_length_in=14.55,      # 14.55 in (369.6 mm) — reaches just under fulcrum when cocked down
-    counterweight_mass_g=748.0, # 748 grams (1.65 lbs) screwed onto stick end (calibrated for 3.00 yd)
-    stick_mass_g=320.0,         # 320 grams (bigger 1.5" x 1.5" x 40" timber stick)
-    marble_mass_g=5.5,          # 5.5 grams standard 16 mm glass marble
+    counterweight_mass_g=2000.0,# 2000 grams (4.41 lbs) portable demonstration counterweight
+    stick_mass_g=300.0,         # 300 grams (1.5" x 1.5" x 40" timber stick)
+    marble_mass_g=20.0,         # 20.0 grams solid glass marble (16 mm)
     marble_diam_mm=16.0,        # 16 mm diameter
     dt=0.0005,                  # 0.5 ms integration step
-    max_time=2.5
+    max_time=3.5
 ):
     g = 9.80665
 
@@ -247,14 +247,14 @@ def generate_plots(results, times, marble_coords, tip_coords, cw_coords, speeds)
     ax1.set_facecolor('#071324')
     mx = [p[0] for p in marble_coords]
     my = [p[1] for p in marble_coords]
-    ax1.plot(mx, my, color='#48CAE4', lw=2.8, label='Marble Path (16mm Glass)')
-    ax1.axvline(x=2.7432, color='#FF5964', linestyle='--', lw=2.2, label='Target: 3.00 yd (9.0 ft / 2.74 m)')
-    ax1.scatter([results['range_meters']], [0], color='#06D6A0', s=130, zorder=5, label=f"Impact: {results['range_yards']} yd ({results['range_meters']} m)")
-    ax1.set_title('Ballistic Trajectory (Target: 3.00 Yards)', color='#E0E6ED', fontsize=12, pad=10)
+    ax1.plot(mx, my, color='#48CAE4', lw=2.8, label='Marble Path (16mm Glass, 20g)')
+    ax1.axvline(x=results['range_meters'], color='#FF5964', linestyle='--', lw=2.2, label=f"Impact: {results['range_yards']} yd ({results['range_meters']} m)")
+    ax1.scatter([results['range_meters']], [0], color='#06D6A0', s=130, zorder=5)
+    ax1.set_title(f"Ballistic Trajectory (2.0 kg Load: {results['range_yards']} Yards / {results['range_meters']} m)", color='#E0E6ED', fontsize=12, pad=10)
     ax1.set_xlabel('Horizontal Distance (meters)', color='#A0AEC0')
     ax1.set_ylabel('Height (meters)', color='#A0AEC0')
-    ax1.set_xlim(-0.8, 3.2)
-    ax1.set_ylim(-0.05, 1.4)
+    ax1.set_xlim(-1.0, max(mx) + 2.0)
+    ax1.set_ylim(-0.1, max(my) * 1.25)
     ax1.grid(True, linestyle=':', alpha=0.35, color='#4A5568')
     ax1.legend(loc='upper right', facecolor='#0B192C', edgecolor='#64DFDF', fontsize=9)
 

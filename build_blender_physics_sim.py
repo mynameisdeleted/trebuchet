@@ -153,15 +153,15 @@ def build_simulation():
     target_3y.name = "Target_Marker_3_Yards"
     target_3y.data.materials.append(mat_target)
 
+    bpy.ops.mesh.primitive_cylinder_add(radius=0.25, depth=0.004, location=(13.716, 0.0, 0.002))
+    target_15y = bpy.context.active_object
+    target_15y.name = "Target_Marker_15_Yards"
+    target_15y.data.materials.append(mat_target)
+
     bpy.ops.mesh.primitive_cylinder_add(radius=0.25, depth=0.004, location=(18.288, 0.0, 0.002))
     target_20y = bpy.context.active_object
     target_20y.name = "Target_Marker_20_Yards"
     target_20y.data.materials.append(mat_target)
-
-    bpy.ops.mesh.primitive_cylinder_add(radius=0.35, depth=0.004, location=(36.576, 0.0, 0.002))
-    target_40y = bpy.context.active_object
-    target_40y.name = "Target_Marker_40_Yards"
-    target_40y.data.materials.append(mat_target)
 
     # -------------------------------------------------------------
     # 6. CONFIGURE BULLET RIGID BODY WORLD (300 FPS ENGINE)
@@ -174,7 +174,7 @@ def build_simulation():
     rbw.point_cache.frame_end = TOTAL_STEPS
 
     # 6a. Passive Collision Bodies
-    for obj in [floor_obj, target_3y, target_20y, target_40y]:
+    for obj in [floor_obj, target_3y, target_15y, target_20y]:
         bpy.ops.object.select_all(action='DESELECT')
         obj.select_set(True)
         bpy.context.view_layer.objects.active = obj
@@ -217,7 +217,7 @@ def build_simulation():
     bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
     bpy.ops.rigidbody.object_add()
     cw.rigid_body.type = 'ACTIVE'
-    cw.rigid_body.mass = 3.50
+    cw.rigid_body.mass = 2.00 # 2.0 kg portable demonstration counterweight
     # Swing-arm friction kept as is:
     cw.rigid_body.linear_damping = 0.03
     cw.rigid_body.angular_damping = 0.04
@@ -408,14 +408,14 @@ def build_simulation():
         dot_val = T_vec.dot(p_dir_w)
         rot_deg = math.degrees(arm_eval.matrix_world.to_euler().y)
 
-        if dynamic_release_step is None and s > 80 and rot_deg > 90.0 and dot_val > 0.95:
+        if dynamic_release_step is None and s > 80 and rot_deg > 90.0 and dot_val > 0.80:
             dynamic_release_step = s
             f_60_rel = 1.0 + (s - 1) * 0.2
             print(f">>> 100% DYNAMIC HOOK RELEASE at Step {s} (F60={f_60_rel:.2f}, t={(s-1)/300:.3f}s): arm_rot={rot_deg:.2f}°, dot={dot_val:.4f} <<<")
             break
 
     if dynamic_release_step is None:
-        dynamic_release_step = 135
+        dynamic_release_step = 145
 
     # Apply dynamic release to constraints:
     for j in [j4, jm]:
@@ -662,8 +662,8 @@ def build_simulation():
 
     cam_wide = bpy.data.objects.new("Camera_Trajectory_Wide", bpy.data.cameras.new("Cam_Wide"))
     cam_wide.data.type = 'ORTHO'
-    cam_wide.data.ortho_scale = 28.0 # Covers full 26m journey: trebuchet at X=0 to rest at X=25.2m
-    cam_wide.location = (12.8, -25.0, 2.2)
+    cam_wide.data.ortho_scale = 22.0 # Perfectly frames trebuchet at X=0 to 15-yard target marker at X=13.7m
+    cam_wide.location = (9.5, -25.0, 2.4)
     cam_wide.rotation_euler = (math.radians(90.0), 0.0, 0.0)
     scene.collection.objects.link(cam_wide)
 
