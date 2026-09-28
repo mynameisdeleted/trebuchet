@@ -195,7 +195,7 @@ def build_simulation():
         trough.rigid_body.collision_shape = 'CONVEX_HULL'
         trough.rigid_body.use_margin = True
         trough.rigid_body.collision_margin = 0.0005
-        trough.rigid_body.friction = 0.02
+        trough.rigid_body.friction = 0.16 # Pine wood grain friction against glass marble
         trough.rigid_body.collision_collections[0] = True
 
     # 6b. Active Decoupled Arm & Counterweight
@@ -216,6 +216,9 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     cw.rigid_body.type = 'ACTIVE'
     cw.rigid_body.mass = 3.50
+    # Aerodynamic air drag on counterweight
+    cw.rigid_body.linear_damping = 0.03
+    cw.rigid_body.angular_damping = 0.03
     cw.rigid_body.collision_collections[0] = False
     cw.rigid_body.collision_collections[1] = False
 
@@ -231,7 +234,9 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     arm.rigid_body.type = 'ACTIVE'
     arm.rigid_body.mass = 0.30
-    arm.rigid_body.angular_damping = 0.02
+    # Arm aerodynamic drag & oiled axle bearing rotational friction
+    arm.rigid_body.linear_damping = 0.04
+    arm.rigid_body.angular_damping = 0.06
     arm.rigid_body.collision_collections[0] = False
     arm.rigid_body.collision_collections[1] = False
 
@@ -278,7 +283,10 @@ def build_simulation():
     marble.rigid_body.use_margin = True
     marble.rigid_body.collision_margin = 0.0005
     marble.rigid_body.mass = 0.020 # 20 grams
-    marble.rigid_body.friction = 0.02
+    # Glass contact friction against trough & aerodynamic air resistance
+    marble.rigid_body.friction = 0.14
+    marble.rigid_body.linear_damping = 0.03
+    marble.rigid_body.angular_damping = 0.04
     marble.rigid_body.restitution = 0.25
     marble.rigid_body.collision_collections[0] = True
     marble.rigid_body.collision_collections[1] = False
@@ -297,6 +305,9 @@ def build_simulation():
         bpy.ops.rigidbody.object_add()
         pouch.rigid_body.type = 'ACTIVE'
         pouch.rigid_body.mass = 0.010 # 10 grams canvas pouch
+        # Canvas cloth aerodynamic drag
+        pouch.rigid_body.linear_damping = 0.08
+        pouch.rigid_body.angular_damping = 0.08
         pouch.rigid_body.collision_collections[0] = False
         pouch.rigid_body.collision_collections[1] = False
 
@@ -307,6 +318,8 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     line1.rigid_body.type = 'ACTIVE'
     line1.rigid_body.mass = 0.008
+    line1.rigid_body.linear_damping = 0.06
+    line1.rigid_body.angular_damping = 0.06
     line1.rigid_body.collision_collections[0] = False
     line1.rigid_body.collision_collections[1] = False
     line1.hide_render = True
@@ -318,6 +331,8 @@ def build_simulation():
     bpy.ops.rigidbody.object_add()
     line2.rigid_body.type = 'ACTIVE'
     line2.rigid_body.mass = 0.008
+    line2.rigid_body.linear_damping = 0.06
+    line2.rigid_body.angular_damping = 0.06
     line2.rigid_body.collision_collections[0] = False
     line2.rigid_body.collision_collections[1] = False
     line2.hide_render = True
