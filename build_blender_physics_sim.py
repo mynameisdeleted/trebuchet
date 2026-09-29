@@ -22,16 +22,114 @@ Pure Native Blender Bullet Physics Engine Trebuchet Simulation & Keyframe Baker:
 import bpy
 import math
 import os
+os.environ.pop("DISPLAY", None)
 import shutil
 import mathutils
 import time
 
-def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None, wind_mph=0.0, duration_sec=30.0, pin_angle=10.0, render_stills=True):
+def generate_slack_sling_path(p_start, p_end, num_segments, slack_m=0.020, n_waves=2, lateral_sign=1.0):
+    """
+    Computes a physically relaxed initial path with smooth lateral slack curve and trough droop.
+    Generates segment centers, orientations, and joint locations with exact arc length = straight_distance + slack_m.
+    """
+    span_vec = p_end - p_start
+    span_len = span_vec.length
+    target_len = span_len + max(0.0, slack_m)
+
+    if slack_m <= 1e-5:
+        joint_locs = [p_start + (i / num_segments) * span_vec for i in range(num_segments + 1)]
+        seg_centers = [0.5 * (joint_locs[i] + joint_locs[i + 1]) for i in range(num_segments)]
+        seg_rot = []
+        for i in range(num_segments):
+            v_seg = (joint_locs[i + 1] - joint_locs[i]).normalized()
+            seg_rot.append(mathutils.Vector((0, 0, 1)).rotation_difference(v_seg).to_euler())
+        return {
+            'target_len': span_len,
+            'seg_len': span_len / num_segments,
+            'joint_locs': joint_locs,
+            'seg_centers': seg_centers,
+            'seg_rotations': seg_rot,
+            'amplitude': 0.0
+        }
+
+    # Bisection search for lateral sine wave amplitude to yield arc length = target_len
+    A_low = 0.0
+    A_high = 0.022 # Max 22mm to stay inside 50.8mm trough (width is +/-25.4mm)
+    dt = 1.0 / 200.0
+    best_A = 0.015
+    for _ in range(25):
+        A_mid = 0.5 * (A_low + A_high)
+        length = 0.0
+        for step in range(200):
+            t0 = step * dt
+            t1 = (step + 1) * dt
+            p0 = p_start + t0 * span_vec + mathutils.Vector((0.0, lateral_sign * A_mid * math.sin(n_waves * math.pi * t0), 0.0))
+            p1 = p_start + t1 * span_vec + mathutils.Vector((0.0, lateral_sign * A_mid * math.sin(n_waves * math.pi * t1), 0.0))
+            length += (p1 - p0).length
+        if length < target_len:
+            A_low = A_mid
+        else:
+            A_high = A_mid
+        best_A = A_mid
+
+    # Sample densely along curve with vertical droop into trough
+    dense_pts = []
+    dense_dists = [0.0]
+    total_dist = 0.0
+    N_dense = 1000
+    for s in range(N_dense + 1):
+        t = s / N_dense
+        # Droop in Z into trough floor (floor is at Z=0.0508, p_start.z=0.0627, p_end.z=0.0593)
+        z_droop = -0.005 * math.sin(math.pi * t)
+        pt = p_start + t * span_vec + mathutils.Vector((0.0, lateral_sign * best_A * math.sin(n_waves * math.pi * t), z_droop))
+        dense_pts.append(pt)
+        if s > 0:
+            total_dist += (dense_pts[-1] - dense_pts[-2]).length
+            dense_dists.append(total_dist)
+
+    # Sample joint locations at equal arc lengths
+    joint_locs = [p_start.copy()]
+    target_dists = [i * (total_dist / num_segments) for i in range(num_segments + 1)]
+
+    dense_idx = 0
+    for i in range(1, num_segments):
+        td = target_dists[i]
+        while dense_idx < len(dense_dists) - 1 and dense_dists[dense_idx + 1] < td:
+            dense_idx += 1
+        d0 = dense_dists[dense_idx]
+        d1 = dense_dists[dense_idx + 1]
+        frac = (td - d0) / max(1e-6, (d1 - d0))
+        pt = dense_pts[dense_idx].lerp(dense_pts[dense_idx + 1], frac)
+        joint_locs.append(pt)
+    joint_locs.append(p_end.copy())
+
+    # Segment midpoints and cylinder orientations
+    seg_centers = []
+    seg_rotations = []
+    for i in range(num_segments):
+        j0 = joint_locs[i]
+        j1 = joint_locs[i + 1]
+        mid = 0.5 * (j0 + j1)
+        seg_centers.append(mid)
+        v_seg = (j1 - j0).normalized()
+        q = mathutils.Vector((0, 0, 1)).rotation_difference(v_seg)
+        seg_rotations.append(q.to_euler())
+
+    return {
+        'target_len': total_dist,
+        'seg_len': total_dist / num_segments,
+        'joint_locs': joint_locs,
+        'seg_centers': seg_centers,
+        'seg_rotations': seg_rotations,
+        'amplitude': best_A
+    }
+
+def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None, wind_mph=0.0, duration_sec=30.0, pin_angle=20.0, marble_x=-0.035, slack_m=0.020, render_stills=True):
     t_start = time.time()
     v_wind = wind_mph * 0.44704
     print("=====================================================================")
     print(f"Starting Native Blender Bullet Sim ({duration_sec:.1f}s at 60 FPS / 1200 FPS physics | Wind: {wind_mph:.1f} mph | Pin Angle: {pin_angle:.1f}°)")
-    print(f"Sling Architecture: {num_segments} Articulated Segments per Line | Material: {sling_material}")
+    print(f"Sling Architecture: {num_segments} Articulated Segments per Line | Material: {sling_material} | Marble X: {marble_x:.3f}m | Initial Slack: {slack_m*1000:.1f}mm")
     print("Realistic Aerodynamics: Quadratic Drag & Ambient Wind Force Fields")
     print("=====================================================================")
 
@@ -372,13 +470,13 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     cw_fix.rigid_body_constraint.object2 = cw
     cw_fix.rigid_body_constraint.disable_collisions = True
 
-    # 6c. Active Marble
+    # 6c. Active Marble (Moved towards arm tip to prevent initial string tightness)
     marble = bpy.data.objects.get('Glass_Marble_16mm')
     bpy.ops.object.select_all(action='DESELECT')
     marble.select_set(True)
     bpy.context.view_layer.objects.active = marble
     bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
-    marble.location = mathutils.Vector((0.0000, 0.0, 0.0593))
+    marble.location = mathutils.Vector((marble_x, 0.0, 0.0593))
     bpy.ops.rigidbody.object_add()
     marble.rigid_body.type = 'ACTIVE'
     marble.rigid_body.collision_shape = 'SPHERE'
@@ -392,9 +490,9 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     marble.rigid_body.collision_collections[0] = True
     marble.rigid_body.collision_collections[1] = False
 
-    # 6d. 100% Native Continuous Physical Sling Simulation (INCREASED SLING FRICTION)
+    # 6d. 100% Native Continuous Physical Sling Simulation with Initial Slack
     p_tip = mathutils.Vector((-0.3922, 0.0, 0.0627))
-    p_pouch = mathutils.Vector((0.0000, 0.0, 0.0593))
+    p_pouch = mathutils.Vector((marble_x, 0.0, 0.0593))
 
     pouch = bpy.data.objects.get('Cloth_Sling_Pouch')
     if pouch:
@@ -417,11 +515,16 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         pouch.rigid_body.collision_collections[0] = False
         pouch.rigid_body.collision_collections[1] = True # Collision layer 1: Arm & Sling physical bounce/contact
 
-    # Line 1 & Line 2: Multi-Segment Articulated Physics Chains (16 Segments Default)
-    line_vec = p_pouch - p_tip
-    L_total = line_vec.length
-    seg_len = L_total / num_segments
-    rot_cyl = (0.0, math.radians(90.0), 0.0)
+    # Line 1 & Line 2: Multi-Segment Articulated Physics Chains with Realistic Slack Geometry
+    # Line 1: Fixed line from arm eyelet (Y = -0.008) to pouch (Y = -0.008)
+    p1_start = p_tip + mathutils.Vector((0.0, -0.008, 0.0))
+    p1_end   = p_pouch + mathutils.Vector((0.0, -0.008, 0.0))
+    path1 = generate_slack_sling_path(p1_start, p1_end, num_segments, slack_m=slack_m, n_waves=2, lateral_sign=-1.0)
+
+    # Line 2: Release line from pin loop (Y = 0.0) to pouch (Y = +0.008)
+    p2_start = p_tip.copy()
+    p2_end   = p_pouch + mathutils.Vector((0.0, 0.008, 0.0))
+    path2 = generate_slack_sling_path(p2_start, p2_end, num_segments, slack_m=slack_m, n_waves=2, lateral_sign=1.0)
 
     line1_segs = []
     line2_segs = []
@@ -429,11 +532,11 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     line2_joints = []
 
     for i in range(num_segments):
-        frac_mid = (i + 0.5) / num_segments
-        p_seg = p_tip + frac_mid * line_vec
-
         # Line 1 segment (Fixed)
-        bpy.ops.mesh.primitive_cylinder_add(radius=0.0013, depth=seg_len, location=p_seg, rotation=rot_cyl)
+        mid1 = path1['seg_centers'][i]
+        rot1 = path1['seg_rotations'][i]
+        slen1 = path1['seg_len']
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.0013, depth=slen1, location=mid1, rotation=rot1)
         s1 = bpy.context.active_object
         s1.name = f"Phys_Line1_{i}"
         bpy.ops.rigidbody.object_add()
@@ -452,7 +555,10 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         line1_segs.append(s1)
 
         # Line 2 segment (Release)
-        bpy.ops.mesh.primitive_cylinder_add(radius=0.0013, depth=seg_len, location=p_seg, rotation=rot_cyl)
+        mid2 = path2['seg_centers'][i]
+        rot2 = path2['seg_rotations'][i]
+        slen2 = path2['seg_len']
+        bpy.ops.mesh.primitive_cylinder_add(radius=0.0013, depth=slen2, location=mid2, rotation=rot2)
         s2 = bpy.context.active_object
         s2.name = f"Phys_Line2_{i}"
         bpy.ops.rigidbody.object_add()
@@ -525,25 +631,23 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     sc.limit_lin_x_upper = pin_len
     sc.disable_collisions = True
 
-    # Line 1 Joints: Arm Tip -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch
-    j1_0 = create_sling_joint("Joint_Arm_Line1_0", arm, line1_segs[0], p_tip)
+    # Line 1 Joints: Arm Tip Eyelet -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch (Along Relaxed Slack Path)
+    j1_0 = create_sling_joint("Joint_Arm_Line1_0", arm, line1_segs[0], path1['joint_locs'][0])
     line1_joints.append(j1_0)
     for i in range(1, num_segments):
-        loc_i = p_tip + (i / num_segments) * line_vec
-        ji = create_sling_joint(f"Joint_Line1_{i-1}_{i}", line1_segs[i-1], line1_segs[i], loc_i)
+        ji = create_sling_joint(f"Joint_Line1_{i-1}_{i}", line1_segs[i-1], line1_segs[i], path1['joint_locs'][i])
         line1_joints.append(ji)
-    j1_N = create_sling_joint("Joint_Line1_Pouch", line1_segs[-1], pouch, p_pouch)
+    j1_N = create_sling_joint("Joint_Line1_Pouch", line1_segs[-1], pouch, path1['joint_locs'][-1])
     line1_joints.append(j1_N)
 
-    # Line 2 Joints: PHYSICAL LOOP -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch
+    # Line 2 Joints: PHYSICAL LOOP -> seg 0 -> seg 1 ... -> seg N-1 -> Pouch (Along Relaxed Slack Path)
     # (The rope is directly anchored to the loop that slides along the pin!)
-    j_loop_rope = create_sling_joint("Joint_Loop_Line2_0", loop_obj, line2_segs[0], p_tip)
+    j_loop_rope = create_sling_joint("Joint_Loop_Line2_0", loop_obj, line2_segs[0], path2['joint_locs'][0])
     line2_joints.append(j_loop_rope)
     for i in range(1, num_segments):
-        loc_i = p_tip + (i / num_segments) * line_vec
-        ji = create_sling_joint(f"Joint_Line2_{i-1}_{i}", line2_segs[i-1], line2_segs[i], loc_i)
+        ji = create_sling_joint(f"Joint_Line2_{i-1}_{i}", line2_segs[i-1], line2_segs[i], path2['joint_locs'][i])
         line2_joints.append(ji)
-    j2_N = create_sling_joint("Joint_Line2_Pouch", line2_segs[-1], pouch, p_pouch)
+    j2_N = create_sling_joint("Joint_Line2_Pouch", line2_segs[-1], pouch, path2['joint_locs'][-1])
     line2_joints.append(j2_N)
 
     # Joint M: Pouch <-> Marble (Cradles marble, opens at release!)
@@ -589,7 +693,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
             dot_val = T_vec.dot(p_dir_w)
             rot_deg = math.degrees(arm_eval.matrix_world.to_euler().y)
 
-            if rot_deg > 85.0 and dot_val > 0.80:
+            if rot_deg > 105.0 and dot_val > 0.80:
                 released = True
                 dynamic_release_frame = f
                 sc.enabled = False # Release loop from 45° pin!
@@ -738,7 +842,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
         emps_fixed[0].location = p1_anc
         emps_fixed[0].keyframe_insert(data_path="location", frame=f)
         for i in range(num_segments):
-            emps_fixed[i + 1].location = d['line1_locs'][i] + mathutils.Vector((0.0, -0.008, 0.0))
+            emps_fixed[i + 1].location = d['line1_locs'][i]
             emps_fixed[i + 1].keyframe_insert(data_path="location", frame=f)
         emps_fixed[-1].location = p1_end
         emps_fixed[-1].keyframe_insert(data_path="location", frame=f)
@@ -870,6 +974,8 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     if render_stills:
         scene.render.resolution_x = 1280
         scene.render.resolution_y = 720
+        if hasattr(scene, 'eevee') and hasattr(scene.eevee, 'taa_render_samples'):
+            scene.eevee.taa_render_samples = 16
 
         rel_f = dynamic_release_frame
         render_action = [
@@ -972,6 +1078,8 @@ if __name__ == '__main__':
     parser.add_argument("--wind", type=float, default=0.0, help="Ambient horizontal wind speed in mph (+X tailwind, -X headwind)")
     parser.add_argument("--duration", type=float, default=30.0, help="Simulation duration in seconds (default: 30.0s = 1800 frames)")
     parser.add_argument("--pin-angle", type=float, default=10.0, help="Release pin angle relative to arm axis in degrees (default: 10.0°, reduced from 25.07°)")
+    parser.add_argument("--marble-x", type=float, default=-0.035, help="Initial marble X location in meters (default: -0.035m, shifted towards arm)")
+    parser.add_argument("--slack", type=float, default=0.020, help="Initial sling string slack length in meters (default: 0.020m = 20mm)")
     parser.add_argument("--no-render", action="store_true", help="Skip rendering stills for faster physics testing")
     args, unknown = parser.parse_known_args(argv)
     build_simulation(
@@ -981,5 +1089,7 @@ if __name__ == '__main__':
         wind_mph=args.wind,
         duration_sec=args.duration,
         pin_angle=args.pin_angle,
+        marble_x=args.marble_x,
+        slack_m=args.slack,
         render_stills=not args.no_render
     )
