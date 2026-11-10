@@ -377,7 +377,7 @@ def build_simulation(num_segments=16, sling_material="nylon", elasticity_k=None,
     bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
     bpy.ops.rigidbody.object_add()
     cw.rigid_body.type = 'ACTIVE'
-    cw.rigid_body.mass = 2.00 # 2.0 kg portable demonstration counterweight
+    cw.rigid_body.mass = 5.00 # 2.0 kg portable demonstration counterweight
     # Swing-arm friction kept as is:
     cw.rigid_body.linear_damping = 0.03
     cw.rigid_body.angular_damping = 0.04
